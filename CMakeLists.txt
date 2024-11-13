@@ -9,7 +9,7 @@ set(CMAKE_CXX_COMPILER "aarch64-linux-gnu-g++")
 
 # ---- Project ----
 
-project(standalone LANGUAGES C)
+project(drvmgr LANGUAGES C)
 
 # ---- Create executable ----
 set(CMAKE_BUILD_TYPE "Debug")
@@ -30,21 +30,21 @@ file(GLOB_RECURSE sources CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/src/*.c
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/libbase/include/*.h")
 file(GLOB_RECURSE headers CONFIGURE_DEPENDS "${CMAKE_CURRENT_SOURCE_DIR}/libbase/src/*.h")
 
-add_library(standalone_lib ${headers} ${sources})
+add_library(drvmgr_lib ${headers} ${sources})
 target_include_directories(
-  standalone_lib PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
+  drvmgr_lib PUBLIC $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include>
                         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/include/linux>
                         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/arch/arm64/include>
                         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/libbase/include>
                         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/libbase/include/linux>
                         $<BUILD_INTERFACE:${PROJECT_SOURCE_DIR}/libbase/arch/arm64/include>
-                        $<INSTALL_INTERFACE:include/standalone_lib-${PROJECT_VERSION}>
+                        $<INSTALL_INTERFACE:include/drvmgr_lib-${PROJECT_VERSION}>
 )
 
 file(GLOB sources CONFIGURE_DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/test/src/*.c)
 
-add_executable(standalone_bin ${sources})
+add_executable(drvmgr_bin ${sources})
 # link to your dependencies' targets here
-target_link_libraries(standalone_bin standalone_lib)
+target_link_libraries(drvmgr_bin drvmgr_lib)
 # setup your target's properties
-set_target_properties(standalone_bin PROPERTIES C_STANDARD 11)
+set_target_properties(drvmgr_bin PROPERTIES C_STANDARD 11)
