@@ -11,24 +11,16 @@
 
 #include <linux/string.h>
 #include <linux/platform_device.h>
-#include <linux/of_device.h>
-#include <linux/of_irq.h>
 #include <linux/module.h>
 #include <linux/init.h>
-// #include <linux/interrupt.h>
 #include <linux/ioport.h>
-#include <linux/dma-mapping.h>
-// #include <linux/memblock.h>
 #include <linux/err.h>
-#include <linux/slab.h>
+#include <linux/compat.h>
 #include <linux/pm_runtime.h>
 #include <linux/pm_domain.h>
 #include <linux/idr.h>
-#include <linux/acpi.h>
-#include <linux/clk/clk-conf.h>
 #include <linux/limits.h>
 #include <linux/property.h>
-// #include <linux/kmemleak.h>
 #include <linux/types.h>
 
 #include "base.h"
@@ -173,6 +165,7 @@ EXPORT_SYMBOL_GPL(devm_platform_ioremap_resource_byname);
  */
 int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 {
+#if 0
 	int ret;
 #ifdef CONFIG_SPARC
 	/* sparc does not have irqs represented as IORESOURCE_IRQ resources */
@@ -204,7 +197,6 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 	 * IORESOURCE_BITS correspond 1-to-1 to the IRQF_TRIGGER*
 	 * settings.
 	 */
-#if 0
 	if (r && r->flags & IORESOURCE_BITS) {
 		struct irq_data *irqd;
 
@@ -213,7 +205,6 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 			goto out_not_found;
 		irqd_set_trigger_type(irqd, r->flags & IORESOURCE_BITS);
 	}
-#endif
 
 	if (r) {
 		ret = r->start;
@@ -235,13 +226,14 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 	}
 
 #endif
-#if 0
+
 out_not_found:
 	ret = -ENXIO;
-#endif
 out:
 	WARN(ret == 0, "0 is an invalid IRQ number\n");
 	return ret;
+#endif
+	return -ENXIO;
 }
 EXPORT_SYMBOL_GPL(platform_get_irq_optional);
 
@@ -323,6 +315,7 @@ static void platform_disable_acpi_irq(struct platform_device *pdev, int index)
 static void devm_platform_get_irqs_affinity_release(struct device *dev,
 						    void *res)
 {
+#if 0
 	struct irq_affinity_devres *ptr = res;
 	int i;
 
@@ -332,6 +325,7 @@ static void devm_platform_get_irqs_affinity_release(struct device *dev,
 		if (has_acpi_companion(dev))
 			platform_disable_acpi_irq(to_platform_device(dev), i);
 	}
+#endif
 }
 
 /**
@@ -381,7 +375,7 @@ int devm_platform_get_irqs_affinity(struct platform_device *dev,
 
 	size = sizeof(*ptr) + sizeof(unsigned int) * nvec;
 	ptr = devres_alloc(devm_platform_get_irqs_affinity_release, size,
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return -ENOMEM;
 
@@ -457,6 +451,7 @@ EXPORT_SYMBOL_GPL(platform_get_resource_byname);
 static int __platform_get_irq_byname(struct platform_device *dev,
 				     const char *name)
 {
+#if 0
 	struct resource *r;
 	int ret;
 
@@ -472,6 +467,8 @@ static int __platform_get_irq_byname(struct platform_device *dev,
 		return r->start;
 	}
 
+	return -ENXIO;
+#endif
 	return -ENXIO;
 }
 
@@ -546,6 +543,7 @@ struct platform_object {
  */
 static void setup_pdev_dma_masks(struct platform_device *pdev)
 {
+#if 0
 	pdev->dev.dma_parms = &pdev->dma_parms;
 
 	if (!pdev->dev.coherent_dma_mask)
@@ -554,6 +552,7 @@ static void setup_pdev_dma_masks(struct platform_device *pdev)
 		pdev->platform_dma_mask = DMA_BIT_MASK(32);
 		pdev->dev.dma_mask = &pdev->platform_dma_mask;
 	}
+#endif
 };
 
 /**
@@ -595,7 +594,7 @@ struct platform_device *platform_device_alloc(const char *name, int id)
 {
 	struct platform_object *pa;
 
-	pa = kzalloc(sizeof(*pa) + strlen(name) + 1, GFP_KERNEL);
+	pa = kzalloc(sizeof(*pa) + strlen(name) + 1, 0);
 	if (pa) {
 		strcpy(pa->name, name);
 		pa->pdev.name = pa->name;
@@ -625,7 +624,7 @@ int platform_device_add_resources(struct platform_device *pdev,
 	struct resource *r = NULL;
 
 	if (res) {
-		r = kmemdup(res, sizeof(struct resource) * num, GFP_KERNEL);
+		r = kmemdup(res, sizeof(struct resource) * num, 0);
 		if (!r)
 			return -ENOMEM;
 	}
@@ -653,7 +652,7 @@ int platform_device_add_data(struct platform_device *pdev, const void *data,
 	void *d = NULL;
 
 	if (data) {
-		d = kmemdup(data, size, GFP_KERNEL);
+		d = kmemdup(data, size, 0);
 		if (!d)
 			return -ENOMEM;
 	}
@@ -697,7 +696,7 @@ int platform_device_add(struct platform_device *pdev)
 		 * that we remember it must be freed, and we append a suffix
 		 * to avoid namespace collision with explicit IDs.
 		 */
-		ret = ida_alloc(&platform_devid_ida, GFP_KERNEL);
+		ret = ida_alloc(&platform_devid_ida, 0);
 		if (ret < 0)
 			goto err_out;
 		pdev->id = ret;
@@ -862,7 +861,7 @@ struct platform_device *platform_device_register_full(
 	ret = platform_device_add(pdev);
 	if (ret) {
 err:
-		ACPI_COMPANION_SET(&pdev->dev, NULL);
+		// ACPI_COMPANION_SET(&pdev->dev, NULL);
 		platform_device_put(pdev);
 		return ERR_PTR(ret);
 	}
@@ -879,7 +878,7 @@ EXPORT_SYMBOL_GPL(platform_device_register_full);
 int __platform_driver_register(struct platform_driver *drv,
 				struct module *owner)
 {
-	drv->driver.owner = owner;
+	// drv->driver.owner = owner;
 	drv->driver.bus = &platform_bus_type;
 
 	return driver_register(&drv->driver);
@@ -1265,6 +1264,7 @@ int platform_pm_restore(struct device *dev)
 static ssize_t modalias_show(struct device *dev,
 			     struct device_attribute *attr, char *buf)
 {
+#if 0
 	struct platform_device *pdev = to_platform_device(dev);
 	int len;
 
@@ -1277,6 +1277,8 @@ static ssize_t modalias_show(struct device *dev,
 		return len;
 
 	return sysfs_emit(buf, "platform:%s\n", pdev->name);
+#endif
+	return 0;
 }
 static DEVICE_ATTR_RO(modalias);
 
@@ -1311,7 +1313,7 @@ static ssize_t driver_override_store(struct device *dev,
 	if (count >= (PAGE_SIZE - 1))
 		return -EINVAL;
 
-	driver_override = kstrndup(buf, count, GFP_KERNEL);
+	driver_override = kstrndup(buf, count, 0);
 	if (!driver_override)
 		return -ENOMEM;
 
@@ -1348,7 +1350,7 @@ static umode_t platform_dev_attrs_visible(struct kobject *kobj, struct attribute
 	struct device *dev = container_of(kobj, typeof(*dev), kobj);
 
 	if (a == &dev_attr_numa_node.attr &&
-			dev_to_node(dev) == NUMA_NO_NODE)
+			dev_to_node(dev) == -1)
 		return 0;
 
 	return a->mode;
@@ -1382,7 +1384,7 @@ static int platform_match(struct device *dev, struct device_driver *drv)
 	/* When driver_override is set, only bind to the matching driver */
 	if (pdev->driver_override)
 		return !strcmp(pdev->driver_override, drv->name);
-
+#if 0
 	/* Attempt an OF style match first */
 	if (of_driver_match_device(dev, drv))
 		return 1;
@@ -1390,7 +1392,7 @@ static int platform_match(struct device *dev, struct device_driver *drv)
 	/* Then try ACPI style match */
 	if (acpi_driver_match_device(dev, drv))
 		return 1;
-
+#endif
 	/* Then try to match against the id table */
 	if (pdrv->id_table)
 		return platform_match_id(pdrv->id_table, pdev) != NULL;
@@ -1402,6 +1404,7 @@ static int platform_match(struct device *dev, struct device_driver *drv)
 static int platform_uevent(struct device *dev, struct kobj_uevent_env *env)
 {
 	struct platform_device	*pdev = to_platform_device(dev);
+#if 0
 	int rc;
 
 	/* Some devices have extra OF data and an OF-style MODALIAS */
@@ -1412,7 +1415,7 @@ static int platform_uevent(struct device *dev, struct kobj_uevent_env *env)
 	rc = acpi_device_uevent_modalias(dev, env);
 	if (rc != -ENODEV)
 		return rc;
-
+#endif
 	add_uevent_var(env, "MODALIAS=%s%s", PLATFORM_MODULE_PREFIX,
 			pdev->name);
 	return 0;
@@ -1433,11 +1436,11 @@ static int platform_probe(struct device *_dev)
 	 */
 	if (unlikely(drv->probe == platform_probe_fail))
 		return -ENXIO;
-
+#if 0
 	ret = of_clk_set_defaults(_dev->of_node, false);
 	if (ret < 0)
 		return ret;
-
+#endif
 	ret = dev_pm_domain_attach(_dev, true);
 	if (ret)
 		goto out;
@@ -1487,6 +1490,7 @@ static void platform_shutdown(struct device *_dev)
 
 int platform_dma_configure(struct device *dev)
 {
+#if 0
 	enum dev_dma_attr attr;
 	int ret = 0;
 
@@ -1498,6 +1502,9 @@ int platform_dma_configure(struct device *dev)
 	}
 
 	return ret;
+#endif
+
+	return 0;
 }
 
 static const struct dev_pm_ops platform_dev_pm_ops = {
@@ -1553,6 +1560,6 @@ int __init platform_bus_init(void)
 	error =  bus_register(&platform_bus_type);
 	if (error)
 		device_unregister(&platform_bus);
-	of_platform_register_reconfig_notifier();
+	// of_platform_register_reconfig_notifier();
 	return error;
 }

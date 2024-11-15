@@ -12,8 +12,6 @@
 #include <linux/notifier.h>
 #include <linux/pm.h>
 
-// #include <linux/jiffies.h>
-
 /* Runtime PM flag argument bits */
 #define RPM_ASYNC		0x01	/* Request is asynchronous */
 #define RPM_NOWAIT		0x02	/* Don't wait for concurrent

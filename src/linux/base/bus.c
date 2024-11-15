@@ -13,11 +13,11 @@
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/errno.h>
-#include <linux/slab.h>
+#include <linux/compat.h>
 #include <linux/init.h>
 #include <linux/string.h>
-#include <linux/mutex.h>
 #include <linux/sysfs.h>
+
 #include "base.h"
 #include "power/power.h"
 
@@ -599,7 +599,7 @@ int bus_add_driver(struct device_driver *drv)
 
 	pr_debug("bus: '%s': add driver %s\n", bus->name, drv->name);
 
-	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
+	priv = kzalloc(sizeof(*priv), 0);
 	if (!priv) {
 		error = -ENOMEM;
 		goto out_put_bus;
@@ -619,7 +619,7 @@ int bus_add_driver(struct device_driver *drv)
 		if (error)
 			goto out_unregister;
 	}
-	module_add_driver(drv->owner, drv);
+	// module_add_driver(drv->owner, drv);
 
 	error = driver_create_file(drv, &driver_attr_uevent);
 	if (error) {
@@ -673,7 +673,7 @@ void bus_remove_driver(struct device_driver *drv)
 	klist_remove(&drv->p->knode_bus);
 	pr_debug("bus: '%s': remove driver %s\n", drv->bus->name, drv->name);
 	driver_detach(drv);
-	module_remove_driver(drv);
+	// module_remove_driver(drv);
 	kobject_put(&drv->p->kobj);
 	bus_put(drv->bus);
 }
@@ -784,7 +784,7 @@ int bus_register(struct bus_type *bus)
 	struct subsys_private *priv;
 	struct lock_class_key *key = &bus->lock_key;
 
-	priv = kzalloc(sizeof(struct subsys_private), GFP_KERNEL);
+	priv = kzalloc(sizeof(struct subsys_private), 0);
 	if (!priv)
 		return -ENOMEM;
 
@@ -1084,7 +1084,7 @@ static int subsys_register(struct bus_type *subsys,
 	if (err < 0)
 		return err;
 
-	dev = kzalloc(sizeof(struct device), GFP_KERNEL);
+	dev = kzalloc(sizeof(struct device), 0);
 	if (!dev) {
 		err = -ENOMEM;
 		goto err_dev;

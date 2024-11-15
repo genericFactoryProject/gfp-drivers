@@ -10,9 +10,9 @@
 
 #ifndef _LINUX_NOTIFIER_H
 #define _LINUX_NOTIFIER_H
+
 #include <linux/errno.h>
-#include <linux/mutex.h>
-#include <linux/rwsem.h>
+#include <linux/compat.h>
 
 /*
  * Notifier chains are of four types:
@@ -80,12 +80,12 @@ struct raw_notifier_head {
 		.lock = __SPIN_LOCK_UNLOCKED(name.lock),	\
 		.head = NULL }
 #define BLOCKING_NOTIFIER_INIT(name) {				\
-		.rwsem = __RWSEM_INITIALIZER((name).rwsem),	\
+		\
 		.head = NULL }
 #define RAW_NOTIFIER_INIT(name)	{				\
 		.head = NULL }
 
-
+//.rwsem = __RWSEM_INITIALIZER((name).rwsem),
 
 #define ATOMIC_NOTIFIER_HEAD(name)				\
 	struct atomic_notifier_head name =			\

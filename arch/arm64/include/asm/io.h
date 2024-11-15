@@ -9,14 +9,8 @@
 #define __ASM_IO_H
 
 #include <linux/types.h>
-// #include <linux/pgtable.h>
-
 #include <asm/byteorder.h>
 #include <asm/barrier.h>
-// #include <asm/memory.h>
-// #include <asm/early_ioremap.h>
-#include <asm/alternative.h>
-#include <asm/cpufeature.h>
 
 /*
  * Generic IO read/write.  These perform native-endian accesses.
@@ -49,9 +43,7 @@ static inline void __raw_writeq(u64 val, volatile void __iomem *addr)
 static inline u8 __raw_readb(const volatile void __iomem *addr)
 {
 	u8 val;
-	asm volatile(ALTERNATIVE("ldrb %w0, [%1]",
-				 "ldarb %w0, [%1]",
-				 ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE)
+	asm volatile("ldrb %w0, [%1]"
 		     : "=r" (val) : "r" (addr));
 	return val;
 }
@@ -61,9 +53,7 @@ static inline u16 __raw_readw(const volatile void __iomem *addr)
 {
 	u16 val;
 
-	asm volatile(ALTERNATIVE("ldrh %w0, [%1]",
-				 "ldarh %w0, [%1]",
-				 ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE)
+	asm volatile("ldrh %w0, [%1]"
 		     : "=r" (val) : "r" (addr));
 	return val;
 }
@@ -72,9 +62,7 @@ static inline u16 __raw_readw(const volatile void __iomem *addr)
 static __always_inline u32 __raw_readl(const volatile void __iomem *addr)
 {
 	u32 val;
-	asm volatile(ALTERNATIVE("ldr %w0, [%1]",
-				 "ldar %w0, [%1]",
-				 ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE)
+	asm volatile("ldr %w0, [%1]"
 		     : "=r" (val) : "r" (addr));
 	return val;
 }
@@ -83,9 +71,7 @@ static __always_inline u32 __raw_readl(const volatile void __iomem *addr)
 static inline u64 __raw_readq(const volatile void __iomem *addr)
 {
 	u64 val;
-	asm volatile(ALTERNATIVE("ldr %0, [%1]",
-				 "ldar %0, [%1]",
-				 ARM64_WORKAROUND_DEVICE_LOAD_ACQUIRE)
+	asm volatile("ldr %0, [%1]"
 		     : "=r" (val) : "r" (addr));
 	return val;
 }
@@ -175,9 +161,9 @@ extern void __memset_io(volatile void __iomem *, int, size_t);
 extern void iounmap(volatile void __iomem *addr);
 extern void __iomem *ioremap_cache(phys_addr_t phys_addr, size_t size);
 
-//#define ioremap(addr, size)		__ioremap((addr), (size), __pgprot(PROT_DEVICE_nGnRE))
-//#define ioremap_wc(addr, size)		__ioremap((addr), (size), __pgprot(PROT_NORMAL_NC))
-//#define ioremap_np(addr, size)		__ioremap((addr), (size), __pgprot(PROT_DEVICE_nGnRnE))
+#define ioremap(addr, size)
+#define ioremap_wc(addr, size)
+#define ioremap_np(addr, size)
 
 /*
  * io{read,write}{16,32,64}be() macros

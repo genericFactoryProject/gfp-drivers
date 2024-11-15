@@ -16,8 +16,7 @@
 #include <linux/errno.h>
 #include <linux/kobject.h>
 #include <linux/mod_devicetable.h>
-#include <linux/spinlock.h>
-// #include <linux/topology.h>
+#include <linux/compat.h>
 #include <linux/notifier.h>
 #include <linux/property.h>
 #include <linux/list.h>
@@ -866,7 +865,7 @@ extern int of_node_to_nid(struct device_node *np);
 #else
 static inline int of_node_to_nid(struct device_node *device)
 {
-	return NUMA_NO_NODE;
+	return -1;
 }
 #endif
 

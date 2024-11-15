@@ -20,12 +20,10 @@
 #include <linux/sysfs.h>
 #include <linux/compiler.h>
 #include <linux/container_of.h>
-#include <linux/spinlock.h>
+#include <linux/compat.h>
 #include <linux/kref.h>
 #include <linux/kobject_ns.h>
-// #include <linux/wait.h>
 #include <linux/atomic.h>
-// #include <linux/workqueue.h>
 #include <linux/uidgid.h>
 
 #define UEVENT_HELPER_PATH_LEN		256
@@ -67,7 +65,7 @@ struct kobject {
 	struct kobject		*parent;
 	struct kset		*kset;
 	const struct kobj_type	*ktype;
-	struct kernfs_node	*sd; /* sysfs directory entry */
+	// struct kernfs_node	*sd; /* sysfs directory entry */
 	struct kref		kref;
 #ifdef CONFIG_DEBUG_KOBJECT_RELEASE
 	struct delayed_work	release;

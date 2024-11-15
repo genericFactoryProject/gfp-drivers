@@ -15,9 +15,7 @@
 #include <linux/string.h>
 #include <linux/kdev_t.h>
 #include <linux/err.h>
-#include <linux/slab.h>
-// #include <linux/blkdev.h>
-#include <linux/mutex.h>
+#include <linux/compat.h>
 #include <linux/printk.h>
 
 #include "base.h"
@@ -159,7 +157,7 @@ int __class_register(struct class *cls, struct lock_class_key *key)
 
 	pr_debug("device class '%s': registering\n", cls->name);
 
-	cp = kzalloc(sizeof(*cp), GFP_KERNEL);
+	cp = kzalloc(sizeof(*cp), 0);
 	if (!cp)
 		return -ENOMEM;
 	klist_init(&cp->klist_devices, klist_class_dev_get, klist_class_dev_put);
@@ -231,7 +229,7 @@ struct class *__class_create(struct module *owner, const char *name,
 	struct class *cls;
 	int retval;
 
-	cls = kzalloc(sizeof(*cls), GFP_KERNEL);
+	cls = kzalloc(sizeof(*cls), 0);
 	if (!cls) {
 		retval = -ENOMEM;
 		goto error;
@@ -361,8 +359,8 @@ int class_for_each_device(struct class *class, struct device *start,
 	if (!class)
 		return -EINVAL;
 	if (!class->p) {
-		//WARN(1, "%s called for class '%s' before it was initialized",
-		//     __func__, class->name);
+		WARN(1, "%s called for class '%s' before it was initialized",
+		     __func__, class->name);
 		return -EINVAL;
 	}
 
@@ -500,7 +498,7 @@ struct class_compat *class_compat_register(const char *name)
 {
 	struct class_compat *cls;
 
-	cls = kmalloc(sizeof(struct class_compat), GFP_KERNEL);
+	cls = kmalloc(sizeof(struct class_compat), 0);
 	if (!cls)
 		return NULL;
 	cls->kobj = kobject_create_and_add(name, &class_kset->kobj);

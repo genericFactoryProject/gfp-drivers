@@ -13,7 +13,8 @@
 
 #include <linux/compiler.h>
 #include <linux/types.h>
-// #include <linux/ratelimit.h>
+#include <linux/stdarg.h>
+#include <linux/printk.h>
 
 #ifndef dev_fmt
 #define dev_fmt(fmt) fmt

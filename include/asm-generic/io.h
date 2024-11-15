@@ -15,7 +15,6 @@
 #include <asm-generic/iomap.h>
 #endif
 
-#include <asm/mmiowb.h>
 #include <asm-generic/pci_iomap.h>
 
 #ifndef __io_br
@@ -42,7 +41,7 @@
 
 /* serialize device access against a spin_unlock, usually handled there. */
 #ifndef __io_aw
-#define __io_aw()      mmiowb_set_pending()
+#define __io_aw()      //
 #endif
 
 #ifndef __io_pbw
@@ -523,7 +522,7 @@ static inline void _outl(u32 value, unsigned long addr)
 }
 #endif
 
-#include <linux/logic_pio.h>
+// #include <linux/logic_pio.h>
 
 #ifndef inb
 #define inb _inb

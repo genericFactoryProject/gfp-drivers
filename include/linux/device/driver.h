@@ -97,8 +97,8 @@ struct device_driver {
 	const char		*name;
 	struct bus_type		*bus;
 
-	struct module		*owner;
-	const char		*mod_name;	/* used for built-in modules */
+	// struct module		*owner;
+	// const char		*mod_name;	/* used for built-in modules */
 
 	bool suppress_bind_attrs;	/* disables bind/unbind via sysfs */
 	enum probe_type probe_type;

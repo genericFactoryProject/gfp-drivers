@@ -10,7 +10,6 @@
 
 #include <linux/types.h>
 #include <linux/list.h>
-#include <linux/numa.h>
 #include <linux/device.h>
 
 typedef u64 async_cookie_t;
@@ -51,7 +50,8 @@ async_cookie_t async_schedule_node_domain(async_func_t func, void *data,
  */
 static inline async_cookie_t async_schedule(async_func_t func, void *data)
 {
-	return async_schedule_node(func, data, NUMA_NO_NODE);
+	//return async_schedule_node(func, data, -1);
+	return 0;
 }
 
 /**
@@ -69,7 +69,7 @@ static inline async_cookie_t
 async_schedule_domain(async_func_t func, void *data,
 		      struct async_domain *domain)
 {
-	return async_schedule_node_domain(func, data, NUMA_NO_NODE, domain);
+	return async_schedule_node_domain(func, data, -1, domain);
 }
 
 /**
@@ -87,7 +87,8 @@ async_schedule_domain(async_func_t func, void *data,
 static inline async_cookie_t
 async_schedule_dev(async_func_t func, struct device *dev)
 {
-	return async_schedule_node(func, dev, dev_to_node(dev));
+	//return async_schedule_node(func, dev, dev_to_node(dev));
+	return 0;
 }
 
 /**

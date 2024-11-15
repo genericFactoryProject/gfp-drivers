@@ -12,7 +12,7 @@
 #include <linux/device.h>
 #include <linux/module.h>
 #include <linux/errno.h>
-#include <linux/slab.h>
+#include <linux/compat.h>
 #include <linux/string.h>
 #include <linux/sysfs.h>
 #include "base.h"

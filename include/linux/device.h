@@ -19,17 +19,16 @@
 #include <linux/list.h>
 #include <linux/compiler.h>
 #include <linux/types.h>
-#include <linux/mutex.h>
 #include <linux/pm.h>
 #include <linux/atomic.h>
 #include <linux/uidgid.h>
-#include <linux/gfp.h>
+#include <linux/compat.h>
 #include <linux/overflow.h>
 #include <linux/device/bus.h>
 #include <linux/device/class.h>
 #include <linux/device/driver.h>
 #include <asm/device.h>
-#include <linux/numa.h>
+
 
 struct work_struct {};
 struct device;
@@ -169,7 +168,7 @@ typedef int (*dr_match_t)(struct device *dev, void *res, void *match_data);
 void *__devres_alloc_node(dr_release_t release, size_t size, gfp_t gfp,
 			  int nid, const char *name) __malloc;
 #define devres_alloc(release, size, gfp) \
-	__devres_alloc_node(release, size, gfp, NUMA_NO_NODE, #release)
+	__devres_alloc_node(release, size, gfp, -1, #release)
 #define devres_alloc_node(release, size, gfp, nid) \
 	__devres_alloc_node(release, size, gfp, nid, #release)
 
@@ -206,7 +205,7 @@ __printf(3, 4) char *devm_kasprintf(struct device *dev, gfp_t gfp,
 				    const char *fmt, ...) __malloc;
 static inline void *devm_kzalloc(struct device *dev, size_t size, gfp_t gfp)
 {
-	return devm_kmalloc(dev, size, gfp | __GFP_ZERO);
+	return devm_kmalloc(dev, size, gfp);
 }
 static inline void *devm_kmalloc_array(struct device *dev,
 				       size_t n, size_t size, gfp_t flags)
@@ -221,7 +220,7 @@ static inline void *devm_kmalloc_array(struct device *dev,
 static inline void *devm_kcalloc(struct device *dev,
 				 size_t n, size_t size, gfp_t flags)
 {
-	return devm_kmalloc_array(dev, n, size, flags | __GFP_ZERO);
+	return devm_kmalloc_array(dev, n, size, flags);
 }
 void devm_kfree(struct device *dev, const void *p);
 char *devm_kstrdup(struct device *dev, const char *s, gfp_t gfp) __malloc;
@@ -608,7 +607,7 @@ struct device_link {
 	u32 flags;
 	refcount_t rpm_active;
 	struct kref kref;
-	struct work_struct rm_work;
+	// struct work_struct rm_work;
 	bool supplier_preactivated; /* Owned by consumer probe. */
 };
 
@@ -665,7 +664,7 @@ static inline void set_dev_node(struct device *dev, int node)
 #else
 static inline int dev_to_node(struct device *dev)
 {
-	return NUMA_NO_NODE;
+	return -1;
 }
 static inline void set_dev_node(struct device *dev, int node)
 {
