@@ -681,12 +681,12 @@ done:
 	return ret;
 }
 
+#if 0
 /*
  * For initcall_debug, show the driver probe time.
  */
 static int really_probe_debug(struct device *dev, struct device_driver *drv)
 {
-#if 0
 	ktime_t calltime, rettime;
 	int ret;
 
@@ -696,9 +696,8 @@ static int really_probe_debug(struct device *dev, struct device_driver *drv)
 	pr_debug("probe of %s returned %d after %lld usecs\n",
 		 dev_name(dev), ret, ktime_us_delta(rettime, calltime));
 	return ret;
-#endif
-	return 0;
 }
+#endif
 
 /**
  * driver_probe_done
@@ -1083,7 +1082,7 @@ int device_driver_attach(struct device_driver *drv, struct device *dev)
 	return ret;
 }
 EXPORT_SYMBOL_GPL(device_driver_attach);
-
+#if 0
 static void __driver_attach_async_helper(void *_dev, async_cookie_t cookie)
 {
 	struct device *dev = _dev;
@@ -1099,7 +1098,7 @@ static void __driver_attach_async_helper(void *_dev, async_cookie_t cookie)
 
 	put_device(dev);
 }
-
+#endif
 static int __driver_attach(struct device *dev, void *data)
 {
 	struct device_driver *drv = data;

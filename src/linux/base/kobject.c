@@ -337,6 +337,7 @@ void kobject_init(struct kobject *kobj, const struct kobj_type *ktype)
 
 error:
 	pr_err("kobject (%p): %s\n", kobj, err_str);
+	(void) err_str;
 	// dump_stack();
 }
 EXPORT_SYMBOL(kobject_init);

@@ -429,9 +429,9 @@ static struct attribute *devlink_attrs[] = {
 };
 ATTRIBUTE_GROUPS(devlink);
 
+#if 0
 static void device_link_release_fn(struct work_struct *work)
 {
-#if 0
 	struct device_link *link = container_of(work, struct device_link, rm_work);
 
 	/* Ensure that all references to the link object have been dropped. */
@@ -442,8 +442,8 @@ static void device_link_release_fn(struct work_struct *work)
 	put_device(link->consumer);
 	put_device(link->supplier);
 	kfree(link);
-#endif
 }
+#endif
 
 static void devlink_dev_release(struct device *dev)
 {

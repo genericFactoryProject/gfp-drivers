@@ -225,6 +225,7 @@ out:
 		       devpath ?: "unknown device",
 		       msg ?: "failed to send uevent");
 		kfree(devpath);
+		(void)msg;
 	}
 	return r;
 }
