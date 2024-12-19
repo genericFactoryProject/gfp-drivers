@@ -566,7 +566,7 @@ static int add_probe_files(struct bus_type *bus)
 {
 	int retval;
 
-	retval = bus_create_  file(bus, &bus_attr_drivers_probe);
+	retval = bus_create_file(bus, &bus_attr_drivers_probe);
 	if (retval)
 		goto out;
 
