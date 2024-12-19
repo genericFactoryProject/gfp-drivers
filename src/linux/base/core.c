@@ -40,6 +40,9 @@ early_param("sysfs.deprecated", sysfs_deprecated_setup);
 /* Device links support. */
 static LIST_HEAD(deferred_sync);
 static unsigned int defer_sync_state_count = 1;
+
+/* (1) firmware node link. */
+
 static DEFINE_MUTEX(fwnode_link_lock);
 static bool fw_devlink_is_permissive(void);
 static bool fw_devlink_drv_reg_done;
@@ -168,6 +171,7 @@ void fw_devlink_purge_absent_suppliers(struct fwnode_handle *fwnode)
 }
 EXPORT_SYMBOL_GPL(fw_devlink_purge_absent_suppliers);
 
+/* (2) device node link. */
 
 static DECLARE_RWSEM(device_links_lock);
 
@@ -568,6 +572,8 @@ postcore_initcall(devlink_class_init);
 
 #define DL_ADD_VALID_FLAGS (DL_MANAGED_LINK_FLAGS | DL_FLAG_STATELESS | \
 			    DL_FLAG_PM_RUNTIME | DL_FLAG_RPM_ACTIVE)
+
+/* (2.1) device_link_add,device_link_del,device_link_remove */
 
 /**
  * device_link_add - Create a link between two devices.
@@ -1498,6 +1504,8 @@ static void device_links_purge(struct device *dev)
 	device_links_write_unlock();
 }
 
+/* (2.2) firmware and device node link. */
+
 #define FW_DEVLINK_FLAGS_PERMISSIVE	(DL_FLAG_INFERRED | \
 					 DL_FLAG_SYNC_STATE_ONLY)
 #define FW_DEVLINK_FLAGS_ON		(DL_FLAG_INFERRED | \
@@ -1942,6 +1950,8 @@ static void fw_devlink_link_device(struct device *dev)
 }
 
 /* Device links support end. */
+
+/* (3) device sysfs */
 
 int (*platform_notify)(struct device *dev) = NULL;
 int (*platform_notify_remove)(struct device *dev) = NULL;
@@ -2778,6 +2788,8 @@ static void klist_children_put(struct klist_node *n)
 
 	put_device(dev);
 }
+
+/* (4) device_register,device_unregister */
 
 /**
  * device_initialize - init device structure.
@@ -3761,6 +3773,8 @@ struct device *device_find_child_by_name(struct device *parent,
 }
 EXPORT_SYMBOL_GPL(device_find_child_by_name);
 
+/* (5) devices_init,device_create */
+
 int __init devices_init(void)
 {
 	devices_kset = kset_create_and_add("devices", &device_uevent_ops, NULL);
@@ -4471,6 +4485,7 @@ void device_shutdown(void)
 	spin_unlock(&devices_kset->list_lock);
 }
 
+/* (6) misc */
 
 /**
  * dev_err_probe - probe error check and log helper

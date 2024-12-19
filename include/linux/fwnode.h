@@ -155,6 +155,9 @@ struct fwnode_operations {
 		   (fwnode)->ops->op(fwnode, ## __VA_ARGS__) : -ENXIO) : \
 	 -EINVAL)
 
+/* of_node_init+of_fwnode_ops */
+
+
 #define fwnode_call_bool_op(fwnode, op, ...)		\
 	(fwnode_has_op(fwnode, op) ?			\
 	 (fwnode)->ops->op(fwnode, ## __VA_ARGS__) : false)

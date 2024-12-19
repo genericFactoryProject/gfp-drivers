@@ -161,9 +161,9 @@ extern void __memset_io(volatile void __iomem *, int, size_t);
 extern void iounmap(volatile void __iomem *addr);
 extern void __iomem *ioremap_cache(phys_addr_t phys_addr, size_t size);
 
-#define ioremap(addr, size)
-#define ioremap_wc(addr, size)
-#define ioremap_np(addr, size)
+#define ioremap(addr, size) 0
+#define ioremap_wc(addr, size) 0
+#define ioremap_np(addr, size) 0
 
 /*
  * io{read,write}{16,32,64}be() macros

@@ -5,6 +5,10 @@
 
 #include <linux/compat.h>
 
+/* notifer trigger
+ * 1. call - sync
+ * 2. event - async
+ */
 
 /*
  *	Notifier list for kernel code which wants to be called

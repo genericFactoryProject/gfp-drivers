@@ -20,6 +20,9 @@
 
 #include "base.h"
 
+
+/* class ==? bus */
+
 #define to_class_attr(_attr) container_of(_attr, struct class_attribute, attr)
 
 static ssize_t class_attr_show(struct kobject *kobj, struct attribute *attr,

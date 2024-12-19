@@ -21,6 +21,11 @@
 #include "base.h"
 #include "power/power.h"
 
+/* (1) bus sysfs */
+
+/* kobject/kset -> sysfs */
+/* klist/klist_node -> device/driver/bus */
+
 /* /sys/devices/system */
 static struct kset *system_kset;
 
@@ -252,6 +257,8 @@ static ssize_t drivers_probe_store(struct bus_type *bus,
 	put_device(dev);
 	return err;
 }
+
+/* (2) bus : device */
 
 static struct device *next_device(struct klist_iter *i)
 {
@@ -530,6 +537,9 @@ void bus_remove_device(struct device *dev)
 	bus_put(dev->bus);
 }
 
+/* (3) bus sysfs driver */
+
+
 static int __must_check add_bind_files(struct device_driver *drv)
 {
 	int ret;
@@ -556,7 +566,7 @@ static int add_probe_files(struct bus_type *bus)
 {
 	int retval;
 
-	retval = bus_create_file(bus, &bus_attr_drivers_probe);
+	retval = bus_create_  file(bus, &bus_attr_drivers_probe);
 	if (retval)
 		goto out;
 
@@ -582,6 +592,8 @@ static ssize_t uevent_store(struct device_driver *drv, const char *buf,
 	return rc ? rc : count;
 }
 static DRIVER_ATTR_WO(uevent);
+
+/* (4) bus : driver */
 
 /**
  * bus_add_driver - Add a driver to the bus.
@@ -694,6 +706,8 @@ static int __must_check bus_rescan_devices_helper(struct device *dev,
 	return ret < 0 ? ret : 0;
 }
 
+/* (5) bus sysfs device */
+
 /**
  * bus_rescan_devices - rescan devices on the bus for possible drivers
  * @bus: the bus to scan.
@@ -769,6 +783,9 @@ static ssize_t bus_uevent_store(struct bus_type *bus,
  */
 static struct bus_attribute bus_attr_uevent = __ATTR(uevent, 0200, NULL,
 						     bus_uevent_store);
+
+
+/* (6) bus register */
 
 /**
  * bus_register - register a driver-core subsystem
@@ -950,6 +967,8 @@ void bus_sort_breadthfirst(struct bus_type *bus,
 	spin_unlock(&device_klist->k_lock);
 }
 EXPORT_SYMBOL_GPL(bus_sort_breadthfirst);
+
+/* (7) misc subsys */
 
 /**
  * subsys_dev_iter_init - initialize subsys device iterator

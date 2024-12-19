@@ -21,6 +21,7 @@
 
 #include <asm/io.h>
 
+/* device address space */
 
 struct resource ioport_resource = {
 	.name	= "PCI IO",
@@ -614,7 +615,8 @@ static int __find_resource(struct resource *root, struct resource *old,
 			}
 		}
 
-next:		if (!this || this->end == root->end)
+next:
+		if (!this || this->end == root->end)
 			break;
 
 		if (this != old)

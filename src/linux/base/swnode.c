@@ -15,6 +15,23 @@
 
 #include "base.h"
 
+/* software node and fwnode -> device node */
+/* fwnode -> ACPI(x86)/OF(ARM) device node */
+
+/*
+	Software node is a :c:type:`struct fwnode_handle <fwnode_handle>` type,
+	analogous to the ACPI and DT firmware nodes except that the software nodes are
+	created in kernel code (hence the name "software" node). The software nodes can
+	be used to complement fwnodes representing real firmware nodes when they are
+	incomplete, for example missing device properties, and to supply the primary
+	fwnode when the firmware lacks hardware description for a device completely.
+
+	NOTE! The primary hardware description should always come from either ACPI
+	tables or DT. Describing an entire system with software nodes, though possible,
+	is not acceptable! The software nodes should only complement the primary
+	hardware description.
+*/
+
 struct swnode {
 	struct kobject kobj;
 	struct fwnode_handle fwnode;

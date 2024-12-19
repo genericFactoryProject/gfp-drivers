@@ -459,6 +459,8 @@ static void driver_sysfs_remove(struct device *dev)
 	}
 }
 
+/* (1) device -> driver(bind) */
+
 /**
  * device_bind_driver - bind a driver to one device.
  * @dev: device.
@@ -732,6 +734,9 @@ void wait_for_device_probe(void)
 	//async_synchronize_full();
 }
 EXPORT_SYMBOL_GPL(wait_for_device_probe);
+
+/* (2) driver -> deivce (probe) */
+
 
 static int __driver_probe_device(struct device_driver *drv, struct device *dev)
 {

@@ -15,6 +15,8 @@
 #include <linux/ioport.h>
 
 
+/* fwnode ACPI/OF -> property */
+
 struct fwnode_handle *dev_fwnode(struct device *dev)
 {
 	return IS_ENABLED(CONFIG_OF) && dev->of_node ?
