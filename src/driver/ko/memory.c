@@ -1,1 +1,0 @@
-/* memory mangement driver */

@@ -3,6 +3,6 @@
 #define _INCLUDE_LIBFDT_H_
 
 #include <linux/libfdt_env.h>
-#include "../../../lib/src/libfdt/libfdt.h"
+#include "../../../lib/src/linux/libfdt/libfdt.h"
 
 #endif /* _INCLUDE_LIBFDT_H_ */

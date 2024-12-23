@@ -1,0 +1,2 @@
+/* as platform */
+/* special klink */
