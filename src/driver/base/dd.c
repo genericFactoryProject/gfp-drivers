@@ -375,7 +375,7 @@ static void driver_bound(struct device *dev)
 {
 	if (device_is_bound(dev)) {
 		pr_warn("%s: device %s already bound\n",
-			__func__, kobject_name(&dev->kobj));
+			__func__, dev_name(dev));
 		return;
 	}
 
@@ -391,72 +391,12 @@ static void driver_bound(struct device *dev)
 	 * Make sure the device is no longer in one of the deferred lists and
 	 * kick off retrying all pending devices
 	 */
-	//driver_deferred_probe_del(dev);
-	//driver_deferred_probe_trigger();
+	// driver_deferred_probe_del(dev);
+	// driver_deferred_probe_trigger();
 
 	if (dev->bus)
 		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
 					     BUS_NOTIFY_BOUND_DRIVER, dev);
-
-	kobject_uevent(&dev->kobj, KOBJ_BIND);
-}
-
-static ssize_t coredump_store(struct device *dev, struct device_attribute *attr,
-			    const char *buf, size_t count)
-{
-	device_lock(dev);
-	dev->driver->coredump(dev);
-	device_unlock(dev);
-
-	return count;
-}
-static DEVICE_ATTR_WO(coredump);
-
-static int driver_sysfs_add(struct device *dev)
-{
-	int ret;
-
-	if (dev->bus)
-		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
-					     BUS_NOTIFY_BIND_DRIVER, dev);
-
-	ret = sysfs_create_link(&dev->driver->p->kobj, &dev->kobj,
-				kobject_name(&dev->kobj));
-	if (ret)
-		goto fail;
-
-	ret = sysfs_create_link(&dev->kobj, &dev->driver->p->kobj,
-				"driver");
-	if (ret)
-		goto rm_dev;
-
-	if (!IS_ENABLED(CONFIG_DEV_COREDUMP) || !dev->driver->coredump)
-		return 0;
-
-	ret = device_create_file(dev, &dev_attr_coredump);
-	if (!ret)
-		return 0;
-
-	sysfs_remove_link(&dev->kobj, "driver");
-
-rm_dev:
-	sysfs_remove_link(&dev->driver->p->kobj,
-			  kobject_name(&dev->kobj));
-
-fail:
-	return ret;
-}
-
-static void driver_sysfs_remove(struct device *dev)
-{
-	struct device_driver *drv = dev->driver;
-
-	if (drv) {
-		if (drv->coredump)
-			device_remove_file(dev, &dev_attr_coredump);
-		sysfs_remove_link(&drv->p->kobj, kobject_name(&dev->kobj));
-		sysfs_remove_link(&dev->kobj, "driver");
-	}
 }
 
 /* (1) device -> driver(bind) */
@@ -478,35 +418,15 @@ static void driver_sysfs_remove(struct device *dev)
  */
 int device_bind_driver(struct device *dev)
 {
-	int ret;
+	device_links_force_bind(dev);
+	driver_bound(dev);
 
-	ret = driver_sysfs_add(dev);
-	if (!ret) {
-		device_links_force_bind(dev);
-		driver_bound(dev);
-	}
-	else if (dev->bus)
-		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
-					     BUS_NOTIFY_DRIVER_NOT_BOUND, dev);
-	return ret;
+	return 0;
 }
 EXPORT_SYMBOL_GPL(device_bind_driver);
 
 static atomic_t probe_count = ATOMIC_INIT(0);
 // static DECLARE_WAIT_QUEUE_HEAD(probe_waitqueue);
-
-static ssize_t state_synced_show(struct device *dev,
-				 struct device_attribute *attr, char *buf)
-{
-	bool val;
-
-	device_lock(dev);
-	val = dev->state_synced;
-	device_unlock(dev);
-
-	return sysfs_emit(buf, "%u\n", val);
-}
-static DEVICE_ATTR_RO(state_synced);
 
 static void device_unbind_cleanup(struct device *dev)
 {
@@ -524,9 +444,6 @@ static void device_unbind_cleanup(struct device *dev)
 
 static void device_remove(struct device *dev)
 {
-	device_remove_file(dev, &dev_attr_state_synced);
-	device_remove_groups(dev, dev->driver->dev_groups);
-
 	if (dev->bus && dev->bus->remove)
 		dev->bus->remove(dev);
 	else if (dev->driver->remove)
@@ -566,8 +483,7 @@ static int call_driver_probe(struct device *dev, struct device_driver *drv)
 
 static int really_probe(struct device *dev, struct device_driver *drv)
 {
-	bool test_remove = IS_ENABLED(CONFIG_DEBUG_TEST_DRIVER_REMOVE) &&
-			   !drv->suppress_bind_attrs;
+	bool test_remove = IS_ENABLED(CONFIG_DEBUG_TEST_DRIVER_REMOVE);
 	int ret;
 
 #if 0
@@ -602,20 +518,13 @@ re_probe:
 	ret = pinctrl_bind_pins(dev);
 	if (ret)
 		goto pinctrl_bind_failed;
-#endif
 
 	if (dev->bus->dma_configure) {
 		ret = dev->bus->dma_configure(dev);
 		if (ret)
 			goto pinctrl_bind_failed;
 	}
-
-	ret = driver_sysfs_add(dev);
-	if (ret) {
-		pr_err("%s: driver_sysfs_add(%s) failed\n",
-		       __func__, dev_name(dev));
-		goto sysfs_failed;
-	}
+#endif
 
 	if (dev->pm_domain && dev->pm_domain->activate) {
 		ret = dev->pm_domain->activate(dev);
@@ -633,25 +542,10 @@ re_probe:
 		goto probe_failed;
 	}
 
-	ret = device_add_groups(dev, drv->dev_groups);
-	if (ret) {
-		dev_err(dev, "device_add_groups() failed\n");
-		goto dev_groups_failed;
-	}
-
-	if (dev_has_sync_state(dev)) {
-		ret = device_create_file(dev, &dev_attr_state_synced);
-		if (ret) {
-			dev_err(dev, "state_synced sysfs add failed\n");
-			goto dev_sysfs_state_synced_failed;
-		}
-	}
-
 	if (test_remove) {
 		test_remove = false;
 
 		device_remove(dev);
-		driver_sysfs_remove(dev);
 		device_unbind_cleanup(dev);
 
 		goto re_probe;
@@ -667,16 +561,7 @@ re_probe:
 		 drv->bus->name, __func__, dev_name(dev), drv->name);
 	goto done;
 
-dev_sysfs_state_synced_failed:
-dev_groups_failed:
-	device_remove(dev);
 probe_failed:
-	driver_sysfs_remove(dev);
-sysfs_failed:
-	if (dev->bus)
-		blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
-					     BUS_NOTIFY_DRIVER_NOT_BOUND, dev);
-pinctrl_bind_failed:
 	device_links_no_driver(dev);
 	device_unbind_cleanup(dev);
 done:
@@ -736,7 +621,6 @@ void wait_for_device_probe(void)
 EXPORT_SYMBOL_GPL(wait_for_device_probe);
 
 /* (2) driver -> deivce (probe) */
-
 
 static int __driver_probe_device(struct device_driver *drv, struct device *dev)
 {
@@ -1202,8 +1086,6 @@ static void __device_release_driver(struct device *dev, struct device *parent)
 			}
 		}
 
-		driver_sysfs_remove(dev);
-
 		if (dev->bus)
 			blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
 						     BUS_NOTIFY_UNBIND_DRIVER,
@@ -1222,8 +1104,6 @@ static void __device_release_driver(struct device *dev, struct device *parent)
 			blocking_notifier_call_chain(&dev->bus->p->bus_notifier,
 						     BUS_NOTIFY_UNBOUND_DRIVER,
 						     dev);
-
-		kobject_uevent(&dev->kobj, KOBJ_UNBIND);
 	}
 }
 

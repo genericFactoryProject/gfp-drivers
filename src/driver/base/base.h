@@ -37,29 +37,23 @@
  * bus_type/class to be statically allocated safely.  Nothing outside of the
  * driver core should ever touch these fields.
  */
-struct subsys_private {
-	struct kset subsys;
-	struct kset *devices_kset;
-	struct list_head interfaces;
-	struct mutex mutex;
+struct subsys_private { //bus_register[*]
+	struct list_head interfaces;// [*]
+	struct mutex mutex;// [*]
 
-	struct kset *drivers_kset;
-	struct klist klist_devices;
-	struct klist klist_drivers;
-	struct blocking_notifier_head bus_notifier;
-	unsigned int drivers_autoprobe:1;
-	struct bus_type *bus;
+	struct klist klist_devices;// [*]
+	struct klist klist_drivers;// [*]
+	struct blocking_notifier_head bus_notifier;// [*] bus_register_notifier
+	unsigned int drivers_autoprobe:1;// [*]
+	struct bus_type *bus; // [*]
 
-	struct kset glue_dirs;
 	struct class *class;
 };
 #define to_subsys_private(obj) container_of(obj, struct subsys_private, subsys.kobj)
 
 struct driver_private {
-	struct kobject kobj;
 	struct klist klist_devices;
 	struct klist_node knode_bus;
-	//struct module_kobject *mkobj;
 	struct device_driver *driver;
 };
 #define to_driver(obj) container_of(obj, struct driver_private, kobj)

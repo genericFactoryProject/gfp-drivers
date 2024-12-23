@@ -35,7 +35,6 @@ struct device;
 struct device_private;
 struct device_driver;
 struct driver_private;
-struct module;
 struct class;
 struct subsys_private;
 struct device_node;
@@ -67,13 +66,7 @@ struct subsys_interface {
 	void (*remove_dev)(struct device *dev, struct subsys_interface *sif);
 };
 
-int subsys_interface_register(struct subsys_interface *sif);
-void subsys_interface_unregister(struct subsys_interface *sif);
 
-int subsys_system_register(struct bus_type *subsys,
-			   const struct attribute_group **groups);
-int subsys_virtual_register(struct bus_type *subsys,
-			    const struct attribute_group **groups);
 
 /*
  * The type of device, "struct device" is embedded in. A class
@@ -86,80 +79,11 @@ int subsys_virtual_register(struct bus_type *subsys,
  */
 struct device_type {
 	const char *name;
-	const struct attribute_group **groups;
-	int (*uevent)(struct device *dev, struct kobj_uevent_env *env);
-	char *(*devnode)(struct device *dev, umode_t *mode,
-			 kuid_t *uid, kgid_t *gid);
+
 	void (*release)(struct device *dev);
 
 	const struct dev_pm_ops *pm;
 };
-
-/* interface for exporting device attributes */
-struct device_attribute {
-	struct attribute	attr;
-	ssize_t (*show)(struct device *dev, struct device_attribute *attr,
-			char *buf);
-	ssize_t (*store)(struct device *dev, struct device_attribute *attr,
-			 const char *buf, size_t count);
-};
-
-struct dev_ext_attribute {
-	struct device_attribute attr;
-	void *var;
-};
-
-ssize_t device_show_ulong(struct device *dev, struct device_attribute *attr,
-			  char *buf);
-ssize_t device_store_ulong(struct device *dev, struct device_attribute *attr,
-			   const char *buf, size_t count);
-ssize_t device_show_int(struct device *dev, struct device_attribute *attr,
-			char *buf);
-ssize_t device_store_int(struct device *dev, struct device_attribute *attr,
-			 const char *buf, size_t count);
-ssize_t device_show_bool(struct device *dev, struct device_attribute *attr,
-			char *buf);
-ssize_t device_store_bool(struct device *dev, struct device_attribute *attr,
-			 const char *buf, size_t count);
-
-#define DEVICE_ATTR(_name, _mode, _show, _store) \
-	struct device_attribute dev_attr_##_name = __ATTR(_name, _mode, _show, _store)
-#define DEVICE_ATTR_PREALLOC(_name, _mode, _show, _store) \
-	struct device_attribute dev_attr_##_name = \
-		__ATTR_PREALLOC(_name, _mode, _show, _store)
-#define DEVICE_ATTR_RW(_name) \
-	struct device_attribute dev_attr_##_name = __ATTR_RW(_name)
-#define DEVICE_ATTR_ADMIN_RW(_name) \
-	struct device_attribute dev_attr_##_name = __ATTR_RW_MODE(_name, 0600)
-#define DEVICE_ATTR_RO(_name) \
-	struct device_attribute dev_attr_##_name = __ATTR_RO(_name)
-#define DEVICE_ATTR_ADMIN_RO(_name) \
-	struct device_attribute dev_attr_##_name = __ATTR_RO_MODE(_name, 0400)
-#define DEVICE_ATTR_WO(_name) \
-	struct device_attribute dev_attr_##_name = __ATTR_WO(_name)
-#define DEVICE_ULONG_ATTR(_name, _mode, _var) \
-	struct dev_ext_attribute dev_attr_##_name = \
-		{ __ATTR(_name, _mode, device_show_ulong, device_store_ulong), &(_var) }
-#define DEVICE_INT_ATTR(_name, _mode, _var) \
-	struct dev_ext_attribute dev_attr_##_name = \
-		{ __ATTR(_name, _mode, device_show_int, device_store_int), &(_var) }
-#define DEVICE_BOOL_ATTR(_name, _mode, _var) \
-	struct dev_ext_attribute dev_attr_##_name = \
-		{ __ATTR(_name, _mode, device_show_bool, device_store_bool), &(_var) }
-#define DEVICE_ATTR_IGNORE_LOCKDEP(_name, _mode, _show, _store) \
-	struct device_attribute dev_attr_##_name =		\
-		__ATTR_IGNORE_LOCKDEP(_name, _mode, _show, _store)
-
-int device_create_file(struct device *device,
-		       const struct device_attribute *entry);
-void device_remove_file(struct device *dev,
-			const struct device_attribute *attr);
-bool device_remove_file_self(struct device *dev,
-			     const struct device_attribute *attr);
-int __must_check device_create_bin_file(struct device *dev,
-					const struct bin_attribute *attr);
-void device_remove_bin_file(struct device *dev,
-			    const struct bin_attribute *attr);
 
 /* device resource management */
 typedef void (*dr_release_t)(struct device *dev, void *res);
@@ -483,7 +407,6 @@ struct dev_msi_info {
  * a higher-level representation of the device.
  */
 struct device {
-	struct kobject kobj;
 	struct device		*parent;
 
 	struct device_private	*p;
@@ -560,7 +483,6 @@ struct device {
 	struct list_head	devres_head;
 
 	struct class		*class;
-	const struct attribute_group **groups;	/* optional groups */
 
 	void	(*release)(struct device *dev);
 	struct iommu_group	*iommu_group;
@@ -611,11 +533,6 @@ struct device_link {
 	bool supplier_preactivated; /* Owned by consumer probe. */
 };
 
-static inline struct device *kobj_to_dev(struct kobject *kobj)
-{
-	return container_of(kobj, struct device, kobj);
-}
-
 /**
  * device_iommu_mapped - Returns true when the device DMA is translated
  *			 by an IOMMU
@@ -635,7 +552,7 @@ static inline const char *dev_name(const struct device *dev)
 	if (dev->init_name)
 		return dev->init_name;
 
-	return kobject_name(&dev->kobj);
+	return NULL; // kobject_name(&dev->kobj);
 }
 
 /**
@@ -702,19 +619,9 @@ static inline struct pm_subsys_data *dev_to_psd(struct device *dev)
 	return dev ? dev->power.subsys_data : NULL;
 }
 
-static inline unsigned int dev_get_uevent_suppress(const struct device *dev)
-{
-	return dev->kobj.uevent_suppress;
-}
-
-static inline void dev_set_uevent_suppress(struct device *dev, int val)
-{
-	dev->kobj.uevent_suppress = val;
-}
-
 static inline int device_is_registered(struct device *dev)
 {
-	return dev->kobj.state_in_sysfs;
+	return 0; // TODO
 }
 
 static inline void device_enable_async_suspend(struct device *dev)
@@ -839,9 +746,6 @@ struct device *device_find_child_by_name(struct device *parent,
 int device_rename(struct device *dev, const char *new_name);
 int device_move(struct device *dev, struct device *new_parent,
 		enum dpm_order dpm_order);
-int device_change_owner(struct device *dev, kuid_t kuid, kgid_t kgid);
-const char *device_get_devnode(struct device *dev, umode_t *mode, kuid_t *uid,
-			       kgid_t *gid, const char **tmp);
 int device_is_dependent(struct device *dev, void *target);
 
 static inline bool device_supports_offline(struct device *dev)
@@ -869,7 +773,7 @@ static inline int dev_num_vf(struct device *dev)
 /*
  * Root device objects for grouping under /sys/devices
  */
-struct device *__root_device_register(const char *name, struct module *owner);
+struct device *__root_device_register(const char *name);
 
 /* This is a macro to avoid include problems with THIS_MODULE */
 #define root_device_register(name) \
@@ -900,44 +804,11 @@ bool device_is_bound(struct device *dev);
 /*
  * Easy functions for dynamically creating devices on the fly
  */
-__printf(5, 6) struct device *
+struct device *
 device_create(struct class *cls, struct device *parent, dev_t devt,
-	      void *drvdata, const char *fmt, ...);
-__printf(6, 7) struct device *
-device_create_with_groups(struct class *cls, struct device *parent, dev_t devt,
-			  void *drvdata, const struct attribute_group **groups,
-			  const char *fmt, ...);
+	      void *drvdata);
+
 void device_destroy(struct class *cls, dev_t devt);
-
-int __must_check device_add_groups(struct device *dev,
-				   const struct attribute_group **groups);
-void device_remove_groups(struct device *dev,
-			  const struct attribute_group **groups);
-
-static inline int __must_check device_add_group(struct device *dev,
-					const struct attribute_group *grp)
-{
-	const struct attribute_group *groups[] = { grp, NULL };
-
-	return device_add_groups(dev, groups);
-}
-
-static inline void device_remove_group(struct device *dev,
-				       const struct attribute_group *grp)
-{
-	const struct attribute_group *groups[] = { grp, NULL };
-
-	return device_remove_groups(dev, groups);
-}
-
-int __must_check devm_device_add_groups(struct device *dev,
-					const struct attribute_group **groups);
-void devm_device_remove_groups(struct device *dev,
-			       const struct attribute_group **groups);
-int __must_check devm_device_add_group(struct device *dev,
-				       const struct attribute_group *grp);
-void devm_device_remove_group(struct device *dev,
-			      const struct attribute_group *grp);
 
 /*
  * Platform "fixup" functions - allow the platform to have their say
@@ -958,11 +829,6 @@ struct device *get_device(struct device *dev);
 void put_device(struct device *dev);
 bool kill_device(struct device *dev);
 
-#ifdef CONFIG_DEVTMPFS
-int devtmpfs_mount(void);
-#else
-static inline int devtmpfs_mount(void) { return 0; }
-#endif
 
 /* drivers/base/power/shutdown.c */
 void device_shutdown(void);
@@ -980,17 +846,5 @@ void device_links_supplier_sync_state_resume(void);
 
 extern __printf(3, 4)
 int dev_err_probe(const struct device *dev, int err, const char *fmt, ...);
-
-/* Create alias, so I can be autoloaded. */
-#define MODULE_ALIAS_CHARDEV(major,minor) \
-	MODULE_ALIAS("char-major-" __stringify(major) "-" __stringify(minor))
-#define MODULE_ALIAS_CHARDEV_MAJOR(major) \
-	MODULE_ALIAS("char-major-" __stringify(major) "-*")
-
-#ifdef CONFIG_SYSFS_DEPRECATED
-extern long sysfs_deprecated;
-#else
-#define sysfs_deprecated 0
-#endif
 
 #endif /* _DEVICE_H_ */

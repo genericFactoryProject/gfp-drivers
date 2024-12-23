@@ -10,7 +10,6 @@
 
 #include <linux/device/driver.h>
 #include <linux/device.h>
-#include <linux/module.h>
 #include <linux/errno.h>
 #include <linux/compat.h>
 #include <linux/string.h>
@@ -94,49 +93,6 @@ struct device *driver_find_device(struct device_driver *drv,
 EXPORT_SYMBOL_GPL(driver_find_device);
 
 /**
- * driver_create_file - create sysfs file for driver.
- * @drv: driver.
- * @attr: driver attribute descriptor.
- */
-int driver_create_file(struct device_driver *drv,
-		       const struct driver_attribute *attr)
-{
-	int error;
-
-	if (drv)
-		error = sysfs_create_file(&drv->p->kobj, &attr->attr);
-	else
-		error = -EINVAL;
-	return error;
-}
-EXPORT_SYMBOL_GPL(driver_create_file);
-
-/**
- * driver_remove_file - remove sysfs file for driver.
- * @drv: driver.
- * @attr: driver attribute descriptor.
- */
-void driver_remove_file(struct device_driver *drv,
-			const struct driver_attribute *attr)
-{
-	if (drv)
-		sysfs_remove_file(&drv->p->kobj, &attr->attr);
-}
-EXPORT_SYMBOL_GPL(driver_remove_file);
-
-int driver_add_groups(struct device_driver *drv,
-		      const struct attribute_group **groups)
-{
-	return sysfs_create_groups(&drv->p->kobj, groups);
-}
-
-void driver_remove_groups(struct device_driver *drv,
-			  const struct attribute_group **groups)
-{
-	sysfs_remove_groups(&drv->p->kobj, groups);
-}
-
-/**
  * driver_register - register driver with bus
  * @drv: driver to register
  *
@@ -169,14 +125,6 @@ int driver_register(struct device_driver *drv)
 	}
 
 	ret = bus_add_driver(drv);
-	if (ret)
-		return ret;
-	ret = driver_add_groups(drv, drv->groups);
-	if (ret) {
-		bus_remove_driver(drv);
-		return ret;
-	}
-	kobject_uevent(&drv->p->kobj, KOBJ_ADD);
 
 	return ret;
 }
@@ -191,10 +139,9 @@ EXPORT_SYMBOL_GPL(driver_register);
 void driver_unregister(struct device_driver *drv)
 {
 	if (!drv || !drv->p) {
-		//WARN(1, "Unexpected driver unregister!\n");
+		WARN(1, "Unexpected driver unregister!\n");
 		return;
 	}
-	driver_remove_groups(drv, drv->groups);
 	bus_remove_driver(drv);
 }
 EXPORT_SYMBOL_GPL(driver_unregister);
@@ -213,15 +160,7 @@ EXPORT_SYMBOL_GPL(driver_unregister);
  */
 struct device_driver *driver_find(const char *name, struct bus_type *bus)
 {
-	struct kobject *k = kset_find_obj(bus->p->drivers_kset, name);
-	struct driver_private *priv;
-
-	if (k) {
-		/* Drop reference added by kset_find_obj() */
-		kobject_put(k);
-		priv = to_driver(k);
-		return priv->driver;
-	}
+	// TODO
 	return NULL;
 }
 EXPORT_SYMBOL_GPL(driver_find);

@@ -151,7 +151,7 @@ static inline void device_pm_check_callbacks(struct device *dev) {}
 
 static inline bool device_pm_initialized(struct device *dev)
 {
-	return device_is_registered(dev);
+	return 0;
 }
 
 static inline int pm_wakeup_source_sysfs_add(struct device *parent)
