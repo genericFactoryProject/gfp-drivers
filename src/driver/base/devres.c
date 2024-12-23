@@ -11,7 +11,6 @@
 
 #include "base.h"
 
-
 struct devres_node {
 	struct list_head		entry;
 	dr_release_t			release;

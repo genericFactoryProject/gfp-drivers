@@ -53,24 +53,11 @@ struct fwnode_handle;
  */
 struct class {
 	const char		*name;
-	struct module		*owner;
-
-	const struct attribute_group	**class_groups;
-	const struct attribute_group	**dev_groups;
-	struct kobject			*dev_kobj;
-
-	int (*dev_uevent)(struct device *dev, struct kobj_uevent_env *env);
-	char *(*devnode)(struct device *dev, umode_t *mode);
 
 	void (*class_release)(struct class *class);
 	void (*dev_release)(struct device *dev);
 
 	int (*shutdown_pre)(struct device *dev);
-
-	const struct kobj_ns_type_operations *ns_type;
-	const void *(*namespace)(struct device *dev);
-
-	void (*get_ownership)(struct device *dev, kuid_t *uid, kgid_t *gid);
 
 	const struct dev_pm_ops *pm;
 
@@ -249,7 +236,7 @@ struct class_interface {
 extern int __must_check class_interface_register(struct class_interface *);
 extern void class_interface_unregister(struct class_interface *);
 
-extern struct class * __must_check __class_create(struct module *owner,
+extern struct class * __must_check __class_create(
 						  const char *name,
 						  struct lock_class_key *key);
 extern void class_destroy(struct class *cls);
@@ -270,10 +257,10 @@ extern void class_destroy(struct class *cls);
  * Note, the pointer created here is to be destroyed when finished by
  * making a call to class_destroy().
  */
-#define class_create(owner, name)		\
+#define class_create(name)		\
 ({						\
 	static struct lock_class_key __key;	\
-	__class_create(owner, name, &__key);	\
+	__class_create(name, &__key);	\
 })
 
 

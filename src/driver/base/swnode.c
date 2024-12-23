@@ -1144,18 +1144,6 @@ void software_node_notify(struct device *dev)
 	swnode = dev_to_swnode(dev);
 	if (!swnode)
 		return;
-
-	ret = sysfs_create_link(&dev->kobj, &swnode->kobj, "software_node");
-	if (ret)
-		return;
-
-	ret = sysfs_create_link(&swnode->kobj, &dev->kobj, dev_name(dev));
-	if (ret) {
-		sysfs_remove_link(&dev->kobj, "software_node");
-		return;
-	}
-
-	kobject_get(&swnode->kobj);
 }
 
 void software_node_notify_remove(struct device *dev)
@@ -1166,10 +1154,6 @@ void software_node_notify_remove(struct device *dev)
 	if (!swnode)
 		return;
 
-	sysfs_remove_link(&swnode->kobj, dev_name(dev));
-	sysfs_remove_link(&dev->kobj, "software_node");
-	kobject_put(&swnode->kobj);
-
 	if (swnode->managed) {
 		set_secondary_fwnode(dev, NULL);
 		kobject_put(&swnode->kobj);
@@ -1178,9 +1162,6 @@ void software_node_notify_remove(struct device *dev)
 
 static int __init software_node_init(void)
 {
-	//swnode_kset = kset_create_and_add("software_nodes", NULL, kernel_kobj);
-	//if (!swnode_kset)
-	//	return -ENOMEM;
 	return 0;
 }
 postcore_initcall(software_node_init);

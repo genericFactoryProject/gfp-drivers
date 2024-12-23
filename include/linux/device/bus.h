@@ -84,9 +84,6 @@ struct bus_type {
 	const char		*name;
 	const char		*dev_name;
 	struct device		*dev_root;
-	const struct attribute_group **bus_groups;
-	const struct attribute_group **dev_groups;
-	const struct attribute_group **drv_groups;
 
 	int (*match)(struct device *dev, struct device_driver *drv);
 	int (*uevent)(struct device *dev, struct kobj_uevent_env *env);
@@ -109,7 +106,7 @@ struct bus_type {
 
 	const struct iommu_ops *iommu_ops;
 
-	struct subsys_private *p;
+	struct subsys_private *p;// [*]
 	struct lock_class_key lock_key;
 
 	bool need_parent_lock;
