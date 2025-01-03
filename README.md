@@ -1,4 +1,4 @@
-# nixLayer 内核
+# Lynix 内核
 
 ## 概述
 
