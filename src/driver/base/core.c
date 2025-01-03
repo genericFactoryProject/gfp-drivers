@@ -142,6 +142,7 @@ void fwnode_links_purge(struct fwnode_handle *fwnode)
 	fwnode_links_purge_consumers(fwnode);
 }
 
+/* absent ==> dev == NULL */
 void fw_devlink_purge_absent_suppliers(struct fwnode_handle *fwnode)
 {
 	struct fwnode_handle *child;
@@ -157,6 +158,9 @@ void fw_devlink_purge_absent_suppliers(struct fwnode_handle *fwnode)
 		fw_devlink_purge_absent_suppliers(child);
 }
 EXPORT_SYMBOL_GPL(fw_devlink_purge_absent_suppliers);
+
+/* (1) fwnode_handle <fwnode_link> fwnode_handle */
+/* (2) device <device_link> device */
 
 
 static DECLARE_RWSEM(device_links_lock);
@@ -293,6 +297,8 @@ static void device_link_init_status(struct device_link *link,
 		break;
 	}
 }
+
+/* parent/supplier <prior to> child/consumer */
 
 static int device_reorder_to_tail(struct device *dev, void *not_used)
 {
@@ -1836,6 +1842,36 @@ static void klist_children_put(struct klist_node *n)
 
 	// put_device(dev);
 }
+
+/*
+                .=============================.
+                |                             |
+                v                             |
+DORMANT <=> AVAILABLE <=> CONSUMER_PROBE => ACTIVE
+   ^                                          |
+   |                                          |
+   '============ SUPPLIER_UNBIND <============'
+
+DL_STATE_NONE：表示不需要关注驱动的存在性
+DL_STATE_DORMANT:表示supplier/consumer的驱动都不存在
+DL_STATE_AVAILABLE：表示supplier的驱动存在，但consumer的驱动不存在
+DL_STATE_CONSUMER_PROBE: 表示consumer在probe过程中（supplier驱动存在）
+DL_STATE_ACTIVE: 表示supplier和consumer的驱动都存在
+DL_STATE_SUPPLIER_UNBIND：表示supplier的驱动在unbind过程中
+
+device link的初始状态自动由device_link_add()基于supplier和consumer的驱动是否存在决定。如果在device probe之前创建link，它的状态为DL_STATE_DORMANT。
+当supplier绑定到驱动时，link进入到状态DL_STATE_AVAILABLE。（通过driver_bound()调用device_links_driver_bound()）
+在consumer设备probe前，通过检查consumer设备不在wait_for_supplier链和检查这些list是否DL_STATE_AVAILABLE状态，来验证supplier驱动的存在。link的状态更新到DL_STATE_CONSUMER_PROBE。（通过really_probe()调用device_links_check_suppliers()）。这会防止supplier unbound。（调用device_links_unbind_consumers()调用wait_for_device_probe()）
+如果probe失败，supplier的link状态返回到DL_STATE_AVAILABLE.(通过really_probe()调用device_links_no_driver())
+如果probe成功，supplier的link状态变成DL_STATE_ACTIVE。（通过driver_bound()调用device_links_driver_bound()）
+当consumer的驱动移除时，supplier的link状态返回到DL_STATE_AVAILABLE。（通过device_links_driver_cleanup()调用__device_links_no_driver()）
+在supplier驱动移除时，consumer的驱动也没有bound到驱动，link状态变为DL_STATE_SUPPLIER_UNBIND。（通过__device_release_driver()调用device_links_busy()）这时不允许consumer进行绑定操作。（通过really_probe()调用device_links_check_suppliers()）绑定的consumer从驱动释放。consumer的probe操作会一直等待直到完成。（通过__device_release_driver()调用device_links_unbind_consumers()）一旦consumer所有的link都在DL_STATE_SUPPLIER_UNBIND，supplier的驱动会释放，并且link的状态返回到DL_STATE_DORMANT。（通过__device_release_driver()调用device_links_driver_cleanup()）
+
+这种关系是兄弟之间的依赖关系，父子之间的依赖关系在遍历fdt时已经确认
+1. fwnode link
+2. devnode link
+
+*/
 
 /* register */
 

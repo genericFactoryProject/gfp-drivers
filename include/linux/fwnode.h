@@ -37,16 +37,16 @@ struct fwnode_handle {
 	struct fwnode_handle *secondary;
 	const struct fwnode_operations *ops;
 	struct device *dev;
-	struct list_head suppliers;
+	struct list_head suppliers; // every fwnode: as suppliers or as consumers
 	struct list_head consumers;
 	u8 flags;
 };
 
 struct fwnode_link {
 	struct fwnode_handle *supplier;
-	struct list_head s_hook;
+	struct list_head s_hook; // node
 	struct fwnode_handle *consumer;
-	struct list_head c_hook;
+	struct list_head c_hook; // node
 };
 
 /**
