@@ -29,19 +29,20 @@
 #include <scsi/scsi_cmnd.h>
 #include <linux/libata.h>
 #include <linux/pci.h>
+#include <linux/kstrtox.h>
 #include "ahci.h"
 #include "libata.h"
 
 static int ahci_skip_host_reset;
 int ahci_ignore_sss;
 EXPORT_SYMBOL_GPL(ahci_ignore_sss);
-
+#if 0
 module_param_named(skip_host_reset, ahci_skip_host_reset, int, 0444);
 MODULE_PARM_DESC(skip_host_reset, "skip global host reset (0=don't skip, 1=skip)");
 
 module_param_named(ignore_sss, ahci_ignore_sss, int, 0444);
 MODULE_PARM_DESC(ignore_sss, "Ignore staggered spinup flag (0=don't ignore, 1=ignore)");
-
+#endif
 static int ahci_set_lpm(struct ata_link *link, enum ata_lpm_policy policy,
 			unsigned hints);
 static ssize_t ahci_led_show(struct ata_port *ap, char *buf);
@@ -82,7 +83,7 @@ static ssize_t ahci_activity_show(struct ata_device *dev, char *buf);
 static ssize_t ahci_activity_store(struct ata_device *dev,
 				   enum sw_activity val);
 static void ahci_init_sw_activity(struct ata_link *link);
-
+#if 0
 static ssize_t ahci_show_host_caps(struct device *dev,
 				   struct device_attribute *attr, char *buf);
 static ssize_t ahci_show_host_cap2(struct device *dev,
@@ -98,7 +99,7 @@ static ssize_t ahci_store_em_buffer(struct device *dev,
 				    const char *buf, size_t size);
 static ssize_t ahci_show_em_supported(struct device *dev,
 				      struct device_attribute *attr, char *buf);
-static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance);
+
 
 static DEVICE_ATTR(ahci_host_caps, S_IRUGO, ahci_show_host_caps, NULL);
 static DEVICE_ATTR(ahci_host_cap2, S_IRUGO, ahci_show_host_cap2, NULL);
@@ -148,6 +149,9 @@ const struct attribute_group *ahci_sdev_groups[] = {
 	NULL
 };
 EXPORT_SYMBOL_GPL(ahci_sdev_groups);
+#endif
+
+static irqreturn_t ahci_single_level_irq_intr(int irq, void *dev_instance);
 
 struct ata_port_operations ahci_ops = {
 	.inherits		= &sata_pmp_port_ops,
@@ -194,15 +198,18 @@ struct ata_port_operations ahci_pmp_retry_srst_ops = {
 EXPORT_SYMBOL_GPL(ahci_pmp_retry_srst_ops);
 
 static bool ahci_em_messages __read_mostly = true;
+#if 0
 module_param(ahci_em_messages, bool, 0444);
 /* add other LED protocol types when they become supported */
 MODULE_PARM_DESC(ahci_em_messages,
 	"AHCI Enclosure Management Message control (0 = off, 1 = on)");
-
+#endif
 /* device sleep idle timeout in ms */
 static int devslp_idle_timeout __read_mostly = 1000;
+#if 0
 module_param(devslp_idle_timeout, int, 0644);
 MODULE_PARM_DESC(devslp_idle_timeout, "device sleep idle timeout");
+#endif
 
 static void ahci_enable_ahci(void __iomem *mmio)
 {
@@ -336,7 +343,7 @@ static ssize_t ahci_read_em_buffer(struct device *dev,
 
 	/* the count should not be larger than PAGE_SIZE */
 	if (count > PAGE_SIZE) {
-		if (printk_ratelimit())
+		// if (printk_ratelimit())
 			ata_port_warn(ap,
 				      "EM read buffer size too large: "
 				      "buffer size %u, page size %lu\n",
@@ -2342,12 +2349,12 @@ static int ahci_port_start(struct ata_port *ap)
 	dma_addr_t mem_dma;
 	size_t dma_sz, rx_fis_sz;
 
-	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+	pp = devm_kzalloc(dev, sizeof(*pp), 0);
 	if (!pp)
 		return -ENOMEM;
 
 	if (ap->host->n_ports > 1) {
-		pp->irq_desc = devm_kzalloc(dev, 8, GFP_KERNEL);
+		pp->irq_desc = devm_kzalloc(dev, 8, 0);
 		if (!pp->irq_desc) {
 			devm_kfree(dev, pp);
 			return -ENOMEM;
@@ -2379,7 +2386,7 @@ static int ahci_port_start(struct ata_port *ap)
 		rx_fis_sz = AHCI_RX_FIS_SZ;
 	}
 
-	mem = dmam_alloc_coherent(dev, dma_sz, &mem_dma, GFP_KERNEL);
+	mem = dmam_alloc_coherent(dev, dma_sz, &mem_dma, 0);
 	if (!mem)
 		return -ENOMEM;
 

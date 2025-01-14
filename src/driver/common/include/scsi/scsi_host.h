@@ -322,7 +322,7 @@ struct scsi_host_template {
 	 *
 	 * Status: OBSOLETE
 	 */
-	int (*show_info)(struct seq_file *, struct Scsi_Host *);
+	// int (*show_info)(struct seq_file *, struct Scsi_Host *);
 	int (*write_info)(struct Scsi_Host *, char *, int);
 
 	/*

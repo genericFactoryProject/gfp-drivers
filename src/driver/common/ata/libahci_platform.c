@@ -392,11 +392,11 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
 	int i, enabled_ports = 0, rc = -ENOMEM, child_nodes;
 	u32 mask_port_map = 0;
 
-	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+	if (!devres_open_group(dev, NULL, 0))
 		return ERR_PTR(-ENOMEM);
 
 	hpriv = devres_alloc(ahci_platform_put_resources, sizeof(*hpriv),
-			     GFP_KERNEL);
+			     0);
 	if (!hpriv)
 		goto err_out;
 
@@ -461,7 +461,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
 	if (!child_nodes)
 		hpriv->nports = 1;
 
-	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), GFP_KERNEL);
+	hpriv->phys = devm_kcalloc(dev, hpriv->nports, sizeof(*hpriv->phys), 0);
 	if (!hpriv->phys) {
 		rc = -ENOMEM;
 		goto err_out;
@@ -470,7 +470,7 @@ struct ahci_host_priv *ahci_platform_get_resources(struct platform_device *pdev,
 	 * We cannot use devm_ here, since ahci_platform_put_resources() uses
 	 * target_pwrs after devm_ have freed memory
 	 */
-	hpriv->target_pwrs = kcalloc(hpriv->nports, sizeof(*hpriv->target_pwrs), GFP_KERNEL);
+	hpriv->target_pwrs = kcalloc(hpriv->nports, sizeof(*hpriv->target_pwrs), 0);
 	if (!hpriv->target_pwrs) {
 		rc = -ENOMEM;
 		goto err_out;

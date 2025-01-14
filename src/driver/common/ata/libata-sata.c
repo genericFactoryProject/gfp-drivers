@@ -774,7 +774,7 @@ static const char *ata_lpm_policy_names[] = {
 	[ATA_LPM_MIN_POWER_WITH_PARTIAL] = "min_power_with_partial",
 	[ATA_LPM_MIN_POWER]		= "min_power",
 };
-
+#if 0
 static ssize_t ata_scsi_lpm_store(struct device *device,
 				  struct device_attribute *attr,
 				  const char *buf, size_t count)
@@ -1016,7 +1016,7 @@ ata_scsi_activity_store(struct device *dev, struct device_attribute *attr,
 DEVICE_ATTR(sw_activity, S_IWUSR | S_IRUGO, ata_scsi_activity_show,
 			ata_scsi_activity_store);
 EXPORT_SYMBOL_GPL(dev_attr_sw_activity);
-
+#endif
 /**
  *	__ata_change_queue_depth - helper for ata_scsi_change_queue_depth
  *	@ap: ATA port to which the device change the queue depth

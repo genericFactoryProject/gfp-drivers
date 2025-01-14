@@ -90,6 +90,7 @@ static inline bool sg_is_last(struct scatterlist *sg)
 {
 	return __sg_flags(sg) & SG_END;
 }
+
 #if 0
 /**
  * sg_assign_page - Assign a given page to an SG entry
@@ -161,6 +162,7 @@ static inline void sg_set_buf(struct scatterlist *sg, const void *buf,
 #endif
 	sg_set_page(sg, virt_to_page(buf), buflen, offset_in_page(buf));
 }
+#endif
 
 /*
  * Loop over each sg element, following the pointer to a new list if necessary
@@ -245,6 +247,7 @@ static inline void sg_unmark_end(struct scatterlist *sg)
 	sg->page_link &= ~SG_END;
 }
 
+#if 0
 /**
  * sg_phys - Return physical address of an sg entry
  * @sg:	     SG entry
@@ -274,6 +277,7 @@ static inline void *sg_virt(struct scatterlist *sg)
 {
 	return page_address(sg_page(sg)) + sg->offset;
 }
+#endif
 
 /**
  * sg_init_marker - Initialize markers in sg table
@@ -309,6 +313,7 @@ void sg_free_append_table(struct sg_append_table *sgt);
 int __sg_alloc_table(struct sg_table *, unsigned int, unsigned int,
 		     struct scatterlist *, unsigned int, gfp_t, sg_alloc_fn *);
 int sg_alloc_table(struct sg_table *, unsigned int, gfp_t);
+#if 0
 int sg_alloc_append_table_from_pages(struct sg_append_table *sgt,
 				     struct page **pages, unsigned int n_pages,
 				     unsigned int offset, unsigned long size,

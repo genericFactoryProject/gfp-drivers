@@ -12,13 +12,14 @@
  *  http://www.sata-io.org/
  */
 
+#include <linux/lynix-compat.h>
 // #include <linux/kernel.h>
 // #include <linux/gfp.h>
 #include <linux/pci.h>
 // #include <linux/module.h>
 #include <linux/libata.h>
-#include <linux/highmem.h>
-#include <trace/events/libata.h>
+// #include <linux/highmem.h>
+// #include <trace/events/libata.h>
 #include "libata.h"
 
 static struct workqueue_struct *ata_sff_wq;

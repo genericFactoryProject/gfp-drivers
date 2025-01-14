@@ -27,39 +27,41 @@
 
 // #include <linux/kernel.h>
 // #include <linux/module.h>
+#include <linux/lynix-compat.h>
 #include <linux/pci.h>
 #include <linux/init.h>
 #include <linux/list.h>
-#include <linux/mm.h>
+// #include <linux/mm.h>
 // #include <linux/spinlock.h>
-#include <linux/blkdev.h>
+// #include <linux/blkdev.h>
 #include <linux/delay.h>
 #include <linux/timer.h>
 #include <linux/time.h>
 #include <linux/interrupt.h>
-#include <linux/completion.h>
-#include <linux/suspend.h>
-#include <linux/workqueue.h>
+// #include <linux/completion.h>
+// #include <linux/suspend.h>
+// #include <linux/workqueue.h>
 #include <linux/scatterlist.h>
 #include <linux/io.h>
 #include <linux/log2.h>
 // #include <linux/slab.h>
-#include <linux/glob.h>
+// #include <linux/glob.h>
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
 #include <scsi/scsi_host.h>
 #include <linux/libata.h>
 #include <asm/byteorder.h>
-#include <asm/unaligned.h>
+#include <asm-generic/unaligned.h>
 #include <linux/cdrom.h>
-#include <linux/ratelimit.h>
-#include <linux/leds.h>
+// #include <linux/ratelimit.h>
+// #include <linux/leds.h>
 #include <linux/pm_runtime.h>
 #include <linux/platform_device.h>
 #include <asm/setup.h>
+#include <linux/ioprio.h>
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/libata.h>
+// #define CREATE_TRACE_POINTS
+// #include <trace/events/libata.h>
 
 #include "libata.h"
 #include "libata-transport.h"
@@ -115,42 +117,61 @@ MODULE_PARM_DESC(force, "Force ATA configurations including cable type, link spe
 #endif
 
 static int atapi_enabled = 1;
+#if 0
 module_param(atapi_enabled, int, 0444);
 MODULE_PARM_DESC(atapi_enabled, "Enable discovery of ATAPI devices (0=off, 1=on [default])");
+#endif
 
 static int atapi_dmadir = 0;
+#if 0
 module_param(atapi_dmadir, int, 0444);
 MODULE_PARM_DESC(atapi_dmadir, "Enable ATAPI DMADIR bridge support (0=off [default], 1=on)");
+#endif
 
 int atapi_passthru16 = 1;
+#if 0
 module_param(atapi_passthru16, int, 0444);
 MODULE_PARM_DESC(atapi_passthru16, "Enable ATA_16 passthru for ATAPI devices (0=off, 1=on [default])");
+#endif
 
 int libata_fua = 0;
+#if 0
 module_param_named(fua, libata_fua, int, 0444);
 MODULE_PARM_DESC(fua, "FUA support (0=off [default], 1=on)");
+#endif
 
 static int ata_ignore_hpa;
+#if 0
 module_param_named(ignore_hpa, ata_ignore_hpa, int, 0644);
 MODULE_PARM_DESC(ignore_hpa, "Ignore HPA limit (0=keep BIOS limits, 1=ignore limits, using full disk)");
+#endif
 
 static int libata_dma_mask = ATA_DMA_MASK_ATA|ATA_DMA_MASK_ATAPI|ATA_DMA_MASK_CFA;
+#if 0
 module_param_named(dma, libata_dma_mask, int, 0444);
 MODULE_PARM_DESC(dma, "DMA enable/disable (0x1==ATA, 0x2==ATAPI, 0x4==CF)");
+#endif
 
 static int ata_probe_timeout;
+#if 0
 module_param(ata_probe_timeout, int, 0444);
 MODULE_PARM_DESC(ata_probe_timeout, "Set ATA probing timeout (seconds)");
+#endif
 
 int libata_noacpi = 0;
+#if 0
 module_param_named(noacpi, libata_noacpi, int, 0444);
 MODULE_PARM_DESC(noacpi, "Disable the use of ACPI in probe/suspend/resume (0=off [default], 1=on)");
+#endif
 
 int libata_allow_tpm = 0;
+#if 0
 module_param_named(allow_tpm, libata_allow_tpm, int, 0444);
 MODULE_PARM_DESC(allow_tpm, "Permit the use of TPM commands (0=off [default], 1=on)");
+#endif
 
 static int atapi_an;
+#if 0
 module_param(atapi_an, int, 0444);
 MODULE_PARM_DESC(atapi_an, "Enable ATAPI AN media presence notification (0=0ff [default], 1=on)");
 
@@ -158,6 +179,7 @@ MODULE_AUTHOR("Jeff Garzik");
 MODULE_DESCRIPTION("Library module for ATA devices");
 MODULE_LICENSE("GPL");
 MODULE_VERSION(DRV_VERSION);
+#endif
 
 static inline bool ata_dev_print_info(struct ata_device *dev)
 {
@@ -1435,7 +1457,7 @@ static void ata_qc_complete_internal(struct ata_queued_cmd *qc)
 {
 	struct completion *waiting = qc->private_data;
 
-	complete(waiting);
+	// complete(waiting);
 }
 
 /**
@@ -1474,10 +1496,10 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
 	u32 preempted_sactive;
 	u64 preempted_qc_active;
 	int preempted_nr_active_links;
-	DECLARE_COMPLETION_ONSTACK(wait);
+	// DECLARE_COMPLETION_ONSTACK(wait);
 	unsigned long flags;
 	unsigned int err_mask;
-	int rc;
+	int rc = 0;
 
 	spin_lock_irqsave(ap->lock, flags);
 
@@ -1529,7 +1551,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
 		qc->nbytes = buflen;
 	}
 
-	qc->private_data = &wait;
+	// qc->private_data = &wait;
 	qc->complete_fn = ata_qc_complete_internal;
 
 	ata_qc_issue(qc);
@@ -1548,7 +1570,7 @@ unsigned ata_exec_internal_sg(struct ata_device *dev,
 	if (ap->ops->error_handler)
 		ata_eh_release(ap);
 
-	rc = wait_for_completion_timeout(&wait, msecs_to_jiffies(timeout));
+	// rc = wait_for_completion_timeout(&wait, msecs_to_jiffies(timeout));
 
 	if (ap->ops->error_handler)
 		ata_eh_acquire(ap);
@@ -1847,8 +1869,8 @@ retry:
 		ata_dev_info(dev, "dumping IDENTIFY data, "
 			    "class=%d may_fallback=%d tried_spinup=%d\n",
 			    class, may_fallback, tried_spinup);
-		print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET,
-			       16, 2, id, ATA_ID_WORDS * sizeof(*id), true);
+		//print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET,
+		//	       16, 2, id, ATA_ID_WORDS * sizeof(*id), true);
 	}
 
 	/* Falling back doesn't make sense if ID data was read
@@ -2457,7 +2479,7 @@ static void ata_dev_config_cpr(struct ata_device *dev)
 	 * most 255 32B range descriptors plus a 64B header.
 	 */
 	buf_len = (64 + 255 * 32 + 511) & ~511;
-	buf = kzalloc(buf_len, GFP_KERNEL);
+	buf = kzalloc(buf_len, 0);
 	if (!buf)
 		goto out;
 
@@ -2470,7 +2492,7 @@ static void ata_dev_config_cpr(struct ata_device *dev)
 	if (!nr_cpr)
 		goto out;
 
-	cpr_log = kzalloc(struct_size(cpr_log, cpr, nr_cpr), GFP_KERNEL);
+	cpr_log = kzalloc(struct_size(cpr_log, cpr, nr_cpr), 0);
 	if (!cpr_log)
 		goto out;
 
@@ -4097,7 +4119,7 @@ static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
 
 	ata_id_c_string(dev->id, model_num, ATA_ID_PROD, sizeof(model_num));
 	ata_id_c_string(dev->id, model_rev, ATA_ID_FW_REV, sizeof(model_rev));
-
+#if 0
 	while (ad->model_num) {
 		if (glob_match(ad->model_num, model_num)) {
 			if (ad->model_rev == NULL)
@@ -4107,6 +4129,7 @@ static unsigned long ata_dev_blacklisted(const struct ata_device *dev)
 		}
 		ad++;
 	}
+#endif
 	return 0;
 }
 
@@ -4709,7 +4732,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
 	struct ata_port *ap = qc->ap;
 
 	/* Trigger the LED (if available) */
-	ledtrig_disk_activity(!!(qc->tf.flags & ATA_TFLAG_WRITE));
+	// ledtrig_disk_activity(!!(qc->tf.flags & ATA_TFLAG_WRITE));
 
 	/* XXX: New EH and old EH use different mechanisms to
 	 * synchronize EH with regular execution path.
@@ -4737,7 +4760,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
 		 */
 		if (unlikely(ata_tag_internal(qc->tag))) {
 			fill_result_tf(qc);
-			trace_ata_qc_complete_internal(qc);
+			// trace_ata_qc_complete_internal(qc);
 			__ata_qc_complete(qc);
 			return;
 		}
@@ -4748,7 +4771,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
 		 */
 		if (unlikely(qc->flags & ATA_QCFLAG_FAILED)) {
 			fill_result_tf(qc);
-			trace_ata_qc_complete_failed(qc);
+			// trace_ata_qc_complete_failed(qc);
 			ata_qc_schedule_eh(qc);
 			return;
 		}
@@ -4759,7 +4782,7 @@ void ata_qc_complete(struct ata_queued_cmd *qc)
 		if (qc->flags & ATA_QCFLAG_RESULT_TF)
 			fill_result_tf(qc);
 
-		trace_ata_qc_complete_done(qc);
+		// trace_ata_qc_complete_done(qc);
 		/* Some commands need post-processing after successful
 		 * completion.
 		 */
@@ -4884,11 +4907,11 @@ void ata_qc_issue(struct ata_queued_cmd *qc)
 		return;
 	}
 
-	trace_ata_qc_prep(qc);
+	// trace_ata_qc_prep(qc);
 	qc->err_mask |= ap->ops->qc_prep(qc);
 	if (unlikely(qc->err_mask))
 		goto err;
-	trace_ata_qc_issue(qc);
+	// trace_ata_qc_issue(qc);
 	qc->err_mask |= ap->ops->qc_issue(qc);
 	if (unlikely(qc->err_mask))
 		goto err;
@@ -5329,7 +5352,7 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
 {
 	struct ata_port *ap;
 
-	ap = kzalloc(sizeof(*ap), GFP_KERNEL);
+	ap = kzalloc(sizeof(*ap), 0);
 	if (!ap)
 		return NULL;
 
@@ -5341,11 +5364,11 @@ struct ata_port *ata_port_alloc(struct ata_host *host)
 	ap->dev = host->dev;
 
 	mutex_init(&ap->scsi_scan_mutex);
-	INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
-	INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
+	// INIT_DELAYED_WORK(&ap->hotplug_task, ata_scsi_hotplug);
+	// INIT_WORK(&ap->scsi_rescan_task, ata_scsi_dev_rescan);
 	INIT_LIST_HEAD(&ap->eh_done_q);
-	init_waitqueue_head(&ap->eh_wait_q);
-	init_completion(&ap->park_req_pending);
+	// init_waitqueue_head(&ap->eh_wait_q);
+	// init_completion(&ap->park_req_pending);
 	timer_setup(&ap->fastdrain_timer, ata_eh_fastdrain_timerfn,
 		    TIMER_DEFERRABLE);
 
@@ -5438,14 +5461,14 @@ struct ata_host *ata_host_alloc(struct device *dev, int max_ports)
 
 	/* alloc a container for our list of ATA ports (buses) */
 	sz = sizeof(struct ata_host) + (max_ports + 1) * sizeof(void *);
-	host = kzalloc(sz, GFP_KERNEL);
+	host = kzalloc(sz, 0);
 	if (!host)
 		return NULL;
 
-	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+	if (!devres_open_group(dev, NULL, 0))
 		goto err_free;
 
-	dr = devres_alloc(ata_devres_release, 0, GFP_KERNEL);
+	dr = devres_alloc(ata_devres_release, 0, 0);
 	if (!dr)
 		goto err_out;
 
@@ -5641,7 +5664,7 @@ int ata_host_start(struct ata_host *host)
 		have_stop = 1;
 
 	if (have_stop) {
-		start_dr = devres_alloc(ata_host_stop, 0, GFP_KERNEL);
+		start_dr = devres_alloc(ata_host_stop, 0, 0);
 		if (!start_dr)
 			return -ENOMEM;
 	}
@@ -5892,7 +5915,7 @@ int ata_host_activate(struct ata_host *host, int irq,
 		return ata_host_register(host, sht);
 	}
 
-	irq_desc = devm_kasprintf(host->dev, GFP_KERNEL, "%s[%s]",
+	irq_desc = devm_kasprintf(host->dev, 0, "%s[%s]",
 				  dev_driver_string(host->dev),
 				  dev_name(host->dev));
 	if (!irq_desc)
@@ -5947,7 +5970,7 @@ static void ata_port_detach(struct ata_port *ap)
 	/* it better be dead now */
 	WARN_ON(!(ap->pflags & ATA_PFLAG_UNLOADED));
 
-	cancel_delayed_work_sync(&ap->hotplug_task);
+	// cancel_delayed_work_sync(&ap->hotplug_task);
 
  skip_eh:
 	/* clean up zpodd on port removal */
@@ -6293,7 +6316,7 @@ static void __init ata_parse_force_param(void)
 		if (*p == ',')
 			size++;
 
-	ata_force_tbl = kcalloc(size, sizeof(ata_force_tbl[0]), GFP_KERNEL);
+	ata_force_tbl = kcalloc(size, sizeof(ata_force_tbl[0]), 0);
 	if (!ata_force_tbl) {
 		printk(KERN_WARNING "ata: failed to extend force table, "
 		       "libata.force ignored\n");
@@ -6374,11 +6397,11 @@ static void __exit ata_exit(void)
 subsys_initcall(ata_init);
 module_exit(ata_exit);
 
-static DEFINE_RATELIMIT_STATE(ratelimit, HZ / 5, 1);
+// static DEFINE_RATELIMIT_STATE(ratelimit, HZ / 5, 1);
 
 int ata_ratelimit(void)
 {
-	return __ratelimit(&ratelimit);
+	return 0; // __ratelimit(&ratelimit);
 }
 EXPORT_SYMBOL_GPL(ata_ratelimit);
 
@@ -6398,7 +6421,7 @@ EXPORT_SYMBOL_GPL(ata_ratelimit);
  */
 void ata_msleep(struct ata_port *ap, unsigned int msecs)
 {
-	bool owns_eh = ap && ap->host->eh_owner == current;
+	bool owns_eh = ap; // && ap->host->eh_owner == current;
 
 	if (owns_eh)
 		ata_eh_release(ap);
@@ -6494,9 +6517,10 @@ void ata_print_version(const struct device *dev, const char *version)
 	dev_printk(KERN_DEBUG, dev, "version %s\n", version);
 }
 EXPORT_SYMBOL(ata_print_version);
-
+#if 0
 EXPORT_TRACEPOINT_SYMBOL_GPL(ata_tf_load);
 EXPORT_TRACEPOINT_SYMBOL_GPL(ata_exec_command);
 EXPORT_TRACEPOINT_SYMBOL_GPL(ata_bmdma_setup);
 EXPORT_TRACEPOINT_SYMBOL_GPL(ata_bmdma_start);
 EXPORT_TRACEPOINT_SYMBOL_GPL(ata_bmdma_status);
+#endif

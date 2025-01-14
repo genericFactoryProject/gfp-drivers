@@ -2,9 +2,9 @@
 #ifndef IOPRIO_H
 #define IOPRIO_H
 
-#include <linux/sched.h>
-#include <linux/sched/rt.h>
-#include <linux/iocontext.h>
+// #include <linux/sched.h>
+// #include <linux/sched/rt.h>
+// #include <linux/iocontext.h>
 
 #include <uapi/linux/ioprio.h>
 
@@ -22,7 +22,7 @@ static inline bool ioprio_valid(unsigned short ioprio)
 
 	return class > IOPRIO_CLASS_NONE && class <= IOPRIO_CLASS_IDLE;
 }
-
+#if 0
 /*
  * if process has set io priority explicitly, use that. if not, convert
  * the cpu scheduler nice value to an io priority
@@ -74,5 +74,6 @@ static inline int ioprio_check_cap(int ioprio)
 	return -ENOTBLK;
 }
 #endif /* CONFIG_BLOCK */
+#endif
 
 #endif

@@ -23,6 +23,7 @@
 // #include <linux/cdrom.h>
 // #include <linux/sched.h>
 #include <linux/async.h>
+#include <linux/timer.h>
 
 /*
  * Define if arch has non-standard setup.  This is a _PCI_ standard

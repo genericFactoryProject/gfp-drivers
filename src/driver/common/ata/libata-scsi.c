@@ -13,10 +13,10 @@
  *  - http://www.t13.org/
  */
 
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 // #include <linux/slab.h>
 // #include <linux/kernel.h>
-#include <linux/blkdev.h>
+// #include <linux/blkdev.h>
 // #include <linux/spinlock.h>
 #include <linux/export.h>
 #include <scsi/scsi.h>
@@ -27,10 +27,10 @@
 #include <scsi/scsi_tcq.h>
 #include <scsi/scsi_transport.h>
 #include <linux/libata.h>
-#include <linux/hdreg.h>
-#include <linux/uaccess.h>
-#include <linux/suspend.h>
-#include <asm/unaligned.h>
+#include <uapi/linux/hdreg.h>
+// #include <linux/uaccess.h>
+// #include <linux/suspend.h>
+#include <asm-generic/unaligned.h>
 #include <linux/ioprio.h>
 #include <linux/of.h>
 
@@ -84,7 +84,7 @@ static const u8 def_control_mpage[CONTROL_MPAGE_LEN] = {
 	0, 0, 0, 0, 0xff, 0xff,
 	0, 30	/* extended self test time, see 05-359r1 */
 };
-
+#if 0
 static ssize_t ata_scsi_park_show(struct device *device,
 				  struct device_attribute *attr, char *buf)
 {
@@ -187,7 +187,7 @@ unlock:
 DEVICE_ATTR(unload_heads, S_IRUGO | S_IWUSR,
 	    ata_scsi_park_show, ata_scsi_park_store);
 EXPORT_SYMBOL_GPL(dev_attr_unload_heads);
-
+#endif
 void ata_scsi_set_sense(struct ata_device *dev, struct scsi_cmnd *cmd,
 			u8 sk, u8 asc, u8 ascq)
 {
@@ -233,7 +233,7 @@ static void ata_scsi_set_invalid_parameter(struct ata_device *dev,
 	scsi_set_sense_field_pointer(cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE,
 				     field, 0xff, 0);
 }
-
+#if 0
 static struct attribute *ata_common_sdev_attrs[] = {
 	&dev_attr_unload_heads.attr,
 	NULL
@@ -248,7 +248,7 @@ const struct attribute_group *ata_common_sdev_groups[] = {
 	NULL
 };
 EXPORT_SYMBOL_GPL(ata_common_sdev_groups);
-
+#endif
 /**
  *	ata_std_bios_param - generic bios head/sector/cylinder calculator used by sd.
  *	@sdev: SCSI device for which BIOS geometry is to be determined
@@ -331,20 +331,20 @@ static int ata_get_identity(struct ata_port *ap, struct scsi_device *sdev,
 	if (!dev)
 		return -ENOMSG;
 
-	if (copy_to_user(dst, dev->id, ATA_ID_WORDS * sizeof(u16)))
-		return -EFAULT;
+	// if (copy_to_user(dst, dev->id, ATA_ID_WORDS * sizeof(u16)))
+	// 	return -EFAULT;
 
 	ata_id_string(dev->id, buf, ATA_ID_PROD, ATA_ID_PROD_LEN);
-	if (copy_to_user(dst + ATA_ID_PROD, buf, ATA_ID_PROD_LEN))
-		return -EFAULT;
+	// if (copy_to_user(dst + ATA_ID_PROD, buf, ATA_ID_PROD_LEN))
+	//	return -EFAULT;
 
 	ata_id_string(dev->id, buf, ATA_ID_FW_REV, ATA_ID_FW_REV_LEN);
-	if (copy_to_user(dst + ATA_ID_FW_REV, buf, ATA_ID_FW_REV_LEN))
-		return -EFAULT;
+	//if (copy_to_user(dst + ATA_ID_FW_REV, buf, ATA_ID_FW_REV_LEN))
+	//	return -EFAULT;
 
 	ata_id_string(dev->id, buf, ATA_ID_SERNO, ATA_ID_SERNO_LEN);
-	if (copy_to_user(dst + ATA_ID_SERNO, buf, ATA_ID_SERNO_LEN))
-		return -EFAULT;
+	//if (copy_to_user(dst + ATA_ID_SERNO, buf, ATA_ID_SERNO_LEN))
+	//	return -EFAULT;
 
 	return 0;
 }
@@ -374,8 +374,8 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
 	if (arg == NULL)
 		return -EINVAL;
 
-	if (copy_from_user(args, arg, sizeof(args)))
-		return -EFAULT;
+	// if (copy_from_user(args, arg, sizeof(args)))
+	//	return -EFAULT;
 
 	memset(sensebuf, 0, sizeof(sensebuf));
 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
@@ -437,8 +437,8 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
 			args[0] = desc[13];	/* status */
 			args[1] = desc[3];	/* error */
 			args[2] = desc[5];	/* sector count (0:7) */
-			if (copy_to_user(arg, args, sizeof(args)))
-				rc = -EFAULT;
+			// if (copy_to_user(arg, args, sizeof(args)))
+			//	rc = -EFAULT;
 		}
 	}
 
@@ -448,8 +448,8 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
 		goto error;
 	}
 
-	if ((argbuf)
-	 && copy_to_user(arg + sizeof(args), argbuf, argsize))
+	if (argbuf)
+	 // && copy_to_user(arg + sizeof(args), argbuf, argsize))
 		rc = -EFAULT;
 error:
 	kfree(argbuf);
@@ -479,8 +479,8 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
 	if (arg == NULL)
 		return -EINVAL;
 
-	if (copy_from_user(args, arg, sizeof(args)))
-		return -EFAULT;
+	// if (copy_from_user(args, arg, sizeof(args)))
+	//	return -EFAULT;
 
 	memset(sensebuf, 0, sizeof(sensebuf));
 	memset(scsi_cmd, 0, sizeof(scsi_cmd));
@@ -525,8 +525,8 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
 			args[4] = desc[9];	/* lbam */
 			args[5] = desc[11];	/* lbah */
 			args[6] = desc[12];	/* select */
-			if (copy_to_user(arg, args, sizeof(args)))
-				rc = -EFAULT;
+			//if (copy_to_user(arg, args, sizeof(args)))
+			//	rc = -EFAULT;
 		}
 	}
 
@@ -568,7 +568,7 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
 		if (in_compat_syscall())
 			return put_user(val, (compat_ulong_t __user *)arg);
 #endif
-		return put_user(val, (unsigned long __user *)arg);
+		return val; // put_user(val, (unsigned long __user *)arg);
 
 	case HDIO_SET_32BIT:
 		val = (unsigned long) arg;
@@ -590,13 +590,13 @@ int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *scsidev,
 		return ata_get_identity(ap, scsidev, arg);
 
 	case HDIO_DRIVE_CMD:
-		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-			return -EACCES;
+		// if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+		//	return -EACCES;
 		return ata_cmd_ioctl(scsidev, arg);
 
 	case HDIO_DRIVE_TASK:
-		if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-			return -EACCES;
+		// if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+		//	return -EACCES;
 		return ata_task_ioctl(scsidev, arg);
 
 	default:
@@ -639,7 +639,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
 					      struct scsi_cmnd *cmd)
 {
 	struct ata_queued_cmd *qc;
-
+#if 0
 	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
 	if (qc) {
 		qc->scsicmd = cmd;
@@ -654,7 +654,7 @@ static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
 		cmd->result = (DID_OK << 16) | SAM_STAT_TASK_SET_FULL;
 		scsi_done(cmd);
 	}
-
+#endif
 	return qc;
 }
 
@@ -1022,14 +1022,18 @@ void ata_scsi_sdev_config(struct scsi_device *sdev)
  */
 bool ata_scsi_dma_need_drain(struct request *rq)
 {
+#if 0
 	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
 
 	return atapi_cmd_type(scmd->cmnd[0]) == ATAPI_MISC;
+#endif
+	return true;
 }
 EXPORT_SYMBOL_GPL(ata_scsi_dma_need_drain);
 
 int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
 {
+#if 0
 	struct request_queue *q = sdev->request_queue;
 
 	if (!ata_id_has_unload(dev->id))
@@ -1087,6 +1091,7 @@ int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
 		sdev->security_supported = 1;
 
 	dev->sdev = sdev;
+#endif
 	return 0;
 }
 
@@ -1220,6 +1225,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
 		/* Some odd clown BIOSen issue spindown on power off (ACPI S4
 		 * or S5) causing some drives to spin up and down again.
 		 */
+		#if 0
 		if ((qc->ap->flags & ATA_FLAG_NO_POWEROFF_SPINDOWN) &&
 		    system_state == SYSTEM_POWER_OFF)
 			goto skip;
@@ -1227,7 +1233,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
 		if ((qc->ap->flags & ATA_FLAG_NO_HIBERNATE_SPINDOWN) &&
 		     system_entering_hibernation())
 			goto skip;
-
+		#endif
 		/* Issue ATA STANDBY IMMEDIATE command */
 		tf->command = ATA_CMD_STANDBYNOW1;
 	}
@@ -1244,7 +1250,7 @@ static unsigned int ata_scsi_start_stop_xlat(struct ata_queued_cmd *qc)
  invalid_fld:
 	ata_scsi_set_invalid_field(qc->dev, scmd, fp, bp);
 	return 1;
- skip:
+ // skip:
 	scmd->result = SAM_STAT_GOOD;
 	return 1;
 }
@@ -1468,6 +1474,7 @@ nothing_to_do:
 
 static bool ata_check_nblocks(struct scsi_cmnd *scmd, u32 n_blocks)
 {
+#if 0
 	struct request *rq = scsi_cmd_to_rq(scmd);
 	u32 req_blocks;
 
@@ -1477,7 +1484,7 @@ static bool ata_check_nblocks(struct scsi_cmnd *scmd, u32 n_blocks)
 	req_blocks = blk_rq_bytes(rq) / scmd->device->sector_size;
 	if (n_blocks > req_blocks)
 		return false;
-
+#endif
 	return true;
 }
 
@@ -1501,6 +1508,7 @@ static bool ata_check_nblocks(struct scsi_cmnd *scmd, u32 n_blocks)
  */
 static unsigned int ata_scsi_rw_xlat(struct ata_queued_cmd *qc)
 {
+#if 0
 	struct scsi_cmnd *scmd = qc->scsicmd;
 	const u8 *cdb = scmd->cmnd;
 	struct request *rq = scsi_cmd_to_rq(scmd);
@@ -1600,6 +1608,7 @@ out_of_range:
 
 nothing_to_do:
 	scmd->result = SAM_STAT_GOOD;
+#endif
 	return 1;
 }
 
@@ -1761,9 +1770,9 @@ static void ata_scsi_rbuf_fill(struct ata_scsi_args *args,
 
 	memset(ata_scsi_rbuf, 0, ATA_SCSI_RBUF_SIZE);
 	rc = actor(args, ata_scsi_rbuf);
-	if (rc == 0)
-		sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd),
-				    ata_scsi_rbuf, ATA_SCSI_RBUF_SIZE);
+	//if (rc == 0)
+	//	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd),
+	//			    ata_scsi_rbuf, ATA_SCSI_RBUF_SIZE);
 
 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
 
@@ -2518,12 +2527,12 @@ static void atapi_fixup_inquiry(struct scsi_cmnd *cmd)
 {
 	u8 buf[4];
 
-	sg_copy_to_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
+	//sg_copy_to_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
 	if (buf[2] == 0) {
 		buf[2] = 0x5;
 		buf[3] = 0x32;
 	}
-	sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
+	//sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
 }
 
 static void atapi_qc_complete(struct ata_queued_cmd *qc)
@@ -3092,7 +3101,7 @@ static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 trmax,
 		count -= 0xffff;
 		sector += 0xffff;
 	}
-	r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
+	// r = sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, len);
 	spin_unlock_irqrestore(&ata_scsi_rbuf_lock, flags);
 
 	return r;
@@ -3134,8 +3143,8 @@ static unsigned int ata_scsi_write_same_xlat(struct ata_queued_cmd *qc)
 	 * as it modifies the DATA OUT buffer, which would corrupt user
 	 * memory for SG_IO commands.
 	 */
-	if (unlikely(blk_rq_is_passthrough(scsi_cmd_to_rq(scmd))))
-		goto invalid_opcode;
+	//if (unlikely(blk_rq_is_passthrough(scsi_cmd_to_rq(scmd))))
+	//	goto invalid_opcode;
 
 	if (unlikely(scmd->cmd_len < 16)) {
 		fp = 15;
@@ -3293,6 +3302,7 @@ out:
  */
 static void ata_scsi_report_zones_complete(struct ata_queued_cmd *qc)
 {
+#if 0
 	struct scsi_cmnd *scmd = qc->scsicmd;
 	struct sg_mapping_iter miter;
 	unsigned long flags;
@@ -3352,6 +3362,7 @@ static void ata_scsi_report_zones_complete(struct ata_queued_cmd *qc)
 	local_irq_restore(flags);
 
 	ata_scsi_qc_complete(qc);
+#endif
 }
 
 static unsigned int ata_scsi_zbc_in_xlat(struct ata_queued_cmd *qc)
@@ -3677,9 +3688,9 @@ static unsigned int ata_scsi_mode_select_xlat(struct ata_queued_cmd *qc)
 	if (len < hdr_len)
 		goto invalid_param_len;
 
-	if (!sg_copy_to_buffer(scsi_sglist(scmd), scsi_sg_count(scmd),
-			       buffer, sizeof(buffer)))
-		goto invalid_param_len;
+	//if (!sg_copy_to_buffer(scsi_sglist(scmd), scsi_sg_count(scmd),
+	//		       buffer, sizeof(buffer)))
+	//	goto invalid_param_len;
 
 	if (six_byte)
 		bd_len = p[3];
@@ -4302,8 +4313,8 @@ void ata_scsi_scan_host(struct ata_port *ap, int sync)
 			     "WARNING: synchronous SCSI scan failed without making any progress, switching to async\n");
 	}
 
-	queue_delayed_work(system_long_wq, &ap->hotplug_task,
-			   round_jiffies_relative(HZ));
+	//queue_delayed_work(system_long_wq, &ap->hotplug_task,
+	//		   round_jiffies_relative(HZ));
 }
 
 /**
@@ -4425,9 +4436,9 @@ void ata_scsi_media_change_notify(struct ata_device *dev)
 {
 	if (dev->sdev)
 		sdev_evt_send_simple(dev->sdev, SDEV_EVT_MEDIA_CHANGE,
-				     GFP_ATOMIC);
+				     0);
 }
-
+#if 0
 /**
  *	ata_scsi_hotplug - SCSI part of hotplug
  *	@work: Pointer to ATA port to perform SCSI hotplug on
@@ -4576,3 +4587,4 @@ void ata_scsi_dev_rescan(struct work_struct *work)
 	spin_unlock_irqrestore(ap->lock, flags);
 	mutex_unlock(&ap->scsi_scan_mutex);
 }
+#endif

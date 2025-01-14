@@ -12,7 +12,7 @@
  */
 
 // #include <linux/kernel.h>
-#include <linux/blkdev.h>
+// #include <linux/blkdev.h>
 #include <linux/export.h>
 #include <linux/pci.h>
 #include <scsi/scsi.h>
@@ -25,7 +25,7 @@
 
 #include <linux/libata.h>
 
-#include <trace/events/libata.h>
+// #include <trace/events/libata.h>
 #include "libata.h"
 
 enum {
@@ -470,7 +470,7 @@ void ata_eh_acquire(struct ata_port *ap)
 {
 	mutex_lock(&ap->host->eh_mutex);
 	WARN_ON_ONCE(ap->host->eh_owner);
-	ap->host->eh_owner = current;
+	// ap->host->eh_owner = current;
 }
 
 /**
@@ -485,7 +485,7 @@ void ata_eh_acquire(struct ata_port *ap)
  */
 void ata_eh_release(struct ata_port *ap)
 {
-	WARN_ON_ONCE(ap->host->eh_owner != current);
+	// WARN_ON_ONCE(ap->host->eh_owner != current);
 	ap->host->eh_owner = NULL;
 	mutex_unlock(&ap->host->eh_mutex);
 }
@@ -752,7 +752,7 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
 		ap->pflags &= ~ATA_PFLAG_LOADING;
 	else if ((ap->pflags & ATA_PFLAG_SCSI_HOTPLUG) &&
 		!(ap->flags & ATA_FLAG_SAS_HOST))
-		schedule_delayed_work(&ap->hotplug_task, 0);
+		; // schedule_delayed_work(&ap->hotplug_task, 0);
 
 	if (ap->pflags & ATA_PFLAG_RECOVERED)
 		ata_port_info(ap, "EH complete\n");
@@ -761,7 +761,7 @@ void ata_scsi_port_error_handler(struct Scsi_Host *host, struct ata_port *ap)
 
 	/* tell wait_eh that we're done */
 	ap->pflags &= ~ATA_PFLAG_EH_IN_PROGRESS;
-	wake_up_all(&ap->eh_wait_q);
+	// wake_up_all(&ap->eh_wait_q);
 
 	spin_unlock_irqrestore(ap->lock, flags);
 }
@@ -779,18 +779,18 @@ EXPORT_SYMBOL_GPL(ata_scsi_port_error_handler);
 void ata_port_wait_eh(struct ata_port *ap)
 {
 	unsigned long flags;
-	DEFINE_WAIT(wait);
+	// DEFINE_WAIT(wait);
 
  retry:
 	spin_lock_irqsave(ap->lock, flags);
 
 	while (ap->pflags & (ATA_PFLAG_EH_PENDING | ATA_PFLAG_EH_IN_PROGRESS)) {
-		prepare_to_wait(&ap->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
+		// prepare_to_wait(&ap->eh_wait_q, &wait, TASK_UNINTERRUPTIBLE);
 		spin_unlock_irqrestore(ap->lock, flags);
-		schedule();
+		// schedule();
 		spin_lock_irqsave(ap->lock, flags);
 	}
-	finish_wait(&ap->eh_wait_q, &wait);
+	// finish_wait(&ap->eh_wait_q, &wait);
 
 	spin_unlock_irqrestore(ap->lock, flags);
 
@@ -917,7 +917,7 @@ void ata_qc_schedule_eh(struct ata_queued_cmd *qc)
 	 * Note that ATA_QCFLAG_FAILED is unconditionally set after
 	 * this function completes.
 	 */
-	blk_abort_request(scsi_cmd_to_rq(qc->scsicmd));
+	// blk_abort_request(scsi_cmd_to_rq(qc->scsicmd));
 }
 
 /**
@@ -937,7 +937,7 @@ void ata_std_sched_eh(struct ata_port *ap)
 	ata_eh_set_pending(ap, 1);
 	scsi_schedule_eh(ap->scsi_host);
 
-	trace_ata_std_sched_eh(ap);
+	// trace_ata_std_sched_eh(ap);
 }
 EXPORT_SYMBOL_GPL(ata_std_sched_eh);
 
@@ -1067,7 +1067,7 @@ static void __ata_port_freeze(struct ata_port *ap)
 
 	ap->pflags |= ATA_PFLAG_FROZEN;
 
-	trace_ata_port_freeze(ap);
+	// trace_ata_port_freeze(ap);
 }
 
 /**
@@ -1144,7 +1144,7 @@ void ata_eh_thaw_port(struct ata_port *ap)
 
 	spin_unlock_irqrestore(ap->lock, flags);
 
-	trace_ata_port_thaw(ap);
+	// trace_ata_port_thaw(ap);
 }
 
 static void ata_eh_scsidone(struct scsi_cmnd *scmd)
@@ -1283,7 +1283,7 @@ void ata_eh_about_to_do(struct ata_link *link, struct ata_device *dev,
 	struct ata_eh_context *ehc = &link->eh_context;
 	unsigned long flags;
 
-	trace_ata_eh_about_to_do(link, dev ? dev->devno : 0, action);
+	// trace_ata_eh_about_to_do(link, dev ? dev->devno : 0, action);
 
 	spin_lock_irqsave(ap->lock, flags);
 
@@ -1315,7 +1315,7 @@ void ata_eh_done(struct ata_link *link, struct ata_device *dev,
 {
 	struct ata_eh_context *ehc = &link->eh_context;
 
-	trace_ata_eh_done(link, dev ? dev->devno : 0, action);
+	// trace_ata_eh_done(link, dev ? dev->devno : 0, action);
 
 	ata_eh_clear_action(link, dev, &ehc->i, action);
 }
@@ -1897,8 +1897,8 @@ static inline int ata_eh_worth_retry(struct ata_queued_cmd *qc)
  */
 static inline bool ata_eh_quiet(struct ata_queued_cmd *qc)
 {
-	if (qc->scsicmd && scsi_cmd_to_rq(qc->scsicmd)->rq_flags & RQF_QUIET)
-		qc->flags |= ATA_QCFLAG_QUIET;
+	// if (qc->scsicmd && scsi_cmd_to_rq(qc->scsicmd)->rq_flags & RQF_QUIET)
+	// 	qc->flags |= ATA_QCFLAG_QUIET;
 	return qc->flags & ATA_QCFLAG_QUIET;
 }
 
@@ -1985,7 +1985,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
 		all_err_mask |= qc->err_mask;
 		if (qc->flags & ATA_QCFLAG_IO)
 			eflags |= ATA_EFLAG_IS_IO;
-		trace_ata_eh_link_autopsy_qc(qc);
+		// trace_ata_eh_link_autopsy_qc(qc);
 
 		/* Count quiet errors */
 		if (ata_eh_quiet(qc))
@@ -2028,7 +2028,7 @@ static void ata_eh_link_autopsy(struct ata_link *link)
 		if (dev->flags & ATA_DFLAG_DUBIOUS_XFER)
 			eflags |= ATA_EFLAG_DUBIOUS_XFER;
 		ehc->i.action |= ata_eh_speed_down(dev, eflags, all_err_mask);
-		trace_ata_eh_link_autopsy(dev, ehc->i.action, all_err_mask);
+		// trace_ata_eh_link_autopsy(dev, ehc->i.action, all_err_mask);
 	}
 }
 
@@ -2474,7 +2474,7 @@ int ata_eh_reset(struct ata_link *link, int classify,
 		deadline = ata_deadline(ehc->last_reset,
 					ATA_EH_RESET_COOL_DOWN);
 		if (time_before(now, deadline))
-			schedule_timeout_uninterruptible(deadline - now);
+			; // schedule_timeout_uninterruptible(deadline - now);
 	}
 
 	spin_lock_irqsave(ap->lock, flags);
@@ -2587,17 +2587,17 @@ int ata_eh_reset(struct ata_link *link, int classify,
 		ehc->last_reset = jiffies;
 		if (reset == hardreset) {
 			ehc->i.flags |= ATA_EHI_DID_HARDRESET;
-			trace_ata_link_hardreset_begin(link, classes, deadline);
+			// trace_ata_link_hardreset_begin(link, classes, deadline);
 		} else {
 			ehc->i.flags |= ATA_EHI_DID_SOFTRESET;
-			trace_ata_link_softreset_begin(link, classes, deadline);
+			// trace_ata_link_softreset_begin(link, classes, deadline);
 		}
 
 		rc = ata_do_reset(link, reset, classes, deadline, true);
-		if (reset == hardreset)
-			trace_ata_link_hardreset_end(link, classes, rc);
-		else
-			trace_ata_link_softreset_end(link, classes, rc);
+		// if (reset == hardreset)
+			// trace_ata_link_hardreset_end(link, classes, rc);
+		// else
+			// trace_ata_link_softreset_end(link, classes, rc);
 		if (rc && rc != -EAGAIN) {
 			failed_link = link;
 			goto fail;
@@ -2611,11 +2611,10 @@ int ata_eh_reset(struct ata_link *link, int classify,
 				ata_link_info(slave, "hard resetting link\n");
 
 			ata_eh_about_to_do(slave, NULL, ATA_EH_RESET);
-			trace_ata_slave_hardreset_begin(slave, classes,
-							deadline);
+			// trace_ata_slave_hardreset_begin(slave, classes, deadline);
 			tmp = ata_do_reset(slave, reset, classes, deadline,
 					   false);
-			trace_ata_slave_hardreset_end(slave, classes, tmp);
+			// trace_ata_slave_hardreset_end(slave, classes, tmp);
 			switch (tmp) {
 			case -EAGAIN:
 				rc = -EAGAIN;
@@ -2643,9 +2642,9 @@ int ata_eh_reset(struct ata_link *link, int classify,
 			}
 
 			ata_eh_about_to_do(link, NULL, ATA_EH_RESET);
-			trace_ata_link_softreset_begin(link, classes, deadline);
+			// trace_ata_link_softreset_begin(link, classes, deadline);
 			rc = ata_do_reset(link, reset, classes, deadline, true);
-			trace_ata_link_softreset_end(link, classes, rc);
+			// trace_ata_link_softreset_end(link, classes, rc);
 			if (rc) {
 				failed_link = link;
 				goto fail;
@@ -2699,10 +2698,10 @@ int ata_eh_reset(struct ata_link *link, int classify,
 	 */
 	if (postreset) {
 		postreset(link, classes);
-		trace_ata_link_postreset(link, classes, rc);
+		// trace_ata_link_postreset(link, classes, rc);
 		if (slave) {
 			postreset(slave, classes);
-			trace_ata_slave_postreset(slave, classes, rc);
+			// trace_ata_slave_postreset(slave, classes, rc);
 		}
 	}
 
@@ -2814,8 +2813,8 @@ int ata_eh_reset(struct ata_link *link, int classify,
 			rc, DIV_ROUND_UP(jiffies_to_msecs(delta), 1000));
 
 		ata_eh_release(ap);
-		while (delta)
-			delta = schedule_timeout_uninterruptible(delta);
+		// while (delta)
+		// 	delta = schedule_timeout_uninterruptible(delta);
 		ata_eh_acquire(ap);
 	}
 
@@ -2874,7 +2873,7 @@ static inline void ata_eh_pull_park_action(struct ata_port *ap)
 	 */
 
 	spin_lock_irqsave(ap->lock, flags);
-	reinit_completion(&ap->park_req_pending);
+	// reinit_completion(&ap->park_req_pending);
 	ata_for_each_link(link, ap, EDGE) {
 		ata_for_each_dev(dev, link, ALL) {
 			struct ata_eh_info *ehi = &link->eh_info;
@@ -2958,7 +2957,7 @@ static int ata_eh_revalidate_and_attach(struct ata_link *link,
 			ehc->i.flags |= ATA_EHI_SETMODE;
 
 			/* schedule the scsi_rescan_device() here */
-			schedule_work(&(ap->scsi_rescan_task));
+			// schedule_work(&(ap->scsi_rescan_task));
 		} else if (dev->class == ATA_DEV_UNKNOWN &&
 			   ehc->tries[dev->devno] &&
 			   ata_class_enabled(ehc->classes[dev->devno])) {
@@ -3658,8 +3657,8 @@ int ata_eh_recover(struct ata_port *ap, ata_prereset_fn_t prereset,
 			break;
 
 		ata_eh_release(ap);
-		deadline = wait_for_completion_timeout(&ap->park_req_pending,
-						       deadline - now);
+		// deadline = wait_for_completion_timeout(&ap->park_req_pending,
+		//				       deadline - now);
 		ata_eh_acquire(ap);
 	} while (deadline);
 	ata_for_each_link(link, ap, EDGE) {
