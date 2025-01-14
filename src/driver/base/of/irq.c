@@ -15,16 +15,16 @@
  */
 
 #define pr_fmt(fmt)	"OF: " fmt
-#if 0
+
 #include <linux/device.h>
 #include <linux/errno.h>
 #include <linux/list.h>
-// #include <linux/module.h>
+// // #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/string.h>
-// #include <linux/slab.h>
-#include <linux/compat.h>
+// // #include <linux/slab.h>
+#include <linux/lynix-compat.h>
 
 /**
  * irq_of_parse_and_map - Parse and map an interrupt into linux virq space
@@ -731,4 +731,3 @@ void of_msi_configure(struct device *dev, struct device_node *np)
 			   of_msi_get_domain(dev, np, DOMAIN_BUS_PLATFORM_MSI));
 }
 EXPORT_SYMBOL_GPL(of_msi_configure);
-#endif

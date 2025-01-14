@@ -22,7 +22,7 @@
 #include <linux/pm.h>
 #include <linux/atomic.h>
 #include <linux/uidgid.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/overflow.h>
 #include <linux/device/bus.h>
 #include <linux/device/class.h>

@@ -1,8 +1,8 @@
 #if 0
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/of.h>
-// #include <linux/slab.h>
-#include <linux/compat.h>
+// // #include <linux/slab.h>
+#include <linux/lynix-compat.h>
 
 #include "of_private.h"
 

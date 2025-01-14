@@ -16,7 +16,7 @@
 #include <linux/errno.h>
 #include <linux/kobject.h>
 #include <linux/mod_devicetable.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/notifier.h>
 #include <linux/property.h>
 #include <linux/list.h>

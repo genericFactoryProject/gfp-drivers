@@ -9,8 +9,9 @@
 
 #include <linux/export.h>
 #include <linux/of.h>
+#include <linux/of_irq.h>
 #include <linux/property.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/device.h>
 #include <linux/ioport.h>
 
@@ -923,20 +924,19 @@ EXPORT_SYMBOL(fwnode_iomap);
  */
 int fwnode_irq_get(const struct fwnode_handle *fwnode, unsigned int index)
 {
-#if 0
 	struct resource res;
 	int ret;
 
 	if (is_of_node(fwnode))
 		return of_irq_get(to_of_node(fwnode), index);
-
+#if 0
 	ret = acpi_irq_get(ACPI_HANDLE_FWNODE(fwnode), index, &res);
 	if (ret)
 		return ret;
 
 	return res.start;
 #endif
-	return 0;
+	return -EINVAL;
 }
 EXPORT_SYMBOL(fwnode_irq_get);
 

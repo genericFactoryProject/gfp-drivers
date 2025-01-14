@@ -20,7 +20,7 @@
 #include <linux/sysfs.h>
 #include <linux/compiler.h>
 #include <linux/container_of.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/kref.h>
 #include <linux/kobject_ns.h>
 #include <linux/atomic.h>

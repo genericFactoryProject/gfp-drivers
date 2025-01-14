@@ -14,7 +14,7 @@
 #include <linux/string.h>
 #include <linux/kdev_t.h>
 #include <linux/err.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/printk.h>
 
 #include "base.h"

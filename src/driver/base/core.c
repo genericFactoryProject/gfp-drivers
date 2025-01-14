@@ -13,7 +13,7 @@
 #include <linux/err.h>
 #include <linux/fwnode.h>
 #include <linux/init.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/string.h>
 #include <linux/kdev_t.h>
 #include <linux/notifier.h>

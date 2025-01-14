@@ -31,6 +31,11 @@ start_kernel ->
                 populate_node ->
                     populate_properties
 
+bootline:
+setup_machine_fdt ->
+    early_init_dt_scan ->
+        early_init_dt_scan_nodes ->
+            early_init_dt_scan_chosen(boot_command_line)
 
 [arch_initcall_sync] platform device register:
 of_platform_default_populate_init ->

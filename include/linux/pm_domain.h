@@ -9,11 +9,12 @@
 #define _LINUX_PM_DOMAIN_H
 
 #include <linux/device.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/pm.h>
 #include <linux/err.h>
 #include <linux/of.h>
 #include <linux/notifier.h>
+#include <linux/cpumask.h>
 
 /*
  * Flags to control the behaviour of a genpd.
@@ -67,7 +68,6 @@
 #define GENPD_FLAG_MIN_RESIDENCY (1U << 6)
 
 typedef u64 ktime_t;
-typedef u64 cpumask_var_t;
 
 
 enum gpd_status {

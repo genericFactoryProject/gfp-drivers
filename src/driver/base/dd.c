@@ -22,7 +22,7 @@
 #include <linux/async.h>
 #include <linux/pm_runtime.h>
 
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 #include "base.h"
 #include "power/power.h"

@@ -9,10 +9,10 @@
 // #include <linux/dma-direct.h> /* for bus_dma_region */
 // #include <linux/dma-map-ops.h>
 // #include <linux/init.h>
-// #include <linux/module.h>
+// // #include <linux/module.h>
 #include <linux/mod_devicetable.h>
-// #include <linux/slab.h>
-#include <linux/compat.h>
+// // #include <linux/slab.h>
+#include <linux/lynix-compat.h>
 #include <linux/platform_device.h>
 
 #include <asm/errno.h>

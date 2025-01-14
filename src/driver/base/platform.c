@@ -11,17 +11,18 @@
 
 #include <linux/string.h>
 #include <linux/platform_device.h>
-#include <linux/module.h>
+// // #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/ioport.h>
 #include <linux/err.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/pm_runtime.h>
 #include <linux/pm_domain.h>
 #include <linux/idr.h>
 #include <linux/limits.h>
 #include <linux/property.h>
 #include <linux/types.h>
+#include <linux/of_irq.h>
 
 #include "base.h"
 #include "power/power.h"
@@ -165,7 +166,6 @@ EXPORT_SYMBOL_GPL(devm_platform_ioremap_resource_byname);
  */
 int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 {
-#if 0
 	int ret;
 #ifdef CONFIG_SPARC
 	/* sparc does not have irqs represented as IORESOURCE_IRQ resources */
@@ -183,6 +183,7 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 	}
 
 	r = platform_get_resource(dev, IORESOURCE_IRQ, num);
+#if 0
 	if (has_acpi_companion(&dev->dev)) {
 		if (r && r->flags & IORESOURCE_DISABLED) {
 			ret = acpi_irq_get(ACPI_HANDLE(&dev->dev), num, r);
@@ -190,7 +191,7 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 				goto out;
 		}
 	}
-
+#endif
 	/*
 	 * The resources may pass trigger flags to the irqs that need
 	 * to be set up. It so happens that the trigger flags for
@@ -211,6 +212,7 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 		goto out;
 	}
 
+#if 0
 	/*
 	 * For the index 0 interrupt, allow falling back to GpioInt
 	 * resources. While a device could have both Interrupt and GpioInt
@@ -224,7 +226,7 @@ int platform_get_irq_optional(struct platform_device *dev, unsigned int num)
 		if (ret >= 0 || ret == -EPROBE_DEFER)
 			goto out;
 	}
-
+#endif
 #endif
 
 out_not_found:
@@ -232,8 +234,6 @@ out_not_found:
 out:
 	WARN(ret == 0, "0 is an invalid IRQ number\n");
 	return ret;
-#endif
-	return -ENXIO;
 }
 EXPORT_SYMBOL_GPL(platform_get_irq_optional);
 
@@ -297,7 +297,7 @@ struct irq_affinity_devres {
  * @mask:	cpumask to hold the affinity assignment
  * @is_managed: 1 if the interrupt is managed internally
  */
-typedef struct cpumask { DECLARE_BITMAP(bits, NR_CPUS); } cpumask_t;
+
 struct irq_affinity_desc {
 	struct cpumask	mask;
 	unsigned int	is_managed : 1;

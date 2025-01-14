@@ -10,17 +10,17 @@
 #define pr_fmt(fmt)	"OF: " fmt
 
 #include <linux/errno.h>
-// #include <linux/module.h>
+// // #include <linux/module.h>
 // #include <linux/amba/bus.h>
 #include <linux/device.h>
 // #include <linux/dma-mapping.h>
-// #include <linux/slab.h>
+// // #include <linux/slab.h>
 #include <linux/of_address.h>
 #include <linux/of_device.h>
 #include <linux/of_irq.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 const struct of_device_id of_default_bus_match_table[] = {
 	{ .compatible = "simple-bus", },

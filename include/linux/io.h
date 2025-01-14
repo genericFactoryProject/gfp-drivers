@@ -8,7 +8,7 @@
 
 #include <linux/types.h>
 #include <linux/init.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/err.h>
 #include <asm/io.h>
 

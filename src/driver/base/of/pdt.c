@@ -12,13 +12,13 @@
  */
 
 // #include <linux/kernel.h>
-// #include <linux/module.h>
+// // #include <linux/module.h>
 #include <linux/errno.h>
 // #include <linux/mutex.h>
-// #include <linux/slab.h>
+// // #include <linux/slab.h>
 #include <linux/of.h>
 #include <linux/of_pdt.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 static struct of_pdt_ops *of_pdt_prom_ops __initdata;
 

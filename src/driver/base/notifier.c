@@ -3,7 +3,7 @@
 #include <linux/export.h>
 #include <linux/notifier.h>
 
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 /* notifer trigger
  * 1. call - sync

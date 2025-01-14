@@ -17,7 +17,7 @@
 #include <linux/align.h>
 #include <linux/resource_ext.h>
 #include <linux/device.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 #include <asm/io.h>
 

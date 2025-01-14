@@ -2,11 +2,11 @@
 #ifndef __OF_IRQ_H
 #define __OF_IRQ_H
 
-#if 0
+
 #include <linux/types.h>
 #include <linux/errno.h>
-// #include <linux/irq.h>
-// #include <linux/irqdomain.h>
+#include <linux/irq.h>
+#include <linux/irqdomain.h>
 #include <linux/ioport.h>
 #include <linux/of.h>
 
@@ -121,5 +121,5 @@ static inline unsigned int irq_of_parse_and_map(struct device_node *dev,
 	return 0;
 }
 #endif /* !CONFIG_OF */
-#endif
+
 #endif /* __OF_IRQ_H */

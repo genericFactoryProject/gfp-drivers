@@ -7,7 +7,7 @@
  */
 
 #include <linux/device.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 #include "base.h"
 

@@ -8,7 +8,7 @@
 
 #include <linux/device.h>
 #include <linux/property.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/idr.h>
 #include <linux/log2.h>
 #include <linux/kstrtox.h>

@@ -8,7 +8,7 @@
 #include <linux/types.h>
 #include <linux/list.h>
 #include <linux/ioport.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 /* Represent resource window for bridge devices */
 struct resource_win {

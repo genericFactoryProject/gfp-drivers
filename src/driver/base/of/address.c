@@ -6,13 +6,13 @@
 #include <linux/io.h>
 #include <linux/ioport.h>
 // #include <linux/logic_pio.h>
-// #include <linux/module.h>
+// // #include <linux/module.h>
 #include <linux/of_address.h>
 // #include <linux/pci.h>
 // #include <linux/pci_regs.h>
 #include <linux/sizes.h>
-#include <linux/compat.h>
-// #include <linux/slab.h>
+#include <linux/lynix-compat.h>
+// // #include <linux/slab.h>
 #include <linux/string.h>
 // #include <linux/dma-direct.h> /* for bus_dma_region */
 

@@ -11,7 +11,7 @@
 #include <linux/device/driver.h>
 #include <linux/device.h>
 #include <linux/errno.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/string.h>
 #include <linux/sysfs.h>
 #include "base.h"

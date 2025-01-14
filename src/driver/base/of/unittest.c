@@ -19,7 +19,7 @@
 #include <linux/of_platform.h>
 #include <linux/list.h>
 // #include <linux/mutex.h>
-// #include <linux/slab.h>
+// // #include <linux/slab.h>
 #include <linux/device.h>
 #include <linux/platform_device.h>
 // #include <linux/kernel.h>
@@ -30,7 +30,7 @@
 
 #include <linux/bitops.h>
 
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 #include "of_private.h"
 

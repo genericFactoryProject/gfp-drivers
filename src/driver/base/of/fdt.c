@@ -20,9 +20,9 @@
 #include <linux/sizes.h>
 #include <linux/string.h>
 #include <linux/errno.h>
-// #include <linux/slab.h>
+// // #include <linux/slab.h>
 #include <linux/libfdt.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 #include <linux/align.h>
 // #include <linux/debugfs.h>
 // #include <linux/serial_core.h>

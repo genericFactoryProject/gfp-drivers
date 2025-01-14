@@ -19,11 +19,11 @@
 #include <linux/sizes.h>
 #include <linux/of_reserved_mem.h>
 #include <linux/sort.h>
-// #include <linux/slab.h>
+// // #include <linux/slab.h>
 // #include <linux/memblock.h>
 // #include <linux/kmemleak.h>
 // #include <linux/cma.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 #include "of_private.h"
 

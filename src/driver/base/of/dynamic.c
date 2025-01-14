@@ -10,10 +10,10 @@
 #define pr_fmt(fmt)	"OF: " fmt
 
 #include <linux/of.h>
-// #include <linux/spinlock.h>
-// #include <linux/slab.h>
+// // #include <linux/spinlock.h>
+// // #include <linux/slab.h>
 #include <linux/string.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 // #include <linux/proc_fs.h>
 #include <linux/export.h>
 

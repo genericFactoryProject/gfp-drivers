@@ -9,14 +9,14 @@
 #define pr_fmt(fmt)	"OF: resolver: " fmt
 
 // #include <linux/kernel.h>
-// #include <linux/module.h>
+// // #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/string.h>
 #include <linux/ctype.h>
 #include <linux/errno.h>
-// #include <linux/slab.h>
-#include <linux/compat.h>
+// // #include <linux/slab.h>
+#include <linux/lynix-compat.h>
 #include <linux/kstrtox.h>
 
 #include "of_private.h"

@@ -9,18 +9,18 @@
 #define pr_fmt(fmt)	"OF: overlay: " fmt
 
 // #include <linux/kernel.h>
-// #include <linux/module.h>
+// // #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/of_fdt.h>
 #include <linux/string.h>
 #include <linux/ctype.h>
 #include <linux/errno.h>
-// #include <linux/slab.h>
+// // #include <linux/slab.h>
 #include <linux/libfdt.h>
 #include <linux/err.h>
 #include <linux/idr.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 #include "of_private.h"
 

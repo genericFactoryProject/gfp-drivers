@@ -10,7 +10,7 @@
 
 #include <linux/export.h>
 #include <linux/list.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 /*
  * Callbacks for platform drivers to implement.

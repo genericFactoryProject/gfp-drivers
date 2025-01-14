@@ -12,7 +12,7 @@
 #define _LINUX_NOTIFIER_H
 
 #include <linux/errno.h>
-#include <linux/compat.h>
+#include <linux/lynix-compat.h>
 
 /*
  * Notifier chains are of four types:
@@ -61,6 +61,7 @@ struct raw_notifier_head {
 	struct notifier_block __rcu *head;
 };
 
+struct srcu_notifier_head {};
 
 #define ATOMIC_INIT_NOTIFIER_HEAD(name) do {	\
 		spin_lock_init(&(name)->lock);	\
@@ -97,7 +98,9 @@ struct raw_notifier_head {
 	struct raw_notifier_head name =				\
 		RAW_NOTIFIER_INIT(name)
 
-
+/* srcu_notifier_heads must be cleaned up dynamically */
+extern void srcu_init_notifier_head(struct srcu_notifier_head *nh);
+#define srcu_cleanup_notifier_head(name)
 
 #define SRCU_NOTIFIER_HEAD(name)				\
 	_SRCU_NOTIFIER_HEAD(name, /* not static */)
@@ -113,7 +116,8 @@ extern int blocking_notifier_chain_register(struct blocking_notifier_head *nh,
 		struct notifier_block *nb);
 extern int raw_notifier_chain_register(struct raw_notifier_head *nh,
 		struct notifier_block *nb);
-
+extern int srcu_notifier_chain_register(struct srcu_notifier_head *nh,
+		struct notifier_block *nb);
 
 extern int atomic_notifier_chain_unregister(struct atomic_notifier_head *nh,
 		struct notifier_block *nb);
@@ -121,7 +125,8 @@ extern int blocking_notifier_chain_unregister(struct blocking_notifier_head *nh,
 		struct notifier_block *nb);
 extern int raw_notifier_chain_unregister(struct raw_notifier_head *nh,
 		struct notifier_block *nb);
-
+extern int srcu_notifier_chain_unregister(struct srcu_notifier_head *nh,
+		struct notifier_block *nb);
 
 extern int atomic_notifier_call_chain(struct atomic_notifier_head *nh,
 		unsigned long val, void *v);
@@ -129,7 +134,8 @@ extern int blocking_notifier_call_chain(struct blocking_notifier_head *nh,
 		unsigned long val, void *v);
 extern int raw_notifier_call_chain(struct raw_notifier_head *nh,
 		unsigned long val, void *v);
-
+extern int srcu_notifier_call_chain(struct srcu_notifier_head *nh,
+		unsigned long val, void *v);
 
 extern int blocking_notifier_call_chain_robust(struct blocking_notifier_head *nh,
 		unsigned long val_up, unsigned long val_down, void *v);
