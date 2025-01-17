@@ -6,9 +6,6 @@
 #include <linux/device.h>
 #include <linux/init.h>
 #include <linux/led-class-multicolor.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
-#include <linux/uaccess.h>
 
 #include "leds.h"
 
@@ -26,7 +23,7 @@ int led_mc_calc_color_components(struct led_classdev_mc *mcled_cdev,
 	return 0;
 }
 EXPORT_SYMBOL_GPL(led_mc_calc_color_components);
-
+#if 0
 static ssize_t multi_intensity_store(struct device *dev,
 				struct device_attribute *intensity_attr,
 				const char *buf, size_t size)
@@ -115,6 +112,7 @@ static struct attribute *led_multicolor_attrs[] = {
 	NULL,
 };
 ATTRIBUTE_GROUPS(led_multicolor);
+#endif
 
 int led_classdev_multicolor_register_ext(struct device *parent,
 				     struct led_classdev_mc *mcled_cdev,
@@ -132,7 +130,7 @@ int led_classdev_multicolor_register_ext(struct device *parent,
 		return -EINVAL;
 
 	led_cdev = &mcled_cdev->led_cdev;
-	mcled_cdev->led_cdev.groups = led_multicolor_groups;
+	//mcled_cdev->led_cdev.groups = led_multicolor_groups;
 
 	return led_classdev_register_ext(parent, led_cdev, init_data);
 }
@@ -160,7 +158,7 @@ int devm_led_classdev_multicolor_register_ext(struct device *parent,
 	int ret;
 
 	dr = devres_alloc(devm_led_classdev_multicolor_release,
-			  sizeof(*dr), GFP_KERNEL);
+			  sizeof(*dr), 0);
 	if (!dr)
 		return -ENOMEM;
 

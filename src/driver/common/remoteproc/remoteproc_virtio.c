@@ -19,7 +19,6 @@
 #include <linux/virtio_ring.h>
 #include <linux/err.h>
 #include <linux/kref.h>
-// #include <linux/slab.h>
 
 #include "remoteproc_internal.h"
 

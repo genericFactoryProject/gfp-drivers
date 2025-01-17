@@ -5,7 +5,7 @@
  *  Sponsored by SuSE
  */
 /*
- * 
+ *
  * Should you need to contact me, the author, you can do so either by
  * e-mail - mail your message to <vojtech@suse.cz>, or by paper mail:
  * Vojtech Pavlik, Ucitelska 1576, Prague 8, 182 00 Czech Republic
@@ -25,7 +25,7 @@ struct hiddev {
 	int exist;
 	int open;
 	struct mutex existancelock;
-	wait_queue_head_t wait;
+	//wait_queue_head_t wait;
 	struct hid_device *hid;
 	struct list_head list;
 	spinlock_t list_lock;

@@ -5,12 +5,10 @@
  * Copyright 2013 Linaro Ltd
  */
 
-// #include <linux/kernel.h>
 #include <linux/err.h>
 #include <linux/regmap.h>
 #include <linux/regulator/consumer.h>
 #include <linux/regulator/driver.h>
-// #include <linux/module.h>
 
 #include "internal.h"
 
@@ -24,7 +22,7 @@ static struct regulator *_devm_regulator_get(struct device *dev, const char *id,
 {
 	struct regulator **ptr, *regulator;
 
-	ptr = devres_alloc(devm_regulator_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_regulator_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -149,7 +147,7 @@ int devm_regulator_bulk_get(struct device *dev, int num_consumers,
 	int ret;
 
 	devres = devres_alloc(devm_regulator_bulk_release,
-			      sizeof(*devres), GFP_KERNEL);
+			      sizeof(*devres), 0);
 	if (!devres)
 		return -ENOMEM;
 
@@ -189,7 +187,7 @@ struct regulator_dev *devm_regulator_register(struct device *dev,
 	struct regulator_dev **ptr, *rdev;
 
 	ptr = devres_alloc(devm_rdev_release, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -248,7 +246,7 @@ int devm_regulator_register_supply_alias(struct device *dev, const char *id,
 
 	match = devres_alloc(devm_regulator_destroy_supply_alias,
 			   sizeof(struct regulator_supply_alias_match),
-			   GFP_KERNEL);
+			   0);
 	if (!match)
 		return -ENOMEM;
 
@@ -371,7 +369,7 @@ int devm_regulator_register_notifier(struct regulator *regulator,
 
 	match = devres_alloc(devm_regulator_destroy_notifier,
 			     sizeof(struct regulator_notifier_match),
-			     GFP_KERNEL);
+			     0);
 	if (!match)
 		return -ENOMEM;
 

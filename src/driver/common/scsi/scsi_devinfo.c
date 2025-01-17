@@ -1,13 +1,8 @@
 // SPDX-License-Identifier: GPL-2.0
 
-#include <linux/blkdev.h>
 #include <linux/init.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/moduleparam.h>
-#include <linux/proc_fs.h>
-#include <linux/seq_file.h>
-// #include <linux/slab.h>
+#include <linux/kstrtox.h>
 
 #include <scsi/scsi_device.h>
 #include <scsi/scsi_devinfo.h>

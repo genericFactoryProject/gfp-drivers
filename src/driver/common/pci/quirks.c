@@ -13,30 +13,26 @@
  */
 
 #include <linux/types.h>
-// #include <linux/kernel.h>
 #include <linux/export.h>
 #include <linux/pci.h>
 #include <linux/init.h>
 #include <linux/delay.h>
-#include <linux/acpi.h>
 #include <linux/dmi.h>
 #include <linux/ioport.h>
-#include <linux/sched.h>
 #include <linux/ktime.h>
-#include <linux/mm.h>
 #include <linux/nvme.h>
 #include <linux/platform_data/x86/apple.h>
 #include <linux/pm_runtime.h>
 #include <linux/suspend.h>
 #include <linux/switchtec.h>
-#include <asm/dma.h>	/* isa_dma_bridge_buggy */
+//#include <asm/dma.h>	/* isa_dma_bridge_buggy */
 #include "pci.h"
 
 static ktime_t fixup_debug_start(struct pci_dev *dev,
 				 void (*fn)(struct pci_dev *dev))
 {
-	if (initcall_debug)
-		pci_info(dev, "calling  %pS @ %i\n", fn, task_pid_nr(current));
+	//if (initcall_debug)
+	//	pci_info(dev, "calling  %pS @ %i\n", fn, task_pid_nr(current));
 
 	return ktime_get();
 }
@@ -248,10 +244,10 @@ DECLARE_PCI_FIXUP_RESUME(PCI_VENDOR_ID_INTEL,	PCI_DEVICE_ID_INTEL_82441,	quirk_p
  */
 static void quirk_isa_dma_hangs(struct pci_dev *dev)
 {
-	if (!isa_dma_bridge_buggy) {
-		isa_dma_bridge_buggy = 1;
-		pci_info(dev, "Activating ISA DMA hang workarounds\n");
-	}
+	//if (!isa_dma_bridge_buggy) {
+	//	isa_dma_bridge_buggy = 1;
+	//	pci_info(dev, "Activating ISA DMA hang workarounds\n");
+	//}
 }
 /*
  * It's not totally clear which chipsets are the problematic ones.  We know
@@ -279,7 +275,7 @@ static void quirk_tigerpoint_bm_sts(struct pci_dev *dev)
 	pm1a = inw(pmbase);
 
 	if (pm1a & 0x10) {
-		pci_info(dev, FW_BUG "TigerPoint LPC.BM_STS cleared\n");
+		pci_info(dev,  "TigerPoint LPC.BM_STS cleared\n");
 		outw(0x10, pmbase);
 	}
 }
@@ -524,7 +520,7 @@ static void quirk_io(struct pci_dev *dev, int pos, unsigned int size,
 	bus_region.end = region + size - 1;
 	pcibios_bus_to_resource(dev->bus, res, &bus_region);
 
-	pci_info(dev, FW_BUG "%s quirk: reg 0x%x: %pR\n",
+	pci_info(dev,  "%s quirk: reg 0x%x: %pR\n",
 		 name, PCI_BASE_ADDRESS_0 + (pos << 2), res);
 }
 
@@ -5771,7 +5767,7 @@ static void quirk_reset_lenovo_thinkpad_p50_nvgpu(struct pci_dev *pdev)
 	 * it.
 	 */
 	if (ioread32(map + 0x2240c) & 0x2) {
-		pci_info(pdev, FW_BUG "GPU left initialized by EFI, resetting\n");
+		pci_info(pdev,  "GPU left initialized by EFI, resetting\n");
 		ret = pci_reset_bus(pdev);
 		if (ret < 0)
 			pci_err(pdev, "Failed to reset GPU: %d\n", ret);

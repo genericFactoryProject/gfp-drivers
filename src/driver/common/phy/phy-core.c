@@ -7,12 +7,9 @@
  * Author: Kishon Vijay Abraham I <kishon@ti.com>
  */
 
-// #include <linux/kernel.h>
 #include <linux/export.h>
-// #include <linux/module.h>
 #include <linux/err.h>
 #include <linux/device.h>
-// #include <linux/slab.h>
 #include <linux/of.h>
 #include <linux/phy/phy.h>
 #include <linux/idr.h>
@@ -68,7 +65,7 @@ int phy_create_lookup(struct phy *phy, const char *con_id, const char *dev_id)
 	if (!phy || !dev_id || !con_id)
 		return -EINVAL;
 
-	pl = kzalloc(sizeof(*pl), GFP_KERNEL);
+	pl = kzalloc(sizeof(*pl), );
 	if (!pl)
 		return -ENOMEM;
 
@@ -542,10 +539,10 @@ static struct phy *_of_phy_get(struct device_node *np, int index)
 
 	mutex_lock(&phy_provider_mutex);
 	phy_provider = of_phy_provider_lookup(args.np);
-	if (IS_ERR(phy_provider) || !try_module_get(phy_provider->owner)) {
-		phy = ERR_PTR(-EPROBE_DEFER);
-		goto out_unlock;
-	}
+	//if (IS_ERR(phy_provider) || !try_module_get(phy_provider->owner)) {
+	//	phy = ERR_PTR(-EPROBE_DEFER);
+	//	goto out_unlock;
+	//}
 
 	if (!of_device_is_available(args.np)) {
 		dev_warn(phy_provider->dev, "Requested PHY is disabled\n");
@@ -556,9 +553,9 @@ static struct phy *_of_phy_get(struct device_node *np, int index)
 	phy = phy_provider->of_xlate(phy_provider->dev, &args);
 
 out_put_module:
-	module_put(phy_provider->owner);
+	//module_put(phy_provider->owner);
 
-out_unlock:
+//out_unlock:
 	mutex_unlock(&phy_provider_mutex);
 	of_node_put(args.np);
 
@@ -586,8 +583,8 @@ struct phy *of_phy_get(struct device_node *np, const char *con_id)
 	if (IS_ERR(phy))
 		return phy;
 
-	if (!try_module_get(phy->ops->owner))
-		return ERR_PTR(-EPROBE_DEFER);
+	//if (!try_module_get(phy->ops->owner))
+	//	return ERR_PTR(-EPROBE_DEFER);
 
 	get_device(&phy->dev);
 
@@ -611,7 +608,7 @@ void of_phy_put(struct phy *phy)
 		phy->ops->release(phy);
 	mutex_unlock(&phy->mutex);
 
-	module_put(phy->ops->owner);
+	//module_put(phy->ops->owner);
 	put_device(&phy->dev);
 }
 EXPORT_SYMBOL_GPL(of_phy_put);
@@ -714,8 +711,8 @@ struct phy *phy_get(struct device *dev, const char *string)
 	if (IS_ERR(phy))
 		return phy;
 
-	if (!try_module_get(phy->ops->owner))
-		return ERR_PTR(-EPROBE_DEFER);
+	//if (!try_module_get(phy->ops->owner))
+	//	return ERR_PTR(-EPROBE_DEFER);
 
 	get_device(&phy->dev);
 
@@ -763,7 +760,7 @@ struct phy *devm_phy_get(struct device *dev, const char *string)
 {
 	struct phy **ptr, *phy;
 
-	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -819,7 +816,7 @@ struct phy *devm_of_phy_get(struct device *dev, struct device_node *np,
 	struct phy **ptr, *phy;
 	struct device_link *link;
 
-	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -859,7 +856,7 @@ struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
 	struct phy **ptr, *phy;
 	struct device_link *link;
 
-	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_phy_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -868,12 +865,12 @@ struct phy *devm_of_phy_get_by_index(struct device *dev, struct device_node *np,
 		devres_free(ptr);
 		return phy;
 	}
-
+#if 0
 	if (!try_module_get(phy->ops->owner)) {
 		devres_free(ptr);
 		return ERR_PTR(-EPROBE_DEFER);
 	}
-
+#endif
 	get_device(&phy->dev);
 
 	*ptr = phy;
@@ -906,11 +903,11 @@ struct phy *phy_create(struct device *dev, struct device_node *node,
 	if (WARN_ON(!dev))
 		return ERR_PTR(-EINVAL);
 
-	phy = kzalloc(sizeof(*phy), GFP_KERNEL);
+	phy = kzalloc(sizeof(*phy), );
 	if (!phy)
 		return ERR_PTR(-ENOMEM);
 
-	id = ida_simple_get(&phy_ida, 0, 0, GFP_KERNEL);
+	id = ida_simple_get(&phy_ida, 0, 0, 0);
 	if (id < 0) {
 		dev_err(dev, "unable to get id\n");
 		ret = id;
@@ -977,7 +974,7 @@ struct phy *devm_phy_create(struct device *dev, struct device_node *node,
 {
 	struct phy **ptr, *phy;
 
-	ptr = devres_alloc(devm_phy_consume, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_phy_consume, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -1073,7 +1070,7 @@ struct phy_provider *__of_phy_provider_register(struct device *dev,
 		children = dev->of_node;
 	}
 
-	phy_provider = kzalloc(sizeof(*phy_provider), GFP_KERNEL);
+	phy_provider = kzalloc(sizeof(*phy_provider), );
 	if (!phy_provider)
 		return ERR_PTR(-ENOMEM);
 
@@ -1111,7 +1108,7 @@ struct phy_provider *__devm_of_phy_provider_register(struct device *dev,
 {
 	struct phy_provider **ptr, *phy_provider;
 
-	ptr = devres_alloc(devm_phy_provider_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_phy_provider_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -1186,7 +1183,7 @@ static void phy_release(struct device *dev)
 
 static int __init phy_core_init(void)
 {
-	phy_class = class_create(THIS_MODULE, "phy");
+	phy_class = class_create("phy");
 	if (IS_ERR(phy_class)) {
 		pr_err("failed to create phy class --> %ld\n",
 			PTR_ERR(phy_class));

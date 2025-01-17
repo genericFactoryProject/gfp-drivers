@@ -8,16 +8,13 @@
  */
 
 #include <linux/export.h>
-// #include <linux/kernel.h>
 #include <linux/list.h>
-// #include <linux/spinlock.h>
 #include <linux/device.h>
 #include <linux/timer.h>
-#include <linux/rwsem.h>
 #include <linux/leds.h>
-// #include <linux/slab.h>
-#include <linux/mm.h>
+#include <linux/lynix-compat.h>
 #include "leds.h"
+#include <linux/rculist.h>
 
 /*
  * Nests outside led_cdev->trigger_lock
@@ -32,7 +29,7 @@ trigger_relevant(struct led_classdev *led_cdev, struct led_trigger *trig)
 {
 	return !trig->trigger_type || trig->trigger_type == led_cdev->trigger_type;
 }
-
+#if 0
 ssize_t led_trigger_write(struct file *filp, struct kobject *kobj,
 			  struct bin_attribute *bin_attr, char *buf,
 			  loff_t pos, size_t count)
@@ -74,7 +71,7 @@ unlock:
 	return ret;
 }
 EXPORT_SYMBOL_GPL(led_trigger_write);
-
+#endif
 __printf(3, 4)
 static int led_trigger_snprintf(char *buf, ssize_t size, const char *fmt, ...)
 {
@@ -115,7 +112,7 @@ static int led_trigger_format(char *buf, size_t size,
 
 	return len;
 }
-
+#if 0
 /*
  * It was stupid to create 10000 cpu triggers, but we are stuck with it now.
  * Don't make that mistake again. We work around it here by creating binary
@@ -135,7 +132,7 @@ ssize_t led_trigger_read(struct file *filp, struct kobject *kobj,
 	down_read(&led_cdev->trigger_lock);
 
 	len = led_trigger_format(NULL, 0, led_cdev);
-	data = kvmalloc(len + 1, GFP_KERNEL);
+	data = kvmalloc(len + 1, );
 	if (!data) {
 		up_read(&led_cdev->trigger_lock);
 		up_read(&triggers_list_lock);
@@ -153,7 +150,7 @@ ssize_t led_trigger_read(struct file *filp, struct kobject *kobj,
 	return len;
 }
 EXPORT_SYMBOL_GPL(led_trigger_read);
-
+#endif
 /* Caller must ensure led_cdev->trigger_lock held */
 int led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trig)
 {
@@ -166,7 +163,7 @@ int led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trig)
 		return 0;
 
 	name = trig ? trig->name : "none";
-	event = kasprintf(GFP_KERNEL, "TRIGGER=%s", name);
+	event = kasprintf(, "TRIGGER=%s", name);
 
 	/* Remove any existing trigger */
 	if (led_cdev->trigger) {
@@ -177,11 +174,11 @@ int led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trig)
 		/* ensure it's no longer visible on the led_cdevs list */
 		synchronize_rcu();
 
-		cancel_work_sync(&led_cdev->set_brightness_work);
+		//cancel_work_sync(&led_cdev->set_brightness_work);
 		led_stop_software_blink(led_cdev);
 		if (led_cdev->trigger->deactivate)
 			led_cdev->trigger->deactivate(led_cdev);
-		device_remove_groups(led_cdev->dev, led_cdev->trigger->groups);
+		//device_remove_groups(led_cdev->dev, led_cdev->trigger->groups);
 		led_cdev->trigger = NULL;
 		led_cdev->trigger_data = NULL;
 		led_cdev->activated = false;
@@ -201,13 +198,13 @@ int led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trig)
 		if (ret)
 			goto err_activate;
 
-		ret = device_add_groups(led_cdev->dev, trig->groups);
-		if (ret) {
-			dev_err(led_cdev->dev, "Failed to add trigger attributes\n");
-			goto err_add_groups;
-		}
+		//ret = device_add_groups(led_cdev->dev, trig->groups);
+		//if (ret) {
+		//	dev_err(led_cdev->dev, "Failed to add trigger attributes\n");
+		//	goto err_add_groups;
+		//}
 	}
-
+#if 0
 	if (event) {
 		envp[0] = event;
 		envp[1] = NULL;
@@ -216,10 +213,10 @@ int led_trigger_set(struct led_classdev *led_cdev, struct led_trigger *trig)
 				"%s: Error sending uevent\n", __func__);
 		kfree(event);
 	}
-
+#endif
 	return 0;
 
-err_add_groups:
+//err_add_groups:
 
 	if (trig->deactivate)
 		trig->deactivate(led_cdev);
@@ -359,7 +356,7 @@ int devm_led_trigger_register(struct device *dev,
 	int rc;
 
 	dr = devres_alloc(devm_led_trigger_release, sizeof(*dr),
-			  GFP_KERNEL);
+			  0);
 	if (!dr)
 		return -ENOMEM;
 
@@ -436,7 +433,7 @@ void led_trigger_register_simple(const char *name, struct led_trigger **tp)
 	struct led_trigger *trig;
 	int err;
 
-	trig = kzalloc(sizeof(struct led_trigger), GFP_KERNEL);
+	trig = kzalloc(sizeof(struct led_trigger), );
 
 	if (trig) {
 		trig->name = name;

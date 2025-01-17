@@ -7,12 +7,7 @@
 #include <linux/virtio_ring.h>
 #include <linux/virtio_config.h>
 #include <linux/device.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
-#include <linux/hrtimer.h>
 #include <linux/dma-mapping.h>
-// #include <linux/spinlock.h>
-#include <xen/xen.h>
 
 #ifdef DEBUG
 /* For development, we want to crash whenever the ring is screwed. */
@@ -257,8 +252,8 @@ static bool vring_use_dma_api(struct virtio_device *vdev)
 	 * the DMA API if we're a Xen guest, which at least allows
 	 * all of the sensible Xen configurations to work correctly.
 	 */
-	if (xen_domain())
-		return true;
+	//if (xen_domain())
+	//	return true;
 
 	return false;
 }
@@ -281,10 +276,10 @@ static void *vring_alloc_queue(struct virtio_device *vdev, size_t size,
 		return dma_alloc_coherent(vdev->dev.parent, size,
 					  dma_handle, flag);
 	} else {
-		void *queue = alloc_pages_exact(PAGE_ALIGN(size), flag);
+		void *queue = NULL;//alloc_pages_exact(PAGE_ALIGN(size), flag);
 
 		if (queue) {
-			phys_addr_t phys_addr = virt_to_phys(queue);
+			phys_addr_t phys_addr = 0;//virt_to_phys(queue);
 			*dma_handle = (dma_addr_t)phys_addr;
 
 			/*
@@ -299,7 +294,7 @@ static void *vring_alloc_queue(struct virtio_device *vdev, size_t size,
 			 * unrepresentable address.
 			 */
 			if (WARN_ON_ONCE(*dma_handle != phys_addr)) {
-				free_pages_exact(queue, PAGE_ALIGN(size));
+				//free_pages_exact(queue, PAGE_ALIGN(size));
 				return NULL;
 			}
 		}
@@ -313,7 +308,7 @@ static void vring_free_queue(struct virtio_device *vdev, size_t size,
 	if (vring_use_dma_api(vdev))
 		dma_free_coherent(vdev->dev.parent, size, queue, dma_handle);
 	else
-		free_pages_exact(queue, PAGE_ALIGN(size));
+		;//free_pages_exact(queue, PAGE_ALIGN(size));
 }
 
 /*
@@ -331,6 +326,7 @@ static dma_addr_t vring_map_one_sg(const struct vring_virtqueue *vq,
 				   struct scatterlist *sg,
 				   enum dma_data_direction direction)
 {
+#if 0
 	if (!vq->use_dma_api)
 		return (dma_addr_t)sg_phys(sg);
 
@@ -342,6 +338,8 @@ static dma_addr_t vring_map_one_sg(const struct vring_virtqueue *vq,
 	return dma_map_page(vring_dma_dev(vq),
 			    sg_page(sg), sg->offset, sg->length,
 			    direction);
+#endif
+	return 0;
 }
 
 static dma_addr_t vring_map_single(const struct vring_virtqueue *vq,
@@ -349,7 +347,7 @@ static dma_addr_t vring_map_single(const struct vring_virtqueue *vq,
 				   enum dma_data_direction direction)
 {
 	if (!vq->use_dma_api)
-		return (dma_addr_t)virt_to_phys(cpu_addr);
+		return (dma_addr_t)0;//virt_to_phys(cpu_addr);
 
 	return dma_map_single(vring_dma_dev(vq),
 			      cpu_addr, size, direction);
@@ -427,7 +425,7 @@ static struct vring_desc *alloc_indirect_split(struct virtqueue *_vq,
 	 * otherwise virt_to_phys will give us bogus addresses in the
 	 * virtqueue.
 	 */
-	gfp &= ~__GFP_HIGHMEM;
+	gfp &= ~0;
 
 	desc = kmalloc_array(total_sg, sizeof(struct vring_desc), gfp);
 	if (!desc)
@@ -935,7 +933,7 @@ static struct virtqueue *vring_create_virtqueue_split(
 	for (; num && vring_size(num, vring_align) > PAGE_SIZE; num /= 2) {
 		queue = vring_alloc_queue(vdev, vring_size(num, vring_align),
 					  &dma_addr,
-					  GFP_KERNEL|__GFP_NOWARN|__GFP_ZERO);
+					  0|0|0);
 		if (queue)
 			break;
 		if (!may_reduce_num)
@@ -948,7 +946,7 @@ static struct virtqueue *vring_create_virtqueue_split(
 	if (!queue) {
 		/* Try to get a single page. You are my only hope! */
 		queue = vring_alloc_queue(vdev, vring_size(num, vring_align),
-					  &dma_addr, GFP_KERNEL|__GFP_ZERO);
+					  &dma_addr, 0|0);
 	}
 	if (!queue)
 		return NULL;
@@ -1026,7 +1024,7 @@ static struct vring_packed_desc *alloc_indirect_packed(unsigned int total_sg,
 	 * otherwise virt_to_phys will give us bogus addresses in the
 	 * virtqueue.
 	 */
-	gfp &= ~__GFP_HIGHMEM;
+	gfp &= ~0;
 
 	desc = kmalloc_array(total_sg, sizeof(struct vring_packed_desc), gfp);
 
@@ -1626,7 +1624,7 @@ static struct vring_desc_extra *vring_alloc_desc_extra(struct vring_virtqueue *v
 	unsigned int i;
 
 	desc_extra = kmalloc_array(num, sizeof(struct vring_desc_extra),
-				   GFP_KERNEL);
+				   0);
 	if (!desc_extra)
 		return NULL;
 
@@ -1660,7 +1658,7 @@ static struct virtqueue *vring_create_virtqueue_packed(
 
 	ring = vring_alloc_queue(vdev, ring_size_in_bytes,
 				 &ring_dma_addr,
-				 GFP_KERNEL|__GFP_NOWARN|__GFP_ZERO);
+				 0|0|0);
 	if (!ring)
 		goto err_ring;
 
@@ -1668,17 +1666,17 @@ static struct virtqueue *vring_create_virtqueue_packed(
 
 	driver = vring_alloc_queue(vdev, event_size_in_bytes,
 				   &driver_event_dma_addr,
-				   GFP_KERNEL|__GFP_NOWARN|__GFP_ZERO);
+				   0|0|0);
 	if (!driver)
 		goto err_driver;
 
 	device = vring_alloc_queue(vdev, event_size_in_bytes,
 				   &device_event_dma_addr,
-				   GFP_KERNEL|__GFP_NOWARN|__GFP_ZERO);
+				   0|0|0);
 	if (!device)
 		goto err_device;
 
-	vq = kmalloc(sizeof(*vq), GFP_KERNEL);
+	vq = kmalloc(sizeof(*vq), 0);
 	if (!vq)
 		goto err_vq;
 
@@ -1728,7 +1726,7 @@ static struct virtqueue *vring_create_virtqueue_packed(
 
 	vq->packed.desc_state = kmalloc_array(num,
 			sizeof(struct vring_desc_state_packed),
-			GFP_KERNEL);
+			0);
 	if (!vq->packed.desc_state)
 		goto err_desc_state;
 
@@ -2166,7 +2164,7 @@ struct virtqueue *__vring_new_virtqueue(unsigned int index,
 	if (virtio_has_feature(vdev, VIRTIO_F_RING_PACKED))
 		return NULL;
 
-	vq = kmalloc(sizeof(*vq), GFP_KERNEL);
+	vq = kmalloc(sizeof(*vq), 0);
 	if (!vq)
 		return NULL;
 
@@ -2212,7 +2210,7 @@ struct virtqueue *__vring_new_virtqueue(unsigned int index,
 	}
 
 	vq->split.desc_state = kmalloc_array(vring.num,
-			sizeof(struct vring_desc_state_split), GFP_KERNEL);
+			sizeof(struct vring_desc_state_split), 0);
 	if (!vq->split.desc_state)
 		goto err_state;
 

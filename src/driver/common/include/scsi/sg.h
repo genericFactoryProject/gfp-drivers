@@ -63,7 +63,7 @@ typedef struct sg_io_hdr
     unsigned int duration;      /* [o] time taken by cmd (unit: millisec) */
     unsigned int info;          /* [o] auxiliary information */
 } sg_io_hdr_t;  /* 64 bytes long (on i386) */
-
+#if 0
 #if defined(__KERNEL__)
 #include <linux/compat.h>
 
@@ -93,7 +93,7 @@ struct compat_sg_io_hdr {
 	compat_uint_t info;		/* [o] auxiliary information */
 };
 #endif
-
+#endif
 #define SG_INTERFACE_ID_ORIG 'S'
 
 /* Use negative values to flag difference from original sg_header structure */
@@ -244,7 +244,7 @@ typedef struct sg_req_info { /* used by SG_GET_REQUEST_TABLE ioctl() */
 #define SG_GET_KEEP_ORPHAN 0x2288
 
 /* yields scsi midlevel's access_count for this SCSI device */
-#define SG_GET_ACCESS_COUNT 0x2289  
+#define SG_GET_ACCESS_COUNT 0x2289
 
 
 #define SG_SCATTER_SZ (8 * 4096)

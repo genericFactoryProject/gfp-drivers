@@ -11,8 +11,8 @@
 #define __LINUX_OF_GPIO_H
 
 #include <linux/compiler.h>
-// #include <linux/gpio/driver.h>
-// #include <linux/gpio.h>		/* FIXME: Shouldn't be here */
+#include <linux/gpio/driver.h>
+#include <linux/gpio.h>		/* FIXME: Shouldn't be here */
 #include <linux/of.h>
 
 struct device_node;
@@ -33,8 +33,8 @@ enum of_gpio_flags {
 
 #ifdef CONFIG_OF_GPIO
 
-#include <linux/kernel.h>
-
+// #include <linux/kernel.h>
+#include <linux/lynix-compat.h>
 /*
  * OF GPIO chip for memory mapped banks
  */

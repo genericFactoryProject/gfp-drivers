@@ -15,12 +15,10 @@
 #include <linux/export.h>
 #include <linux/idr.h>
 #include <linux/init.h>
-// #include <linux/module.h>
 #include <linux/mux/consumer.h>
 #include <linux/mux/driver.h>
 #include <linux/of.h>
 #include <linux/of_platform.h>
-// #include <linux/slab.h>
 
 /*
  * The idle-as-is "state" is not an actual state that may be selected, it
@@ -45,7 +43,7 @@ struct mux_state {
 
 static struct class mux_class = {
 	.name = "mux",
-	.owner = THIS_MODULE,
+	//.owner = THIS_MODULE,
 };
 
 static DEFINE_IDA(mux_ida);
@@ -102,7 +100,7 @@ struct mux_chip *mux_chip_alloc(struct device *dev,
 
 	mux_chip = kzalloc(sizeof(*mux_chip) +
 			   controllers * sizeof(*mux_chip->mux) +
-			   sizeof_priv, GFP_KERNEL);
+			   sizeof_priv, 0);
 	if (!mux_chip)
 		return ERR_PTR(-ENOMEM);
 
@@ -113,7 +111,7 @@ struct mux_chip *mux_chip_alloc(struct device *dev,
 	mux_chip->dev.of_node = dev->of_node;
 	dev_set_drvdata(&mux_chip->dev, mux_chip);
 
-	mux_chip->id = ida_simple_get(&mux_ida, 0, 0, GFP_KERNEL);
+	mux_chip->id = ida_simple_get(&mux_ida, 0, 0, 0);
 	if (mux_chip->id < 0) {
 		int err = mux_chip->id;
 
@@ -240,7 +238,7 @@ struct mux_chip *devm_mux_chip_alloc(struct device *dev,
 {
 	struct mux_chip **ptr, *mux_chip;
 
-	ptr = devres_alloc(devm_mux_chip_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_mux_chip_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -279,7 +277,7 @@ int devm_mux_chip_register(struct device *dev,
 	struct mux_chip **ptr;
 	int res;
 
-	ptr = devres_alloc(devm_mux_chip_reg_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_mux_chip_reg_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return -ENOMEM;
 
@@ -656,7 +654,7 @@ struct mux_control *devm_mux_control_get(struct device *dev,
 {
 	struct mux_control **ptr, *mux;
 
-	ptr = devres_alloc(devm_mux_control_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_mux_control_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -684,7 +682,7 @@ static struct mux_state *mux_state_get(struct device *dev, const char *mux_name)
 {
 	struct mux_state *mstate;
 
-	mstate = kzalloc(sizeof(*mstate), GFP_KERNEL);
+	mstate = kzalloc(sizeof(*mstate), 0);
 	if (!mstate)
 		return ERR_PTR(-ENOMEM);
 
@@ -731,7 +729,7 @@ struct mux_state *devm_mux_state_get(struct device *dev,
 {
 	struct mux_state **ptr, *mstate;
 
-	ptr = devres_alloc(devm_mux_state_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_mux_state_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 

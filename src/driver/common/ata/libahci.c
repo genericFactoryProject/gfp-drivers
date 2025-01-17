@@ -16,11 +16,8 @@
  * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
  */
 
-// #include <linux/kernel.h>
 // // #include <linux/gfp.h>
-// #include <linux/module.h>
 #include <linux/nospec.h>
-// #include <linux/blkdev.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
 #include <linux/dma-mapping.h>
@@ -2332,8 +2329,8 @@ static int ahci_port_suspend(struct ata_port *ap, pm_message_t mesg)
 		ata_port_freeze(ap);
 	}
 
-	if (acpi_storage_d3(ap->host->dev))
-		ahci_handle_s2idle(ap);
+	//if (acpi_storage_d3(ap->host->dev))
+	//	ahci_handle_s2idle(ap);
 
 	ahci_rpm_put_port(ap);
 	return rc;

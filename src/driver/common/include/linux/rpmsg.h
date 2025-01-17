@@ -15,10 +15,12 @@
 #include <linux/err.h>
 #include <linux/mod_devicetable.h>
 #include <linux/kref.h>
-#include <linux/mutex.h>
-#include <linux/poll.h>
+//#include <linux/mutex.h>
+//#include <linux/poll.h>
 #include <linux/rpmsg/byteorder.h>
 #include <uapi/linux/rpmsg.h>
+#include <linux/lynix-compat.h>
+
 
 struct rpmsg_device;
 struct rpmsg_endpoint;
@@ -183,8 +185,8 @@ int rpmsg_trysendto(struct rpmsg_endpoint *ept, void *data, int len, u32 dst);
 int rpmsg_trysend_offchannel(struct rpmsg_endpoint *ept, u32 src, u32 dst,
 			     void *data, int len);
 
-__poll_t rpmsg_poll(struct rpmsg_endpoint *ept, struct file *filp,
-			poll_table *wait);
+//__poll_t rpmsg_poll(struct rpmsg_endpoint *ept, struct file *filp,
+//			poll_table *wait);
 
 ssize_t rpmsg_get_mtu(struct rpmsg_endpoint *ept);
 

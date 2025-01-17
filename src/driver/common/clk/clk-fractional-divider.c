@@ -40,10 +40,9 @@
 
 #include <linux/clk-provider.h>
 #include <linux/io.h>
-// #include <linux/module.h>
 #include <linux/device.h>
-// #include <linux/slab.h>
 #include <linux/rational.h>
+#include <asm/div64.h>
 
 #include "clk-fractional-divider.h"
 
@@ -72,15 +71,17 @@ static unsigned long clk_fd_recalc_rate(struct clk_hw *hw,
 	u32 val;
 	u64 ret;
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_lock_irqsave(fd->lock, flags);
+	}
 	else
 		__acquire(fd->lock);
 
 	val = clk_fd_readl(fd);
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_unlock_irqrestore(fd->lock, flags);
+	}
 	else
 		__release(fd->lock);
 
@@ -165,8 +166,9 @@ static int clk_fd_set_rate(struct clk_hw *hw, unsigned long rate,
 		n--;
 	}
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_lock_irqsave(fd->lock, flags);
+	}
 	else
 		__acquire(fd->lock);
 
@@ -175,8 +177,9 @@ static int clk_fd_set_rate(struct clk_hw *hw, unsigned long rate,
 	val |= (m << fd->mshift) | (n << fd->nshift);
 	clk_fd_writel(fd, val);
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_unlock_irqrestore(fd->lock, flags);
+	}
 	else
 		__release(fd->lock);
 

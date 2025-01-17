@@ -11,7 +11,6 @@
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/mailbox_controller.h>
-// #include <linux/module.h>
 
 #define INTR_STAT_OFS	0x0
 #define INTR_SET_OFS	0x8
@@ -117,7 +116,7 @@ static int mhu_probe(struct amba_device *adev, const struct amba_id *id)
 		return -ENODEV;
 
 	/* Allocate memory for device */
-	mhu = devm_kzalloc(dev, sizeof(*mhu), GFP_KERNEL);
+	mhu = devm_kzalloc(dev, sizeof(*mhu), 0);
 	if (!mhu)
 		return -ENOMEM;
 

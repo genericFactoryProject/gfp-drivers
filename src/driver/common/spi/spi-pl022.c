@@ -14,7 +14,6 @@
  */
 
 #include <linux/init.h>
-// #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/ioport.h>
 #include <linux/errno.h>
@@ -26,13 +25,13 @@
 #include <linux/amba/bus.h>
 #include <linux/amba/pl022.h>
 #include <linux/io.h>
-// #include <linux/slab.h>
 #include <linux/dmaengine.h>
 #include <linux/dma-mapping.h>
 #include <linux/scatterlist.h>
 #include <linux/pm_runtime.h>
 #include <linux/of.h>
 #include <linux/pinctrl/consumer.h>
+#include <linux/jiffies.h>
 
 /*
  * This macro is used to define some register default values.
@@ -853,7 +852,7 @@ static void dma_callback(void *data)
 		pl022_cs_control(pl022, SSP_CHIP_DESELECT);
 	tasklet_schedule(&pl022->pump_transfers);
 }
-
+#if 0
 static void setup_dma_scatter(struct pl022 *pl022,
 			      void *buffer,
 			      unsigned int length,
@@ -1026,11 +1025,11 @@ static int configure_dma(struct pl022 *pl022)
 	pages = DIV_ROUND_UP(pl022->cur_transfer->len, PAGE_SIZE);
 	dev_dbg(&pl022->adev->dev, "using %d pages for transfer\n", pages);
 
-	ret = sg_alloc_table(&pl022->sgt_rx, pages, GFP_ATOMIC);
+	ret = sg_alloc_table(&pl022->sgt_rx, pages, 0);
 	if (ret)
 		goto err_alloc_rx_sg;
 
-	ret = sg_alloc_table(&pl022->sgt_tx, pages, GFP_ATOMIC);
+	ret = sg_alloc_table(&pl022->sgt_tx, pages, 0);
 	if (ret)
 		goto err_alloc_tx_sg;
 
@@ -1097,7 +1096,7 @@ err_alloc_tx_sg:
 err_alloc_rx_sg:
 	return -ENOMEM;
 }
-
+#endif
 static int pl022_dma_probe(struct pl022 *pl022)
 {
 	dma_cap_mask_t mask;
@@ -1125,7 +1124,7 @@ static int pl022_dma_probe(struct pl022 *pl022)
 		goto err_no_txchan;
 	}
 
-	pl022->dummypage = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	pl022->dummypage = kmalloc(PAGE_SIZE, 0);
 	if (!pl022->dummypage)
 		goto err_no_dummypage;
 
@@ -1169,7 +1168,7 @@ static int pl022_dma_autoprobe(struct pl022 *pl022)
 
 	pl022->dma_tx_channel = chan;
 
-	pl022->dummypage = kmalloc(PAGE_SIZE, GFP_KERNEL);
+	pl022->dummypage = kmalloc(PAGE_SIZE, 0);
 	if (!pl022->dummypage) {
 		err = -ENOMEM;
 		goto err_no_dummypage;
@@ -1207,6 +1206,10 @@ static void pl022_dma_remove(struct pl022 *pl022)
 	if (pl022->dma_rx_channel)
 		dma_release_channel(pl022->dma_rx_channel);
 	kfree(pl022->dummypage);
+}
+static inline int configure_dma(struct pl022 *pl022)
+{
+	return -ENODEV;
 }
 
 #else
@@ -1856,7 +1859,7 @@ static int pl022_setup(struct spi_device *spi)
 	chip = spi_get_ctldata(spi);
 
 	if (chip == NULL) {
-		chip = kzalloc(sizeof(struct chip_data), GFP_KERNEL);
+		chip = kzalloc(sizeof(struct chip_data), 0);
 		if (!chip)
 			return -ENOMEM;
 		dev_dbg(&spi->dev,
@@ -2086,7 +2089,7 @@ pl022_platform_data_dt_get(struct device *dev)
 		return NULL;
 	}
 
-	pd = devm_kzalloc(dev, sizeof(struct pl022_ssp_controller), GFP_KERNEL);
+	pd = devm_kzalloc(dev, sizeof(struct pl022_ssp_controller), 0);
 	if (!pd)
 		return NULL;
 

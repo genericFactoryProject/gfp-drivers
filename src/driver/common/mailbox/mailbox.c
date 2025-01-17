@@ -7,16 +7,14 @@
  */
 
 #include <linux/interrupt.h>
-// #include <linux/spinlock.h>
-#include <linux/mutex.h>
 #include <linux/delay.h>
-// #include <linux/slab.h>
 #include <linux/err.h>
-// #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/bitops.h>
 #include <linux/mailbox_client.h>
 #include <linux/mailbox_controller.h>
+#include <linux/lynix-compat.h>
+#include <linux/jiffies.h>
 
 #include "mailbox.h"
 
@@ -85,8 +83,8 @@ exit:
 	/* kick start the timer immediately to avoid delays */
 	if (!err && (chan->txdone_method & TXDONE_BY_POLL)) {
 		/* but only if not already active */
-		if (!hrtimer_active(&chan->mbox->poll_hrt))
-			hrtimer_start(&chan->mbox->poll_hrt, 0, HRTIMER_MODE_REL);
+		//if (!hrtimer_active(&chan->mbox->poll_hrt))
+		//	hrtimer_start(&chan->mbox->poll_hrt, 0, HRTIMER_MODE_REL);
 	}
 }
 
@@ -110,10 +108,10 @@ static void tx_tick(struct mbox_chan *chan, int r)
 	if (chan->cl->tx_done)
 		chan->cl->tx_done(chan->cl, mssg, r);
 
-	if (r != -ETIME && chan->cl->tx_block)
-		complete(&chan->tx_complete);
+	//if (r != -ETIME && chan->cl->tx_block)
+		//complete(&chan->tx_complete);
 }
-
+#if 0
 static enum hrtimer_restart txdone_hrtimer(struct hrtimer *hrtimer)
 {
 	struct mbox_controller *mbox =
@@ -138,7 +136,7 @@ static enum hrtimer_restart txdone_hrtimer(struct hrtimer *hrtimer)
 	}
 	return HRTIMER_NORESTART;
 }
-
+#endif
 /**
  * mbox_chan_received_data - A way for controller driver to push data
  *				received from remote to the upper layer.
@@ -271,11 +269,11 @@ int mbox_send_message(struct mbox_chan *chan, void *mssg)
 		else
 			wait = msecs_to_jiffies(chan->cl->tx_tout);
 
-		ret = wait_for_completion_timeout(&chan->tx_complete, wait);
-		if (ret == 0) {
-			t = -ETIME;
-			tx_tick(chan, t);
-		}
+		//ret = wait_for_completion_timeout(&chan->tx_complete, wait);
+		//if (ret == 0) {
+		//	t = -ETIME;
+		//	tx_tick(chan, t);
+		//}
 	}
 
 	return t;
@@ -365,19 +363,19 @@ struct mbox_chan *mbox_request_channel(struct mbox_client *cl, int index)
 		mutex_unlock(&con_mutex);
 		return chan;
 	}
-
+#if 0
 	if (chan->cl || !try_module_get(mbox->dev->driver->owner)) {
 		dev_dbg(dev, "%s: mailbox not free\n", __func__);
 		mutex_unlock(&con_mutex);
 		return ERR_PTR(-EBUSY);
 	}
-
+#endif
 	spin_lock_irqsave(&chan->lock, flags);
 	chan->msg_free = 0;
 	chan->msg_count = 0;
 	chan->active_req = NULL;
 	chan->cl = cl;
-	init_completion(&chan->tx_complete);
+	//init_completion(&chan->tx_complete);
 
 	if (chan->txdone_method	== TXDONE_BY_POLL && cl->knows_txdone)
 		chan->txdone_method = TXDONE_BY_ACK;
@@ -452,7 +450,7 @@ void mbox_free_channel(struct mbox_chan *chan)
 	if (chan->txdone_method == TXDONE_BY_ACK)
 		chan->txdone_method = TXDONE_BY_POLL;
 
-	module_put(chan->mbox->dev->driver->owner);
+	//module_put(chan->mbox->dev->driver->owner);
 	spin_unlock_irqrestore(&chan->lock, flags);
 }
 EXPORT_SYMBOL_GPL(mbox_free_channel);
@@ -497,9 +495,9 @@ int mbox_controller_register(struct mbox_controller *mbox)
 			return -EINVAL;
 		}
 
-		hrtimer_init(&mbox->poll_hrt, CLOCK_MONOTONIC,
-			     HRTIMER_MODE_REL);
-		mbox->poll_hrt.function = txdone_hrtimer;
+		//hrtimer_init(&mbox->poll_hrt, CLOCK_MONOTONIC,
+		//	     HRTIMER_MODE_REL);
+		//mbox->poll_hrt.function = txdone_hrtimer;
 	}
 
 	for (i = 0; i < mbox->num_chans; i++) {
@@ -540,8 +538,8 @@ void mbox_controller_unregister(struct mbox_controller *mbox)
 	for (i = 0; i < mbox->num_chans; i++)
 		mbox_free_channel(&mbox->chans[i]);
 
-	if (mbox->txdone_poll)
-		hrtimer_cancel(&mbox->poll_hrt);
+	//if (mbox->txdone_poll)
+	//	hrtimer_cancel(&mbox->poll_hrt);
 
 	mutex_unlock(&con_mutex);
 }
@@ -583,7 +581,7 @@ int devm_mbox_controller_register(struct device *dev,
 	int err;
 
 	ptr = devres_alloc(__devm_mbox_controller_unregister, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return -ENOMEM;
 

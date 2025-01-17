@@ -13,7 +13,6 @@
 #include <linux/clk-provider.h>
 #include <linux/i2c.h>
 #include <linux/mod_devicetable.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/regmap.h>
 
@@ -220,7 +219,7 @@ static int rs9_probe(struct i2c_client *client, const struct i2c_device_id *id)
 	struct clk_hw *hw;
 	int i, ret;
 
-	rs9 = devm_kzalloc(&client->dev, sizeof(*rs9), GFP_KERNEL);
+	rs9 = devm_kzalloc(&client->dev, sizeof(*rs9), 0);
 	if (!rs9)
 		return -ENOMEM;
 

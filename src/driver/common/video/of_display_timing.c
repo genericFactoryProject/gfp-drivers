@@ -8,7 +8,6 @@
  */
 #include <linux/export.h>
 #include <linux/of.h>
-// #include <linux/slab.h>
 #include <video/display_timing.h>
 #include <video/of_display_timing.h>
 

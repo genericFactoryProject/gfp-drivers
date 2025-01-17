@@ -6,8 +6,6 @@
  */
 #include <linux/device.h>
 #include <linux/dmaengine.h>
-// #include <linux/module.h>
-// #include <linux/spinlock.h>
 
 #include "virt-dma.h"
 

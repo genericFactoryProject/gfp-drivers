@@ -9,8 +9,6 @@
 
 #include <linux/clk-provider.h>
 #include <linux/device.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/io.h>
 #include <linux/err.h>
 
@@ -103,8 +101,9 @@ static int clk_mux_set_parent(struct clk_hw *hw, u8 index)
 	unsigned long flags = 0;
 	u32 reg;
 
-	if (mux->lock)
+	if (mux->lock) {
 		spin_lock_irqsave(mux->lock, flags);
+	}
 	else
 		__acquire(mux->lock);
 
@@ -118,8 +117,9 @@ static int clk_mux_set_parent(struct clk_hw *hw, u8 index)
 	reg |= val;
 	clk_mux_writel(mux, reg);
 
-	if (mux->lock)
+	if (mux->lock) {
 		spin_unlock_irqrestore(mux->lock, flags);
+	}
 	else
 		__release(mux->lock);
 
@@ -169,7 +169,7 @@ struct clk_hw *__clk_hw_register_mux(struct device *dev, struct device_node *np,
 	}
 
 	/* allocate the mux */
-	mux = kzalloc(sizeof(*mux), GFP_KERNEL);
+	mux = kzalloc(sizeof(*mux), 0);
 	if (!mux)
 		return ERR_PTR(-ENOMEM);
 
@@ -222,7 +222,7 @@ struct clk_hw *__devm_clk_hw_register_mux(struct device *dev, struct device_node
 {
 	struct clk_hw **ptr, *hw;
 
-	ptr = devres_alloc(devm_clk_hw_release_mux, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_clk_hw_release_mux, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 

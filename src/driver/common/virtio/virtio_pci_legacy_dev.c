@@ -2,7 +2,6 @@
 
 #include "linux/virtio_pci.h"
 #include <linux/virtio_pci_legacy.h>
-// #include <linux/module.h>
 #include <linux/pci.h>
 
 

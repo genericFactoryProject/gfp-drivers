@@ -13,7 +13,7 @@
 
 #include <linux/radix-tree.h>
 #include <linux/list.h>
-#include <linux/seq_file.h>
+//#include <linux/seq_file.h>
 #include <linux/pinctrl/pinctrl-state.h>
 #include <linux/pinctrl/devinfo.h>
 
@@ -93,8 +93,8 @@ struct pinctrl_ops {
 			       unsigned selector,
 			       const unsigned **pins,
 			       unsigned *num_pins);
-	void (*pin_dbg_show) (struct pinctrl_dev *pctldev, struct seq_file *s,
-			  unsigned offset);
+	//void (*pin_dbg_show) (struct pinctrl_dev *pctldev, struct seq_file *s,
+	//		  unsigned offset);
 	int (*dt_node_to_map) (struct pinctrl_dev *pctldev,
 			       struct device_node *np_config,
 			       struct pinctrl_map **map, unsigned *num_maps);

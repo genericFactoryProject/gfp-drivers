@@ -6,18 +6,16 @@
  *
  * Helper for the clk API to assist looking up a struct clk.
  */
-// #include <linux/module.h>
-// #include <linux/kernel.h>
 #include <linux/device.h>
 #include <linux/list.h>
 #include <linux/errno.h>
 #include <linux/err.h>
 #include <linux/string.h>
-#include <linux/mutex.h>
 #include <linux/clk.h>
 #include <linux/clkdev.h>
 #include <linux/clk-provider.h>
 #include <linux/of.h>
+#include <linux/lynix-compat.h>
 
 #include "clk.h"
 
@@ -159,7 +157,7 @@ vclkdev_alloc(struct clk_hw *hw, const char *con_id, const char *dev_fmt,
 {
 	struct clk_lookup_alloc *cla;
 
-	cla = kzalloc(sizeof(*cla), GFP_KERNEL);
+	cla = kzalloc(sizeof(*cla), 0);
 	if (!cla)
 		return NULL;
 
@@ -406,7 +404,7 @@ int devm_clk_hw_register_clkdev(struct device *dev, struct clk_hw *hw,
 	int rval = -ENOMEM;
 	struct clk_lookup **cl;
 
-	cl = devres_alloc(devm_clkdev_release, sizeof(*cl), GFP_KERNEL);
+	cl = devres_alloc(devm_clkdev_release, sizeof(*cl), 0);
 	if (cl) {
 		rval = do_clk_register_clkdev(hw, cl, con_id, dev_id);
 		if (!rval)

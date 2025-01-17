@@ -9,12 +9,11 @@
 
 #include <linux/clk-provider.h>
 #include <linux/device.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/io.h>
 #include <linux/err.h>
 #include <linux/string.h>
 #include <linux/log2.h>
+#include <linux/math.h>
 
 /*
  * DOC: basic adjustable divider clock that cannot gate
@@ -497,8 +496,9 @@ static int clk_divider_set_rate(struct clk_hw *hw, unsigned long rate,
 	if (value < 0)
 		return value;
 
-	if (divider->lock)
+	if (divider->lock) {
 		spin_lock_irqsave(divider->lock, flags);
+	}
 	else
 		__acquire(divider->lock);
 
@@ -511,8 +511,9 @@ static int clk_divider_set_rate(struct clk_hw *hw, unsigned long rate,
 	val |= (u32)value << divider->shift;
 	clk_div_writel(divider, val);
 
-	if (divider->lock)
+	if (divider->lock) {
 		spin_unlock_irqrestore(divider->lock, flags);
+	}
 	else
 		__release(divider->lock);
 
@@ -554,7 +555,7 @@ struct clk_hw *__clk_hw_register_divider(struct device *dev,
 	}
 
 	/* allocate the divider */
-	div = kzalloc(sizeof(*div), GFP_KERNEL);
+	div = kzalloc(sizeof(*div), 0);
 	if (!div)
 		return ERR_PTR(-ENOMEM);
 
@@ -669,7 +670,7 @@ struct clk_hw *__devm_clk_hw_register_divider(struct device *dev,
 {
 	struct clk_hw **ptr, *hw;
 
-	ptr = devres_alloc(devm_clk_hw_release_divider, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_clk_hw_release_divider, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 

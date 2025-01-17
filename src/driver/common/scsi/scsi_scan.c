@@ -26,16 +26,11 @@
  * 		or a LUN is seen that cannot have a device attached to it.
  */
 
-// #include <linux/module.h>
 #include <linux/moduleparam.h>
 #include <linux/init.h>
-#include <linux/blkdev.h>
 #include <linux/delay.h>
-#include <linux/kthread.h>
-// #include <linux/spinlock.h>
 #include <linux/async.h>
-// #include <linux/slab.h>
-#include <asm/unaligned.h>
+#include <asm-generic/unaligned.h>
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
@@ -119,7 +114,7 @@ static LIST_HEAD(scanning_hosts);
 struct async_scan_data {
 	struct list_head list;
 	struct Scsi_Host *shost;
-	struct completion prev_finished;
+	//struct completion prev_finished;
 };
 
 /*
@@ -139,7 +134,7 @@ void scsi_enable_async_suspend(struct device *dev)
 }
 
 /**
- * scsi_complete_async_scans - Wait for asynchronous scans to complete
+ * scsi_complete_async_scans - Wait for asynchronous scans to //complete
  *
  * When this function returns, any host which started scanning before
  * this function was called will have finished its scan.  Hosts which
@@ -157,13 +152,13 @@ int scsi_complete_async_scans(void)
 		 * sleep a little.  Even if we never get memory, the async
 		 * scans will finish eventually.
 		 */
-		data = kmalloc(sizeof(*data), GFP_KERNEL);
+		data = kmalloc(sizeof(*data), 0);
 		if (!data)
 			msleep(1);
 	} while (!data);
 
 	data->shost = NULL;
-	init_completion(&data->prev_finished);
+	//init_completion(&data->prev_finished);
 
 	spin_lock(&async_scan_lock);
 	/* Check that there's still somebody else on the list */
@@ -172,15 +167,15 @@ int scsi_complete_async_scans(void)
 	list_add_tail(&data->list, &scanning_hosts);
 	spin_unlock(&async_scan_lock);
 
-	printk(KERN_INFO "scsi: waiting for bus probes to complete ...\n");
-	wait_for_completion(&data->prev_finished);
+	printk(KERN_INFO "scsi: waiting for bus probes to //complete ...\n");
+	//wait_for_completion(&data->prev_finished);
 
 	spin_lock(&async_scan_lock);
 	list_del(&data->list);
 	if (!list_empty(&scanning_hosts)) {
 		struct async_scan_data *next = list_entry(scanning_hosts.next,
 				struct async_scan_data, list);
-		complete(&next->prev_finished);
+		//complete(&next->prev_finished);
 	}
  done:
 	spin_unlock(&async_scan_lock);
@@ -220,7 +215,7 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
 	int new_shift = sbitmap_calculate_shift(depth);
 	bool need_alloc = !sdev->budget_map.map;
 	bool need_free = false;
-	int ret;
+	int ret = 0;
 	struct sbitmap sb_backup;
 
 	depth = min_t(unsigned int, depth, scsi_device_max_queue_depth(sdev));
@@ -240,15 +235,15 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
 	 * and here disk isn't added yet, so freezing is pretty fast
 	 */
 	if (need_free) {
-		blk_mq_freeze_queue(sdev->request_queue);
+		//blk_mq_freeze_queue(sdev->request_queue);
 		sb_backup = sdev->budget_map;
 	}
-	ret = sbitmap_init_node(&sdev->budget_map,
-				scsi_device_max_queue_depth(sdev),
-				new_shift, GFP_KERNEL,
-				sdev->request_queue->node, false, true);
-	if (!ret)
-		sbitmap_resize(&sdev->budget_map, depth);
+	//ret = sbitmap_init_node(&sdev->budget_map,
+	//			scsi_device_max_queue_depth(sdev),
+	//			new_shift, 0,
+	//			sdev->request_queue->node, false, true);
+	//if (!ret)
+	//	sbitmap_resize(&sdev->budget_map, depth);
 
 	if (need_free) {
 		if (ret)
@@ -256,7 +251,7 @@ static int scsi_realloc_sdev_budget_map(struct scsi_device *sdev,
 		else
 			sbitmap_free(&sb_backup);
 		ret = 0;
-		blk_mq_unfreeze_queue(sdev->request_queue);
+		//blk_mq_unfreeze_queue(sdev->request_queue);
 	}
 	return ret;
 }
@@ -285,7 +280,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
 	struct Scsi_Host *shost = dev_to_shost(starget->dev.parent);
 
 	sdev = kzalloc(sizeof(*sdev) + shost->transportt->device_size,
-		       GFP_KERNEL);
+		       0);
 	if (!sdev)
 		goto out;
 
@@ -305,8 +300,8 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
 	INIT_LIST_HEAD(&sdev->event_list);
 	spin_lock_init(&sdev->list_lock);
 	mutex_init(&sdev->inquiry_mutex);
-	INIT_WORK(&sdev->event_work, scsi_evt_thread);
-	INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
+	//INIT_WORK(&sdev->event_work, scsi_evt_thread);
+	//INIT_WORK(&sdev->requeue_work, scsi_requeue_run_queue);
 
 	sdev->sdev_gendev.parent = get_device(&starget->dev);
 	sdev->sdev_target = starget;
@@ -332,7 +327,7 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
 
 	sdev->sg_reserved_size = INT_MAX;
 
-	q = blk_mq_init_queue(&sdev->host->tag_set);
+	q = NULL;//blk_mq_init_queue(&sdev->host->tag_set);
 	if (IS_ERR(q)) {
 		/* release fn is set up in scsi_sysfs_device_initialise, so
 		 * have to free and put manually here */
@@ -341,9 +336,9 @@ static struct scsi_device *scsi_alloc_sdev(struct scsi_target *starget,
 		goto out;
 	}
 	sdev->request_queue = q;
-	q->queuedata = sdev;
+	//q->queuedata = sdev;
 	__scsi_init_queue(sdev->host, q);
-	WARN_ON_ONCE(!blk_get_queue(q));
+	//WARN_ON_ONCE(!blk_get_queue(q));
 
 	depth = sdev->host->cmd_per_lun ?: 1;
 
@@ -500,7 +495,7 @@ static struct scsi_target *scsi_alloc_target(struct device *parent,
 	struct scsi_target *found_target;
 	int error, ref_got;
 
-	starget = kzalloc(size, GFP_KERNEL);
+	starget = kzalloc(size, 0);
 	if (!starget) {
 		printk(KERN_ERR "%s: allocation failure\n", __func__);
 		return NULL;
@@ -871,7 +866,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
 	 */
 	sdev->inquiry = kmemdup(inq_result,
 				max_t(size_t, sdev->inquiry_len, 36),
-				GFP_KERNEL);
+				0);
 	if (sdev->inquiry == NULL)
 		return SCSI_SCAN_NO_RESPONSE;
 
@@ -982,13 +977,13 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
 	 * broken RA4x00 Compaq Disk Array
 	 */
 	if (*bflags & BLIST_MAX_512)
-		blk_queue_max_hw_sectors(sdev->request_queue, 512);
+		;//blk_queue_max_hw_sectors(sdev->request_queue, 512);
 	/*
 	 * Max 1024 sector transfer length for targets that report incorrect
 	 * max/optimal lengths and relied on the old block layer safe default
 	 */
 	else if (*bflags & BLIST_MAX_1024)
-		blk_queue_max_hw_sectors(sdev->request_queue, 1024);
+		;//blk_queue_max_hw_sectors(sdev->request_queue, 1024);
 
 	/*
 	 * Some devices may not want to have a start command automatically
@@ -1018,7 +1013,7 @@ static int scsi_add_lun(struct scsi_device *sdev, unsigned char *inq_result,
 
 	if (ret) {
 		sdev_printk(KERN_ERR, sdev,
-			    "in wrong state %s to complete scan\n",
+			    "in wrong state %s to //complete scan\n",
 			    scsi_device_state_name(sdev->sdev_state));
 		return SCSI_SCAN_NO_RESPONSE;
 	}
@@ -1173,7 +1168,7 @@ static int scsi_probe_and_add_lun(struct scsi_target *starget,
 	if (!sdev)
 		goto out;
 
-	result = kmalloc(result_len, GFP_KERNEL);
+	result = kmalloc(result_len, 0);
 	if (!result)
 		goto out_free_sdev;
 
@@ -1430,7 +1425,7 @@ static int scsi_report_lun_scan(struct scsi_target *starget, blist_flags_t bflag
 	 */
 	length = (511 + 1) * sizeof(struct scsi_lun);
 retry:
-	lun_data = kmalloc(length, GFP_KERNEL);
+	lun_data = kmalloc(length, 0);
 	if (!lun_data) {
 		printk(ALLOC_FAILURE_MSG, __func__);
 		goto out;
@@ -1608,7 +1603,7 @@ void scsi_rescan_device(struct device *dev)
 
 	if (sdev->handler && sdev->handler->rescan)
 		sdev->handler->rescan(sdev);
-
+#if 0
 	if (dev->driver && try_module_get(dev->driver->owner)) {
 		struct scsi_driver *drv = to_scsi_driver(dev->driver);
 
@@ -1616,6 +1611,7 @@ void scsi_rescan_device(struct device *dev)
 			drv->rescan(dev);
 		module_put(dev->driver->owner);
 	}
+#endif
 	device_unlock(dev);
 }
 EXPORT_SYMBOL(scsi_rescan_device);
@@ -1819,13 +1815,13 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
 		goto err;
 	}
 
-	data = kmalloc(sizeof(*data), GFP_KERNEL);
+	data = kmalloc(sizeof(*data), 0);
 	if (!data)
 		goto err;
 	data->shost = scsi_host_get(shost);
 	if (!data->shost)
 		goto err;
-	init_completion(&data->prev_finished);
+	//init_completion(&data->prev_finished);
 
 	spin_lock_irqsave(shost->host_lock, flags);
 	shost->async_scan = 1;
@@ -1834,7 +1830,7 @@ static struct async_scan_data *scsi_prep_async_scan(struct Scsi_Host *shost)
 
 	spin_lock(&async_scan_lock);
 	if (list_empty(&scanning_hosts))
-		complete(&data->prev_finished);
+		//complete(&data->prev_finished);
 	list_add_tail(&data->list, &scanning_hosts);
 	spin_unlock(&async_scan_lock);
 
@@ -1868,12 +1864,12 @@ static void scsi_finish_async_scan(struct async_scan_data *data)
 
 	if (!shost->async_scan) {
 		shost_printk(KERN_INFO, shost, "%s called twice\n", __func__);
-		dump_stack();
+		//dump_stack();
 		mutex_unlock(&shost->scan_mutex);
 		return;
 	}
 
-	wait_for_completion(&data->prev_finished);
+	//wait_for_completion(&data->prev_finished);
 
 	scsi_sysfs_add_devices(shost);
 
@@ -1888,7 +1884,7 @@ static void scsi_finish_async_scan(struct async_scan_data *data)
 	if (!list_empty(&scanning_hosts)) {
 		struct async_scan_data *next = list_entry(scanning_hosts.next,
 				struct async_scan_data, list);
-		complete(&next->prev_finished);
+		//complete(&next->prev_finished);
 	}
 	spin_unlock(&async_scan_lock);
 

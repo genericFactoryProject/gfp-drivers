@@ -10,7 +10,6 @@
 #include <linux/device.h>
 #include <linux/export.h>
 #include <linux/of.h>
-// #include <linux/slab.h>
 
 static int __must_check of_clk_bulk_get(struct device_node *np, int num_clks,
 					struct clk_bulk_data *clks)

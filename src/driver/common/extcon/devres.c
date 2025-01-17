@@ -67,7 +67,7 @@ struct extcon_dev *devm_extcon_dev_allocate(struct device *dev,
 {
 	struct extcon_dev **ptr, *edev;
 
-	ptr = devres_alloc(devm_extcon_dev_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_extcon_dev_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -120,7 +120,7 @@ int devm_extcon_dev_register(struct device *dev, struct extcon_dev *edev)
 	struct extcon_dev **ptr;
 	int ret;
 
-	ptr = devres_alloc(devm_extcon_dev_unreg, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_extcon_dev_unreg, sizeof(*ptr), 0);
 	if (!ptr)
 		return -ENOMEM;
 
@@ -176,7 +176,7 @@ int devm_extcon_register_notifier(struct device *dev, struct extcon_dev *edev,
 	int ret;
 
 	ptr = devres_alloc(devm_extcon_dev_notifier_unreg, sizeof(*ptr),
-				GFP_KERNEL);
+				0);
 	if (!ptr)
 		return -ENOMEM;
 
@@ -232,7 +232,7 @@ int devm_extcon_register_notifier_all(struct device *dev, struct extcon_dev *ede
 	int ret;
 
 	ptr = devres_alloc(devm_extcon_dev_notifier_all_unreg, sizeof(*ptr),
-				GFP_KERNEL);
+				0);
 	if (!ptr)
 		return -ENOMEM;
 

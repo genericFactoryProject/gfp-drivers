@@ -11,12 +11,9 @@
 
 #define pr_fmt(fmt) "%s: " fmt, __func__
 
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/rpmsg.h>
 #include <linux/of_device.h>
 #include <linux/pm_domain.h>
-// #include <linux/slab.h>
 
 #include "rpmsg_internal.h"
 
@@ -278,7 +275,7 @@ int rpmsg_trysendto(struct rpmsg_endpoint *ept, void *data, int len, u32 dst)
 	return ept->ops->trysendto(ept, data, len, dst);
 }
 EXPORT_SYMBOL(rpmsg_trysendto);
-
+#if 0
 /**
  * rpmsg_poll() - poll the endpoint's send buffers
  * @ept:	the rpmsg endpoint
@@ -298,7 +295,7 @@ __poll_t rpmsg_poll(struct rpmsg_endpoint *ept, struct file *filp,
 	return ept->ops->poll(ept, filp, wait);
 }
 EXPORT_SYMBOL(rpmsg_poll);
-
+#endif
 /**
  * rpmsg_trysend_offchannel() - send a message using explicit src/dst addresses
  * @ept: the rpmsg endpoint
@@ -381,7 +378,7 @@ struct device *rpmsg_find_device(struct device *parent,
 
 }
 EXPORT_SYMBOL(rpmsg_find_device);
-
+#if 0
 /* sysfs show configuration fields */
 #define rpmsg_show_attr(field, path, format_string)			\
 static ssize_t								\
@@ -462,7 +459,7 @@ static struct attribute *rpmsg_dev_attrs[] = {
 	NULL,
 };
 ATTRIBUTE_GROUPS(rpmsg_dev);
-
+#endif
 /* rpmsg devices and drivers are matched using the service name */
 static inline int rpmsg_id_match(const struct rpmsg_device *rpdev,
 				  const struct rpmsg_device_id *id)
@@ -586,7 +583,7 @@ static void rpmsg_dev_remove(struct device *dev)
 static struct bus_type rpmsg_bus = {
 	.name		= "rpmsg",
 	.match		= rpmsg_dev_match,
-	.dev_groups	= rpmsg_dev_groups,
+	//.dev_groups	= rpmsg_dev_groups,
 	.uevent		= rpmsg_uevent,
 	.probe		= rpmsg_dev_probe,
 	.remove		= rpmsg_dev_remove,
@@ -643,7 +640,7 @@ EXPORT_SYMBOL(rpmsg_unregister_device);
 int __register_rpmsg_driver(struct rpmsg_driver *rpdrv, struct module *owner)
 {
 	rpdrv->drv.bus = &rpmsg_bus;
-	rpdrv->drv.owner = owner;
+	//rpdrv->drv.owner = owner;
 	return driver_register(&rpdrv->drv);
 }
 EXPORT_SYMBOL(__register_rpmsg_driver);
@@ -665,7 +662,7 @@ static int __init rpmsg_init(void)
 {
 	int ret;
 
-	rpmsg_class = class_create(THIS_MODULE, "rpmsg");
+	rpmsg_class = class_create("rpmsg");
 	if (IS_ERR(rpmsg_class)) {
 		pr_err("failed to create rpmsg class\n");
 		return PTR_ERR(rpmsg_class);

@@ -17,12 +17,10 @@
 #include <linux/i2c.h>
 #include <linux/interrupt.h>
 #include <linux/mod_devicetable.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_platform.h>
 #include <linux/rational.h>
 #include <linux/regmap.h>
-// #include <linux/slab.h>
 
 #include <dt-bindings/clk/versaclock.h>
 
@@ -872,7 +870,7 @@ static int vc5_get_output_config(struct i2c_client *client,
 	char *child_name;
 	int ret = 0;
 
-	child_name = kasprintf(GFP_KERNEL, "OUT%d", clk_out->num + 1);
+	child_name = kasprintf(0, "OUT%d", clk_out->num + 1);
 	if (!child_name)
 		return -ENOMEM;
 
@@ -914,7 +912,7 @@ static int vc5_probe(struct i2c_client *client)
 	unsigned int n, idx = 0;
 	int ret;
 
-	vc5 = devm_kzalloc(&client->dev, sizeof(*vc5), GFP_KERNEL);
+	vc5 = devm_kzalloc(&client->dev, sizeof(*vc5), 0);
 	if (!vc5)
 		return -ENOMEM;
 
@@ -991,7 +989,7 @@ static int vc5_probe(struct i2c_client *client)
 			goto err_clk_register;
 	}
 
-	init.name = kasprintf(GFP_KERNEL, "%pOFn.mux", client->dev.of_node);
+	init.name = kasprintf(0, "%pOFn.mux", client->dev.of_node);
 	init.ops = &vc5_mux_ops;
 	init.flags = 0;
 	init.parent_names = parent_names;
@@ -1004,7 +1002,7 @@ static int vc5_probe(struct i2c_client *client)
 	if (vc5->chip_info->flags & VC5_HAS_PFD_FREQ_DBL) {
 		/* Register frequency doubler */
 		memset(&init, 0, sizeof(init));
-		init.name = kasprintf(GFP_KERNEL, "%pOFn.dbl",
+		init.name = kasprintf(0, "%pOFn.dbl",
 				      client->dev.of_node);
 		init.ops = &vc5_dbl_ops;
 		init.flags = CLK_SET_RATE_PARENT;
@@ -1020,7 +1018,7 @@ static int vc5_probe(struct i2c_client *client)
 
 	/* Register PFD */
 	memset(&init, 0, sizeof(init));
-	init.name = kasprintf(GFP_KERNEL, "%pOFn.pfd", client->dev.of_node);
+	init.name = kasprintf(0, "%pOFn.pfd", client->dev.of_node);
 	init.ops = &vc5_pfd_ops;
 	init.flags = CLK_SET_RATE_PARENT;
 	init.parent_names = parent_names;
@@ -1037,7 +1035,7 @@ static int vc5_probe(struct i2c_client *client)
 
 	/* Register PLL */
 	memset(&init, 0, sizeof(init));
-	init.name = kasprintf(GFP_KERNEL, "%pOFn.pll", client->dev.of_node);
+	init.name = kasprintf(0, "%pOFn.pll", client->dev.of_node);
 	init.ops = &vc5_pll_ops;
 	init.flags = CLK_SET_RATE_PARENT;
 	init.parent_names = parent_names;
@@ -1055,7 +1053,7 @@ static int vc5_probe(struct i2c_client *client)
 	for (n = 0; n < vc5->chip_info->clk_fod_cnt; n++) {
 		idx = vc5_map_index_to_output(vc5->chip_info->model, n);
 		memset(&init, 0, sizeof(init));
-		init.name = kasprintf(GFP_KERNEL, "%pOFn.fod%d",
+		init.name = kasprintf("%pOFn.fod%d",
 				      client->dev.of_node, idx);
 		init.ops = &vc5_fod_ops;
 		init.flags = CLK_SET_RATE_PARENT;
@@ -1073,7 +1071,7 @@ static int vc5_probe(struct i2c_client *client)
 
 	/* Register MUX-connected OUT0_I2C_SELB output */
 	memset(&init, 0, sizeof(init));
-	init.name = kasprintf(GFP_KERNEL, "%pOFn.out0_sel_i2cb",
+	init.name = kasprintf(0, "%pOFn.out0_sel_i2cb",
 			      client->dev.of_node);
 	init.ops = &vc5_clk_out_ops;
 	init.flags = CLK_SET_RATE_PARENT;
@@ -1099,7 +1097,7 @@ static int vc5_probe(struct i2c_client *client)
 			    clk_hw_get_name(&vc5->clk_out[n - 1].hw);
 
 		memset(&init, 0, sizeof(init));
-		init.name = kasprintf(GFP_KERNEL, "%pOFn.out%d",
+		init.name = kasprintf("%pOFn.out%d",
 				      client->dev.of_node, idx + 1);
 		init.ops = &vc5_clk_out_ops;
 		init.flags = CLK_SET_RATE_PARENT;

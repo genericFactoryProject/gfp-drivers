@@ -6,10 +6,9 @@
 #include <linux/device.h>
 #include <linux/input.h>
 #include <linux/jiffies.h>
-#include <linux/mutex.h>
-// #include <linux/slab.h>
 #include <linux/types.h>
-#include <linux/workqueue.h>
+#include <linux/lynix-compat.h>
+
 #include "input-poller.h"
 
 struct input_dev_poller {
@@ -20,7 +19,7 @@ struct input_dev_poller {
 	unsigned int poll_interval_min; /* msec */
 
 	struct input_dev *input;
-	struct delayed_work work;
+	// struct delayed_work work;
 };
 
 static void input_dev_poller_queue_work(struct input_dev_poller *poller)
@@ -31,9 +30,10 @@ static void input_dev_poller_queue_work(struct input_dev_poller *poller)
 	if (delay >= HZ)
 		delay = round_jiffies_relative(delay);
 
-	queue_delayed_work(system_freezable_wq, &poller->work, delay);
+	//queue_delayed_work(system_freezable_wq, &poller->work, delay);
 }
 
+#if 0
 static void input_dev_poller_work(struct work_struct *work)
 {
 	struct input_dev_poller *poller =
@@ -42,6 +42,7 @@ static void input_dev_poller_work(struct work_struct *work)
 	poller->poll(poller->input);
 	input_dev_poller_queue_work(poller);
 }
+#endif
 
 void input_dev_poller_finalize(struct input_dev_poller *poller)
 {
@@ -62,7 +63,7 @@ void input_dev_poller_start(struct input_dev_poller *poller)
 
 void input_dev_poller_stop(struct input_dev_poller *poller)
 {
-	cancel_delayed_work_sync(&poller->work);
+	//cancel_delayed_work_sync(&poller->work);
 }
 
 int input_setup_polling(struct input_dev *dev,
@@ -70,7 +71,7 @@ int input_setup_polling(struct input_dev *dev,
 {
 	struct input_dev_poller *poller;
 
-	poller = kzalloc(sizeof(*poller), GFP_KERNEL);
+	poller = kzalloc(sizeof(*poller), 0);
 	if (!poller) {
 		/*
 		 * We want to show message even though kzalloc() may have
@@ -82,7 +83,7 @@ int input_setup_polling(struct input_dev *dev,
 		return -ENOMEM;
 	}
 
-	INIT_DELAYED_WORK(&poller->work, input_dev_poller_work);
+	//INIT_DELAYED_WORK(&poller->work, input_dev_poller_work);
 	poller->input = dev;
 	poller->poll = poll_fn;
 
@@ -131,7 +132,7 @@ int input_get_poll_interval(struct input_dev *dev)
 	return dev->poller->poll_interval;
 }
 EXPORT_SYMBOL(input_get_poll_interval);
-
+#if 0
 /* SYSFS interface */
 
 static ssize_t input_dev_get_poll_interval(struct device *dev,
@@ -220,3 +221,4 @@ struct attribute_group input_poller_attribute_group = {
 	.is_visible	= input_poller_attrs_visible,
 	.attrs		= input_poller_attrs,
 };
+#endif

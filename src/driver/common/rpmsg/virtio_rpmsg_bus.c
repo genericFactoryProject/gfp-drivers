@@ -14,19 +14,15 @@
 #include <linux/dma-mapping.h>
 #include <linux/idr.h>
 #include <linux/jiffies.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
-#include <linux/mutex.h>
 #include <linux/rpmsg.h>
 #include <linux/rpmsg/byteorder.h>
 #include <linux/rpmsg/ns.h>
 #include <linux/scatterlist.h>
-// #include <linux/slab.h>
-#include <linux/sched.h>
 #include <linux/virtio.h>
 #include <linux/virtio_ids.h>
 #include <linux/virtio_config.h>
-#include <linux/wait.h>
+#include <linux/lynix-compat.h>
+
 
 #include "rpmsg_internal.h"
 
@@ -64,7 +60,7 @@ struct virtproc_info {
 	struct mutex tx_lock;
 	struct idr endpoints;
 	struct mutex endpoints_lock;
-	wait_queue_head_t sendq;
+	//wait_queue_head_t sendq;
 	atomic_t sleepers;
 };
 
@@ -175,6 +171,7 @@ static const struct rpmsg_endpoint_ops virtio_endpoint_ops = {
 static void
 rpmsg_sg_init(struct scatterlist *sg, void *cpu_addr, unsigned int len)
 {
+#if 0
 	if (is_vmalloc_addr(cpu_addr)) {
 		sg_init_table(sg, 1);
 		sg_set_page(sg, vmalloc_to_page(cpu_addr), len,
@@ -183,6 +180,7 @@ rpmsg_sg_init(struct scatterlist *sg, void *cpu_addr, unsigned int len)
 		WARN_ON(!virt_addr_valid(cpu_addr));
 		sg_init_one(sg, cpu_addr, len);
 	}
+#endif
 }
 
 /**
@@ -215,7 +213,7 @@ static struct rpmsg_endpoint *__rpmsg_create_ept(struct virtproc_info *vrp,
 	struct rpmsg_endpoint *ept;
 	struct device *dev = rpdev ? &rpdev->dev : &vrp->vdev->dev;
 
-	ept = kzalloc(sizeof(*ept), GFP_KERNEL);
+	ept = kzalloc(sizeof(*ept), 0);
 	if (!ept)
 		return NULL;
 
@@ -239,7 +237,7 @@ static struct rpmsg_endpoint *__rpmsg_create_ept(struct virtproc_info *vrp,
 	mutex_lock(&vrp->endpoints_lock);
 
 	/* bind the endpoint to an rpmsg address (and allocate one if needed) */
-	id = idr_alloc(&vrp->endpoints, ept, id_min, id_max, GFP_KERNEL);
+	id = idr_alloc(&vrp->endpoints, ept, id_min, id_max, 0);
 	if (id < 0) {
 		dev_err(dev, "idr_alloc failed: %d\n", id);
 		goto free_ept;
@@ -404,7 +402,7 @@ static struct rpmsg_device *__rpmsg_create_channel(struct virtproc_info *vrp,
 		return NULL;
 	}
 
-	vch = kzalloc(sizeof(*vch), GFP_KERNEL);
+	vch = kzalloc(sizeof(*vch), 0);
 	if (!vch)
 		return NULL;
 
@@ -558,7 +556,7 @@ static int rpmsg_send_offchannel_raw(struct rpmsg_device *rpdev,
 	struct device *dev = &rpdev->dev;
 	struct scatterlist sg;
 	struct rpmsg_hdr *msg;
-	int err;
+	int err = 0;
 
 	/* bcasting isn't allowed */
 	if (src == RPMSG_ADDR_ANY || dst == RPMSG_ADDR_ANY) {
@@ -596,9 +594,9 @@ static int rpmsg_send_offchannel_raw(struct rpmsg_device *rpdev,
 		 * little point in asking drivers to specify that.
 		 * if later this happens to be required, it'd be easy to add.
 		 */
-		err = wait_event_interruptible_timeout(vrp->sendq,
-					(msg = get_a_tx_buf(vrp)),
-					msecs_to_jiffies(15000));
+		//err = wait_event_interruptible_timeout(vrp->sendq,
+		//			(msg = get_a_tx_buf(vrp)),
+		//			msecs_to_jiffies(15000));
 
 		/* disable "tx-complete" interrupts if we're the last sleeper */
 		rpmsg_downref_sleepers(vrp);
@@ -629,7 +627,7 @@ static int rpmsg_send_offchannel_raw(struct rpmsg_device *rpdev,
 	mutex_lock(&vrp->tx_lock);
 
 	/* add message to the remote processor's virtqueue */
-	err = virtqueue_add_outbuf(vrp->svq, &sg, 1, msg, GFP_KERNEL);
+	err = virtqueue_add_outbuf(vrp->svq, &sg, 1, msg, 0);
 	if (err) {
 		/*
 		 * need to reclaim the buffer here, otherwise it's lost
@@ -764,7 +762,7 @@ static int rpmsg_recv_single(struct virtproc_info *vrp, struct device *dev,
 	rpmsg_sg_init(&sg, msg, vrp->buf_size);
 
 	/* add the buffer back to the remote processor's virtqueue */
-	err = virtqueue_add_inbuf(vrp->rvq, &sg, 1, msg, GFP_KERNEL);
+	err = virtqueue_add_inbuf(vrp->rvq, &sg, 1, msg, 0);
 	if (err < 0) {
 		dev_err(dev, "failed to add a virtqueue buffer: %d\n", err);
 		return err;
@@ -819,7 +817,7 @@ static void rpmsg_xmit_done(struct virtqueue *svq)
 	dev_dbg(&svq->vdev->dev, "%s\n", __func__);
 
 	/* wake up potential senders that are waiting for a tx buffer */
-	wake_up_interruptible(&vrp->sendq);
+	//wake_up_interruptible(&vrp->sendq);
 }
 
 /*
@@ -834,7 +832,7 @@ static struct rpmsg_device *rpmsg_virtio_add_ctrl_dev(struct virtio_device *vdev
 	struct rpmsg_device *rpdev_ctrl;
 	int err = 0;
 
-	vch = kzalloc(sizeof(*vch), GFP_KERNEL);
+	vch = kzalloc(sizeof(*vch), 0);
 	if (!vch)
 		return ERR_PTR(-ENOMEM);
 
@@ -878,7 +876,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
 	size_t total_buf_space;
 	bool notify;
 
-	vrp = kzalloc(sizeof(*vrp), GFP_KERNEL);
+	vrp = kzalloc(sizeof(*vrp), 0);
 	if (!vrp)
 		return -ENOMEM;
 
@@ -887,7 +885,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
 	idr_init(&vrp->endpoints);
 	mutex_init(&vrp->endpoints_lock);
 	mutex_init(&vrp->tx_lock);
-	init_waitqueue_head(&vrp->sendq);
+	//init_waitqueue_head(&vrp->sendq);
 
 	/* We expect two virtqueues, rx and tx (and in this order) */
 	err = virtio_find_vqs(vdev, 2, vqs, vq_cbs, names, NULL);
@@ -914,7 +912,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
 	/* allocate coherent memory for the buffers */
 	bufs_va = dma_alloc_coherent(vdev->dev.parent,
 				     total_buf_space, &vrp->bufs_dma,
-				     GFP_KERNEL);
+				     0);
 	if (!bufs_va) {
 		err = -ENOMEM;
 		goto vqs_del;
@@ -937,7 +935,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
 		rpmsg_sg_init(&sg, cpu_addr, vrp->buf_size);
 
 		err = virtqueue_add_inbuf(vrp->rvq, &sg, 1, cpu_addr,
-					  GFP_KERNEL);
+					  0);
 		WARN_ON(err); /* sanity check; this can't really happen */
 	}
 
@@ -954,7 +952,7 @@ static int rpmsg_probe(struct virtio_device *vdev)
 
 	/* if supported by the remote processor, enable the name service */
 	if (virtio_has_feature(vdev, VIRTIO_RPMSG_F_NS)) {
-		vch = kzalloc(sizeof(*vch), GFP_KERNEL);
+		vch = kzalloc(sizeof(*vch), 0);
 		if (!vch) {
 			err = -ENOMEM;
 			goto free_ctrldev;
@@ -1052,8 +1050,8 @@ static unsigned int features[] = {
 static struct virtio_driver virtio_ipc_driver = {
 	.feature_table	= features,
 	.feature_table_size = ARRAY_SIZE(features),
-	.driver.name	= KBUILD_MODNAME,
-	.driver.owner	= THIS_MODULE,
+	.driver.name	= "KBUILD_MODNAME",
+	//.driver.owner	= THIS_MODULE,
 	.id_table	= id_table,
 	.probe		= rpmsg_probe,
 	.remove		= rpmsg_remove,

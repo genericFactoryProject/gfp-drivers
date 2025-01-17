@@ -7,12 +7,13 @@
 
 #include <linux/device.h>
 #include <linux/err.h>
-#include <linux/uio.h>
+// #include <linux/uio.h>
 // #include <linux/bug.h>
 #include <linux/scatterlist.h>
 #include <linux/bitmap.h>
 #include <linux/types.h>
-#include <asm/page.h>
+// #include <asm/page.h>
+#include <linux/idr.h>
 
 /**
  * typedef dma_cookie_t - an opaque DMA cookie
@@ -946,7 +947,7 @@ struct dma_device {
 	void (*device_issue_pending)(struct dma_chan *chan);
 	void (*device_release)(struct dma_device *dev);
 	/* debugfs support */
-	void (*dbg_summary_show)(struct seq_file *s, struct dma_device *dev);
+	// void (*dbg_summary_show)(struct seq_file *s, struct dma_device *dev);
 	struct dentry *dbg_dev_root;
 };
 

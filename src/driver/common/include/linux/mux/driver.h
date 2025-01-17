@@ -13,7 +13,9 @@
 #include <dt-bindings/mux/mux.h>
 #include <linux/device.h>
 #include <linux/ktime.h>
-#include <linux/semaphore.h>
+// #include <linux/semaphore.h>
+#include <linux/lynix-compat.h>
+
 
 struct mux_chip;
 struct mux_control;

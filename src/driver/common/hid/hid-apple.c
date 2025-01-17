@@ -18,8 +18,6 @@
 #include <linux/device.h>
 #include <linux/hid.h>
 #include <linux/jiffies.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/timer.h>
 
 #include "hid-ids.h"
@@ -42,27 +40,31 @@
 #define APPLE_BATTERY_TIMEOUT_MS	60000
 
 static unsigned int fnmode = 1;
+#if 0
 module_param(fnmode, uint, 0644);
 MODULE_PARM_DESC(fnmode, "Mode of fn key on Apple keyboards (0 = disabled, "
 		"[1] = fkeyslast, 2 = fkeysfirst)");
-
+#endif
 static int iso_layout = -1;
+#if 0
 module_param(iso_layout, int, 0644);
 MODULE_PARM_DESC(iso_layout, "Swap the backtick/tilde and greater-than/less-than keys. "
 		"([-1] = auto, 0 = disabled, 1 = enabled)");
-
+#endif
 static unsigned int swap_opt_cmd;
+#if 0
 module_param(swap_opt_cmd, uint, 0644);
 MODULE_PARM_DESC(swap_opt_cmd, "Swap the Option (\"Alt\") and Command (\"Flag\") keys. "
 		"(For people who want to keep Windows PC keyboard muscle memory. "
 		"[0] = as-is, Mac layout. 1 = swapped, Windows layout.)");
-
+#endif
 static unsigned int swap_fn_leftctrl;
+#if 0
 module_param(swap_fn_leftctrl, uint, 0644);
 MODULE_PARM_DESC(swap_fn_leftctrl, "Swap the Fn and left Control keys. "
 		"(For people who want to keep PC keyboard muscle memory. "
 		"[0] = as-is, Mac layout, 1 = swapped, PC layout)");
-
+#endif
 struct apple_sc_backlight {
 	struct led_classdev cdev;
 	struct hid_device *hdev;
@@ -579,7 +581,7 @@ static __u8 *apple_report_fixup(struct hid_device *hdev, __u8 *rdesc,
 		hid_info(hdev,
 			 "fixing up Magic Keyboard battery report descriptor\n");
 		*rsize = *rsize - 1;
-		rdesc = kmemdup(rdesc + 1, *rsize, GFP_KERNEL);
+		rdesc = kmemdup(rdesc + 1, *rsize, 0);
 		if (!rdesc)
 			return NULL;
 
@@ -685,7 +687,7 @@ static int apple_backlight_set(struct hid_device *hdev, u16 value, u16 rate)
 	int ret = 0;
 	struct apple_backlight_set_report *rep;
 
-	rep = kmalloc(sizeof(*rep), GFP_KERNEL);
+	rep = kmalloc(sizeof(*rep), 0);
 	if (rep == NULL)
 		return -ENOMEM;
 
@@ -719,7 +721,7 @@ static int apple_backlight_init(struct hid_device *hdev)
 	if (!apple_backlight_check_support(hdev))
 		return -EINVAL;
 
-	rep = kmalloc(0x200, GFP_KERNEL);
+	rep = kmalloc(0x200, 0);
 	if (rep == NULL)
 		return -ENOMEM;
 
@@ -738,7 +740,7 @@ static int apple_backlight_init(struct hid_device *hdev)
 	hid_dbg(hdev, "backlight config: off=%u, on_min=%u, on_max=%u\n",
 		rep->backlight_off, rep->backlight_on_min, rep->backlight_on_max);
 
-	asc->backlight = devm_kzalloc(&hdev->dev, sizeof(*asc->backlight), GFP_KERNEL);
+	asc->backlight = devm_kzalloc(&hdev->dev, sizeof(*asc->backlight), 0);
 	if (!asc->backlight) {
 		ret = -ENOMEM;
 		goto cleanup_and_exit;
@@ -769,7 +771,7 @@ static int apple_probe(struct hid_device *hdev,
 	struct apple_sc *asc;
 	int ret;
 
-	asc = devm_kzalloc(&hdev->dev, sizeof(*asc), GFP_KERNEL);
+	asc = devm_kzalloc(&hdev->dev, sizeof(*asc), 0);
 	if (asc == NULL) {
 		hid_err(hdev, "can't alloc apple descriptor\n");
 		return -ENOMEM;

@@ -13,17 +13,13 @@
 #define pr_fmt(fmt) "pinmux core: " fmt
 
 #include <linux/ctype.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/device.h>
-// #include <linux/slab.h>
 #include <linux/radix-tree.h>
 #include <linux/err.h>
 #include <linux/list.h>
 #include <linux/string.h>
-#include <linux/debugfs.h>
-#include <linux/seq_file.h>
+#include <linux/lynix-compat.h>
 #include <linux/pinctrl/machine.h>
 #include <linux/pinctrl/pinmux.h>
 #include "core.h"
@@ -148,7 +144,7 @@ static int pin_request(struct pinctrl_dev *pctldev,
 
 		desc->mux_owner = owner;
 	}
-
+#if 0
 	/* Let each pin increase references to this module */
 	if (!try_module_get(pctldev->owner)) {
 		dev_err(pctldev->dev,
@@ -157,7 +153,7 @@ static int pin_request(struct pinctrl_dev *pctldev,
 		status = -EINVAL;
 		goto out_free_pin;
 	}
-
+#endif
 	/*
 	 * If there is no kind of request function for the pin we just assume
 	 * we got it by default and proceed.
@@ -172,10 +168,10 @@ static int pin_request(struct pinctrl_dev *pctldev,
 
 	if (status) {
 		dev_err(pctldev->dev, "request() failed for pin %d\n", pin);
-		module_put(pctldev->owner);
+		//module_put(pctldev->owner);
 	}
 
-out_free_pin:
+//out_free_pin:
 	if (status) {
 		if (gpio_range) {
 			desc->gpio_owner = NULL;
@@ -247,7 +243,7 @@ static const char *pin_free(struct pinctrl_dev *pctldev, int pin,
 		desc->mux_setting = NULL;
 	}
 
-	module_put(pctldev->owner);
+	//module_put(pctldev->owner);
 
 	return owner;
 }
@@ -267,7 +263,7 @@ int pinmux_request_gpio(struct pinctrl_dev *pctldev,
 	int ret;
 
 	/* Conjure some name stating what chip and pin this is taken by */
-	owner = kasprintf(GFP_KERNEL, "%s:%d", range->name, gpio);
+	owner = kasprintf("%s:%d", range->name, gpio);
 	if (!owner)
 		return -ENOMEM;
 
@@ -689,7 +685,7 @@ static ssize_t pinmux_select(struct file *file, const char __user *user_buf,
 	if (len > PINMUX_SELECT_MAX)
 		return -ENOMEM;
 
-	buf = kzalloc(PINMUX_SELECT_MAX, GFP_KERNEL);
+	buf = kzalloc(PINMUX_SELECT_MAX, 0);
 	if (!buf)
 		return -ENOMEM;
 
@@ -891,7 +887,7 @@ int pinmux_generic_add_function(struct pinctrl_dev *pctldev,
 
 	selector = pctldev->num_functions;
 
-	function = devm_kzalloc(pctldev->dev, sizeof(*function), GFP_KERNEL);
+	function = devm_kzalloc(pctldev->dev, sizeof(*function), 0);
 	if (!function)
 		return -ENOMEM;
 

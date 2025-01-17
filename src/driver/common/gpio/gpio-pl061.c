@@ -8,7 +8,6 @@
  *
  * Data sheet: ARM DDI 0190B, September 2000
  */
-// #include <linux/spinlock.h>
 #include <linux/errno.h>
 #include <linux/init.h>
 #include <linux/io.h>
@@ -16,12 +15,10 @@
 #include <linux/interrupt.h>
 #include <linux/irq.h>
 #include <linux/irqchip/chained_irq.h>
-// #include <linux/module.h>
 #include <linux/bitops.h>
 #include <linux/gpio/driver.h>
 #include <linux/device.h>
 #include <linux/amba/bus.h>
-// #include <linux/slab.h>
 #include <linux/pinctrl/consumer.h>
 #include <linux/pm.h>
 
@@ -290,7 +287,7 @@ static int pl061_probe(struct amba_device *adev, const struct amba_id *id)
 	struct gpio_irq_chip *girq;
 	int ret, irq;
 
-	pl061 = devm_kzalloc(dev, sizeof(*pl061), GFP_KERNEL);
+	pl061 = devm_kzalloc(dev, sizeof(*pl061), 0);
 	if (pl061 == NULL)
 		return -ENOMEM;
 
@@ -333,7 +330,7 @@ static int pl061_probe(struct amba_device *adev, const struct amba_id *id)
 	girq->parent_handler = pl061_irq_handler;
 	girq->num_parents = 1;
 	girq->parents = devm_kcalloc(dev, 1, sizeof(*girq->parents),
-				     GFP_KERNEL);
+				     0);
 	if (!girq->parents)
 		return -ENOMEM;
 	girq->parents[0] = irq;

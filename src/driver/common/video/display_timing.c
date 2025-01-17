@@ -6,8 +6,8 @@
  */
 
 #include <linux/export.h>
-// #include <linux/slab.h>
 #include <video/display_timing.h>
+#include <linux/lynix-compat.h>
 
 void display_timings_release(struct display_timings *disp)
 {

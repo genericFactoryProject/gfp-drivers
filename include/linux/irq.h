@@ -533,7 +533,7 @@ struct irq_chip {
 
 	void		(*irq_calc_mask)(struct irq_data *data);
 
-	void		(*irq_print_chip)(struct irq_data *data, struct seq_file *p);
+	//void		(*irq_print_chip)(struct irq_data *data, struct seq_file *p);
 	int		(*irq_request_resources)(struct irq_data *data);
 	void		(*irq_release_resources)(struct irq_data *data);
 

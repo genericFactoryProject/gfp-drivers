@@ -14,8 +14,7 @@
 
 #include <linux/hid.h>
 #include <linux/export.h>
-// #include <linux/slab.h>
-#include <linux/mutex.h>
+#include <linux/lynix-compat.h>
 #include <linux/input/elan-i2c-ids.h>
 
 #include "hid-ids.h"
@@ -1176,16 +1175,16 @@ static void hid_remove_all_dquirks(__u16 bus)
 int hid_quirks_init(char **quirks_param, __u16 bus, int count)
 {
 	struct hid_device_id id = { 0 };
-	int n = 0, m;
-	unsigned short int vendor, product;
-	u32 quirks;
+	int n = 0, m = 0;
+	unsigned short int vendor = 0, product = 0;
+	u32 quirks = 0;
 
 	id.bus = bus;
 
 	for (; n < count && quirks_param[n]; n++) {
 
-		m = sscanf(quirks_param[n], "0x%hx:0x%hx:0x%x",
-				&vendor, &product, &quirks);
+		//m = sscanf(quirks_param[n], "0x%hx:0x%hx:0x%x",
+		//		&vendor, &product, &quirks);
 
 		id.vendor = (__u16)vendor;
 		id.product = (__u16)product;

@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/pci.h>
-// #include <linux/module.h>
 #include "pci.h"
 
 static void pci_free_resources(struct pci_dev *dev)
@@ -30,8 +29,8 @@ static void pci_stop_dev(struct pci_dev *dev)
 
 static void pci_destroy_dev(struct pci_dev *dev)
 {
-	if (!dev->dev.kobj.parent)
-		return;
+	//if (!dev->dev.kobj.parent)
+	//	return;
 
 	device_del(&dev->dev);
 

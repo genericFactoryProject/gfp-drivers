@@ -17,19 +17,13 @@
 #define pr_fmt(fmt)    "%s: " fmt, __func__
 
 #include <linux/delay.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/panic_notifier.h>
-// #include <linux/slab.h>
-#include <linux/mutex.h>
 #include <linux/dma-map-ops.h>
 #include <linux/dma-mapping.h>
 #include <linux/dma-direct.h> /* XXX: pokes into bus_dma_range */
 #include <linux/firmware.h>
 #include <linux/string.h>
-#include <linux/debugfs.h>
-#include <linux/rculist.h>
 #include <linux/remoteproc.h>
 #include <linux/iommu.h>
 #include <linux/idr.h>
@@ -40,6 +34,8 @@
 #include <linux/virtio_ring.h>
 #include <asm/byteorder.h>
 #include <linux/platform_device.h>
+#include <linux/lynix-compat.h>
+#include <linux/rculist.h>
 
 #include "remoteproc_internal.h"
 
@@ -146,6 +142,7 @@ static void rproc_disable_iommu(struct rproc *rproc)
 
 phys_addr_t rproc_va_to_pa(void *cpu_addr)
 {
+	#if 0
 	/*
 	 * Return physical address according to virtual address location
 	 * - in vmalloc: if region ioremapped or defined as dma_alloc_coherent
@@ -158,6 +155,8 @@ phys_addr_t rproc_va_to_pa(void *cpu_addr)
 
 	WARN_ON(!virt_addr_valid(cpu_addr));
 	return virt_to_phys(cpu_addr);
+	#endif
+	return 0;
 }
 EXPORT_SYMBOL(rproc_va_to_pa);
 
@@ -365,7 +364,7 @@ int rproc_alloc_vring(struct rproc_vdev *rvdev, int i)
 	 * TODO: assign a notifyid for rvdev updates as well
 	 * TODO: support predefined notifyids (via resource table)
 	 */
-	ret = idr_alloc(&rproc->notifyids, rvring, 0, 0, GFP_KERNEL);
+	ret = idr_alloc(&rproc->notifyids, rvring, 0, 0, 0);
 	if (ret < 0) {
 		dev_err(dev, "idr_alloc failed: %d\n", ret);
 		return ret;
@@ -477,7 +476,7 @@ static int copy_dma_range_map(struct device *to, struct device *from)
 		num_ranges++;
 
 	new_map = kmemdup(map, array_size(num_ranges + 1, sizeof(*map)),
-			  GFP_KERNEL);
+			  0);
 	if (!new_map)
 		return -ENOMEM;
 	to->dma_range_map = new_map;
@@ -543,7 +542,7 @@ static int rproc_handle_vdev(struct rproc *rproc, void *ptr,
 		return -EINVAL;
 	}
 
-	rvdev = kzalloc(sizeof(*rvdev), GFP_KERNEL);
+	rvdev = kzalloc(sizeof(*rvdev), 0);
 	if (!rvdev)
 		return -ENOMEM;
 
@@ -668,7 +667,7 @@ static int rproc_handle_trace(struct rproc *rproc, void *ptr,
 		return -EINVAL;
 	}
 
-	trace = kzalloc(sizeof(*trace), GFP_KERNEL);
+	trace = kzalloc(sizeof(*trace), 0);
 	if (!trace)
 		return -ENOMEM;
 
@@ -750,7 +749,7 @@ static int rproc_handle_devmem(struct rproc *rproc, void *ptr,
 		return -EINVAL;
 	}
 
-	mapping = kzalloc(sizeof(*mapping), GFP_KERNEL);
+	mapping = kzalloc(sizeof(*mapping), 0);
 	if (!mapping)
 		return -ENOMEM;
 
@@ -800,7 +799,7 @@ static int rproc_alloc_carveout(struct rproc *rproc,
 	void *va;
 	int ret;
 
-	va = dma_alloc_coherent(dev->parent, mem->len, &dma, GFP_KERNEL);
+	va = dma_alloc_coherent(dev->parent, mem->len, &dma, 0);
 	if (!va) {
 		dev_err(dev->parent,
 			"failed to allocate dma memory: len 0x%zx\n",
@@ -841,7 +840,7 @@ static int rproc_alloc_carveout(struct rproc *rproc,
 	 * physical address in this case.
 	 */
 	if (mem->da != FW_RSC_ADDR_ANY && rproc->domain) {
-		mapping = kzalloc(sizeof(*mapping), GFP_KERNEL);
+		mapping = kzalloc(sizeof(*mapping), 0);
 		if (!mapping) {
 			ret = -ENOMEM;
 			goto dma_free;
@@ -1031,7 +1030,7 @@ rproc_mem_entry_init(struct device *dev,
 	struct rproc_mem_entry *mem;
 	va_list args;
 
-	mem = kzalloc(sizeof(*mem), GFP_KERNEL);
+	mem = kzalloc(sizeof(*mem), 0);
 	if (!mem)
 		return mem;
 
@@ -1074,7 +1073,7 @@ rproc_of_resm_mem_entry_init(struct device *dev, u32 of_resm_idx, size_t len,
 	struct rproc_mem_entry *mem;
 	va_list args;
 
-	mem = kzalloc(sizeof(*mem), GFP_KERNEL);
+	mem = kzalloc(sizeof(*mem), 0);
 	if (!mem)
 		return mem;
 
@@ -1589,7 +1588,7 @@ static int rproc_set_rsc_table(struct rproc *rproc)
 	 * rproc_reset_rsc_table_on_stop().
 	 */
 	if (rproc->ops->detach) {
-		rproc->clean_table = kmemdup(table_ptr, table_sz, GFP_KERNEL);
+		rproc->clean_table = kmemdup(table_ptr, table_sz, 0);
 		if (!rproc->clean_table)
 			return -ENOMEM;
 	} else {
@@ -1630,7 +1629,7 @@ static int rproc_reset_rsc_table_on_detach(struct rproc *rproc)
 	 * allocated here is free'd in rproc_detach().
 	 */
 	rproc->cached_table = kmemdup(rproc->table_ptr,
-				      rproc->table_sz, GFP_KERNEL);
+				      rproc->table_sz, 0);
 	if (!rproc->cached_table)
 		return -ENOMEM;
 
@@ -1678,7 +1677,7 @@ static int rproc_reset_rsc_table_on_stop(struct rproc *rproc)
 	 * allocated here is free'd in rproc_shutdown().
 	 */
 	rproc->cached_table = kmemdup(rproc->table_ptr,
-				      rproc->table_sz, GFP_KERNEL);
+				      rproc->table_sz, 0);
 	if (!rproc->cached_table)
 		return -ENOMEM;
 
@@ -1805,7 +1804,7 @@ static int rproc_trigger_auto_boot(struct rproc *rproc)
 	 * be built-in kernel code, without hanging the boot process.
 	 */
 	ret = request_firmware_nowait(THIS_MODULE, FW_ACTION_UEVENT,
-				      rproc->firmware, &rproc->dev, GFP_KERNEL,
+				      rproc->firmware, &rproc->dev, 0,
 				      rproc, rproc_auto_boot_callback);
 	if (ret < 0)
 		dev_err(&rproc->dev, "request_firmware_nowait err: %d\n", ret);
@@ -2190,10 +2189,10 @@ struct rproc *rproc_get_by_phandle(phandle phandle)
 	list_for_each_entry_rcu(r, &rproc_list, node) {
 		if (r->dev.parent && r->dev.parent->of_node == np) {
 			/* prevent underlying implementation from being removed */
-			if (!try_module_get(r->dev.parent->driver->owner)) {
-				dev_err(&r->dev, "can't get owner\n");
-				break;
-			}
+			//if (!try_module_get(r->dev.parent->driver->owner)) {
+			//	dev_err(&r->dev, "can't get owner\n");
+			//	break;
+			//}
 
 			rproc = r;
 			get_device(&rproc->dev);
@@ -2262,7 +2261,7 @@ int rproc_set_firmware(struct rproc *rproc, const char *fw_name)
 		goto out;
 	}
 
-	p = kstrndup(fw_name, len, GFP_KERNEL);
+	p = kstrndup(fw_name, len, 0);
 	if (!p) {
 		ret = -ENOMEM;
 		goto out;
@@ -2450,9 +2449,9 @@ static int rproc_alloc_firmware(struct rproc *rproc,
 	 * with.  Otherwise construct a new one using a default pattern.
 	 */
 	if (firmware)
-		p = kstrdup_const(firmware, GFP_KERNEL);
+		p = kstrdup_const(firmware, 0);
 	else
-		p = kasprintf(GFP_KERNEL, "rproc-%s-fw", name);
+		p = kasprintf(0, "rproc-%s-fw", name);
 
 	if (!p)
 		return -ENOMEM;
@@ -2464,7 +2463,7 @@ static int rproc_alloc_firmware(struct rproc *rproc,
 
 static int rproc_alloc_ops(struct rproc *rproc, const struct rproc_ops *ops)
 {
-	rproc->ops = kmemdup(ops, sizeof(*ops), GFP_KERNEL);
+	rproc->ops = kmemdup(ops, sizeof(*ops), 0);
 	if (!rproc->ops)
 		return -ENOMEM;
 
@@ -2517,7 +2516,7 @@ struct rproc *rproc_alloc(struct device *dev, const char *name,
 	if (!dev || !name || !ops)
 		return NULL;
 
-	rproc = kzalloc(sizeof(struct rproc) + len, GFP_KERNEL);
+	rproc = kzalloc(sizeof(struct rproc) + len, 0);
 	if (!rproc)
 		return NULL;
 
@@ -2533,7 +2532,7 @@ struct rproc *rproc_alloc(struct device *dev, const char *name,
 	rproc->dev.driver_data = rproc;
 	idr_init(&rproc->notifyids);
 
-	rproc->name = kstrdup_const(name, GFP_KERNEL);
+	rproc->name = kstrdup_const(name, 0);
 	if (!rproc->name)
 		goto put_device;
 
@@ -2544,7 +2543,7 @@ struct rproc *rproc_alloc(struct device *dev, const char *name,
 		goto put_device;
 
 	/* Assign a unique device index and name */
-	rproc->index = ida_simple_get(&rproc_dev_index, 0, 0, GFP_KERNEL);
+	rproc->index = ida_simple_get(&rproc_dev_index, 0, 0, 0);
 	if (rproc->index < 0) {
 		dev_err(dev, "ida_simple_get failed: %d\n", rproc->index);
 		goto put_device;
@@ -2563,7 +2562,7 @@ struct rproc *rproc_alloc(struct device *dev, const char *name,
 	INIT_LIST_HEAD(&rproc->subdevs);
 	INIT_LIST_HEAD(&rproc->dump_segments);
 
-	INIT_WORK(&rproc->crash_handler, rproc_crash_handler_work);
+	///INIT_WORK(&rproc->crash_handler, rproc_crash_handler_work);
 
 	rproc->state = RPROC_OFFLINE;
 
@@ -2601,7 +2600,7 @@ EXPORT_SYMBOL(rproc_free);
  */
 void rproc_put(struct rproc *rproc)
 {
-	module_put(rproc->dev.parent->driver->owner);
+	//module_put(rproc->dev.parent->driver->owner);
 	put_device(&rproc->dev);
 }
 EXPORT_SYMBOL(rproc_put);
@@ -2674,7 +2673,7 @@ struct rproc *devm_rproc_alloc(struct device *dev, const char *name,
 {
 	struct rproc **ptr, *rproc;
 
-	ptr = devres_alloc(devm_rproc_free, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_rproc_free, sizeof(*ptr), 0);
 	if (!ptr)
 		return NULL;
 
@@ -2756,7 +2755,7 @@ void rproc_report_crash(struct rproc *rproc, enum rproc_crash_type type)
 		rproc->name, rproc_crash_to_string(type));
 
 	/* Have a worker handle the error; ensure system is not suspended */
-	queue_work(system_freezable_wq, &rproc->crash_handler);
+	//queue_work(system_freezable_wq, &rproc->crash_handler);
 }
 EXPORT_SYMBOL(rproc_report_crash);
 

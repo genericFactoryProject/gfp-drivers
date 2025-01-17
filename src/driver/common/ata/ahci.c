@@ -16,11 +16,8 @@
  * http://www.intel.com/technology/serialata/pdf/rev1_1.pdf
  */
 
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/lynix-compat.h>
 #include <linux/pci.h>
-// #include <linux/blkdev.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
 #include <linux/dma-mapping.h>

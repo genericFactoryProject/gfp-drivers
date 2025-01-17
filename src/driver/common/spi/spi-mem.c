@@ -341,7 +341,7 @@ int spi_mem_exec_op(struct spi_mem *mem, const struct spi_mem_op *op)
 	 * we're guaranteed that this buffer is DMA-able, as required by the
 	 * SPI layer.
 	 */
-	tmpbuf = kzalloc(tmpbufsize, GFP_KERNEL | GFP_DMA);
+	tmpbuf = kzalloc(tmpbufsize, 0 | 0);
 	if (!tmpbuf)
 		return -ENOMEM;
 
@@ -538,7 +538,7 @@ spi_mem_dirmap_create(struct spi_mem *mem,
 	if (info->op_tmpl.data.dir == SPI_MEM_NO_DATA)
 		return ERR_PTR(-EINVAL);
 
-	desc = kzalloc(sizeof(*desc), GFP_KERNEL);
+	desc = kzalloc(sizeof(*desc), 0);
 	if (!desc)
 		return ERR_PTR(-ENOMEM);
 
@@ -608,7 +608,7 @@ devm_spi_mem_dirmap_create(struct device *dev, struct spi_mem *mem,
 	struct spi_mem_dirmap_desc **ptr, *desc;
 
 	ptr = devres_alloc(devm_spi_mem_dirmap_release, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -839,7 +839,7 @@ static int spi_mem_probe(struct spi_device *spi)
 	struct spi_controller *ctlr = spi->controller;
 	struct spi_mem *mem;
 
-	mem = devm_kzalloc(&spi->dev, sizeof(*mem), GFP_KERNEL);
+	mem = devm_kzalloc(&spi->dev, sizeof(*mem), 0);
 	if (!mem)
 		return -ENOMEM;
 

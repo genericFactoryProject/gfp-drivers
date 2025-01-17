@@ -16,20 +16,16 @@
 
 #define pr_fmt(fmt)	KBUILD_MODNAME ": " fmt
 
-#include <linux/cdev.h>
-#include <linux/compat.h>
+//#include <linux/compat.h>
 #include <linux/device.h>
-#include <linux/fs.h>
 #include <linux/i2c-dev.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
 #include <linux/jiffies.h>
-// #include <linux/kernel.h>
 #include <linux/list.h>
-// #include <linux/module.h>
 #include <linux/notifier.h>
-// #include <linux/slab.h>
-#include <linux/uaccess.h>
+#include <linux/lynix-compat.h>
+#include <linux/kdev_t.h>
 
 /*
  * An i2c_dev represents an i2c_adapter ... an I2C or SMBus master, not a
@@ -43,7 +39,7 @@ struct i2c_dev {
 	struct list_head list;
 	struct i2c_adapter *adap;
 	struct device dev;
-	struct cdev cdev;
+	//struct cdev cdev;
 };
 
 #define I2C_MINORS	(MINORMASK + 1)
@@ -74,7 +70,7 @@ static struct i2c_dev *get_free_i2c_dev(struct i2c_adapter *adap)
 		return ERR_PTR(-ENODEV);
 	}
 
-	i2c_dev = kzalloc(sizeof(*i2c_dev), GFP_KERNEL);
+	i2c_dev = kzalloc(sizeof(*i2c_dev), 0);
 	if (!i2c_dev)
 		return ERR_PTR(-ENOMEM);
 	i2c_dev->adap = adap;
@@ -90,11 +86,11 @@ static void put_i2c_dev(struct i2c_dev *i2c_dev, bool del_cdev)
 	spin_lock(&i2c_dev_list_lock);
 	list_del(&i2c_dev->list);
 	spin_unlock(&i2c_dev_list_lock);
-	if (del_cdev)
-		cdev_device_del(&i2c_dev->cdev, &i2c_dev->dev);
+	//if (del_cdev)
+	//	cdev_device_del(&i2c_dev->cdev, &i2c_dev->dev);
 	put_device(&i2c_dev->dev);
 }
-
+#if 0
 static ssize_t name_show(struct device *dev,
 			 struct device_attribute *attr, char *buf)
 {
@@ -142,7 +138,7 @@ static ssize_t i2cdev_read(struct file *file, char __user *buf, size_t count,
 	if (count > 8192)
 		count = 8192;
 
-	tmp = kzalloc(count, GFP_KERNEL);
+	tmp = kzalloc(count, 0);
 	if (tmp == NULL)
 		return -ENOMEM;
 
@@ -238,7 +234,7 @@ static noinline int i2cdev_ioctl_rdwr(struct i2c_client *client,
 	u8 __user **data_ptrs;
 	int i, res;
 
-	data_ptrs = kmalloc_array(nmsgs, sizeof(u8 __user *), GFP_KERNEL);
+	data_ptrs = kmalloc_array(nmsgs, sizeof(u8 __user *), 0);
 	if (data_ptrs == NULL) {
 		kfree(msgs);
 		return -ENOMEM;
@@ -258,7 +254,7 @@ static noinline int i2cdev_ioctl_rdwr(struct i2c_client *client,
 			res = PTR_ERR(msgs[i].buf);
 			break;
 		}
-		/* memdup_user allocates with GFP_KERNEL, so DMA is ok */
+		/* memdup_user allocates with 0, so DMA is ok */
 		msgs[i].flags |= I2C_M_DMA_SAFE;
 
 		/*
@@ -542,7 +538,7 @@ static long compat_i2cdev_ioctl(struct file *file, unsigned int cmd, unsigned lo
 			return -EINVAL;
 
 		rdwr_pa = kmalloc_array(rdwr_arg.nmsgs, sizeof(struct i2c_msg),
-				      GFP_KERNEL);
+				      0);
 		if (!rdwr_pa)
 			return -ENOMEM;
 
@@ -599,7 +595,7 @@ static int i2cdev_open(struct inode *inode, struct file *file)
 	 * or I2C core code!!  It just holds private copies of addressing
 	 * information and maybe a PEC flag.
 	 */
-	client = kzalloc(sizeof(*client), GFP_KERNEL);
+	client = kzalloc(sizeof(*client), 0);
 	if (!client) {
 		i2c_put_adapter(adap);
 		return -ENOMEM;
@@ -633,7 +629,7 @@ static const struct file_operations i2cdev_fops = {
 	.open		= i2cdev_open,
 	.release	= i2cdev_release,
 };
-
+#endif
 /* ------------------------------------------------------------------------- */
 
 static struct class *i2c_dev_class;
@@ -660,22 +656,22 @@ static int i2cdev_attach_adapter(struct device *dev, void *dummy)
 	if (IS_ERR(i2c_dev))
 		return PTR_ERR(i2c_dev);
 
-	cdev_init(&i2c_dev->cdev, &i2cdev_fops);
-	i2c_dev->cdev.owner = THIS_MODULE;
+	//cdev_init(&i2c_dev->cdev, &i2cdev_fops);
+	//i2c_dev->cdev.owner = THIS_MODULE;
 
 	device_initialize(&i2c_dev->dev);
 	i2c_dev->dev.devt = MKDEV(I2C_MAJOR, adap->nr);
 	i2c_dev->dev.class = i2c_dev_class;
 	i2c_dev->dev.parent = &adap->dev;
-	i2c_dev->dev.release = i2cdev_dev_release;
+	//i2c_dev->dev.release = i2cdev_dev_release;
 
 	res = dev_set_name(&i2c_dev->dev, "i2c-%d", adap->nr);
 	if (res)
 		goto err_put_i2c_dev;
 
-	res = cdev_device_add(&i2c_dev->cdev, &i2c_dev->dev);
-	if (res)
-		goto err_put_i2c_dev;
+	//res = cdev_device_add(&i2c_dev->cdev, &i2c_dev->dev);
+	//if (res)
+	//	goto err_put_i2c_dev;
 
 	pr_debug("adapter [%s] registered as minor %d\n", adap->name, adap->nr);
 	return 0;
@@ -735,16 +731,16 @@ static int __init i2c_dev_init(void)
 
 	pr_info("i2c /dev entries driver\n");
 
-	res = register_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS, "i2c");
-	if (res)
-		goto out;
+	//res = register_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS, "i2c");
+	//if (res)
+	//	goto out;
 
-	i2c_dev_class = class_create(THIS_MODULE, "i2c-dev");
+	i2c_dev_class = class_create("i2c-dev");
 	if (IS_ERR(i2c_dev_class)) {
 		res = PTR_ERR(i2c_dev_class);
 		goto out_unreg_chrdev;
 	}
-	i2c_dev_class->dev_groups = i2c_groups;
+	//i2c_dev_class->dev_groups = i2c_groups;
 
 	/* Keep track of adapters which will be added or removed later */
 	res = bus_register_notifier(&i2c_bus_type, &i2cdev_notifier);
@@ -759,8 +755,8 @@ static int __init i2c_dev_init(void)
 out_unreg_class:
 	class_destroy(i2c_dev_class);
 out_unreg_chrdev:
-	unregister_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS);
-out:
+	//unregister_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS);
+//out:
 	pr_err("Driver Initialisation failed\n");
 	return res;
 }
@@ -770,7 +766,7 @@ static void __exit i2c_dev_exit(void)
 	bus_unregister_notifier(&i2c_bus_type, &i2cdev_notifier);
 	i2c_for_each_dev(NULL, i2cdev_detach_adapter);
 	class_destroy(i2c_dev_class);
-	unregister_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS);
+	//unregister_chrdev_region(MKDEV(I2C_MAJOR, 0), I2C_MINORS);
 }
 
 MODULE_AUTHOR("Frodo Looijaard <frodol@dds.nl>");

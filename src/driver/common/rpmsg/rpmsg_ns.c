@@ -3,11 +3,8 @@
  * Copyright (C) STMicroelectronics 2020 - All Rights Reserved
  */
 #include <linux/device.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/rpmsg.h>
 #include <linux/rpmsg/ns.h>
-// #include <linux/slab.h>
 
 #include "rpmsg_internal.h"
 
@@ -98,7 +95,7 @@ static int rpmsg_ns_probe(struct rpmsg_device *rpdev)
 }
 
 static struct rpmsg_driver rpmsg_ns_driver = {
-	.drv.name = KBUILD_MODNAME,
+	.drv.name = "KBUILD_MODNAME",
 	.probe = rpmsg_ns_probe,
 };
 
@@ -122,5 +119,5 @@ module_exit(rpmsg_ns_exit);
 
 MODULE_DESCRIPTION("Name service announcement rpmsg driver");
 MODULE_AUTHOR("Arnaud Pouliquen <arnaud.pouliquen@st.com>");
-MODULE_ALIAS("rpmsg:" KBUILD_MODNAME);
+//MODULE_ALIAS("rpmsg:" KBUILD_MODNAME);
 MODULE_LICENSE("GPL v2");

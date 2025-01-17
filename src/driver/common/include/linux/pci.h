@@ -1458,7 +1458,7 @@ int __must_check __pci_register_driver(struct pci_driver *, struct module *,
 
 /* pci_register_driver() must be a macro so KBUILD_MODNAME can be expanded */
 #define pci_register_driver(driver)		\
-	__pci_register_driver(driver, THIS_MODULE, KBUILD_MODNAME)
+	__pci_register_driver(driver, THIS_MODULE, "KBUILD_MODNAME")
 
 void pci_unregister_driver(struct pci_driver *dev);
 
@@ -1693,6 +1693,7 @@ void pci_dev_unlock(struct pci_dev *dev);
  */
 #ifdef CONFIG_PCI_DOMAINS
 extern int pci_domains_supported;
+static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }
 #else
 enum { pci_domains_supported = 0 };
 static inline int pci_domain_nr(struct pci_bus *bus) { return 0; }

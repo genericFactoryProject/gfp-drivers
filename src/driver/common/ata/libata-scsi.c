@@ -14,10 +14,6 @@
  */
 
 #include <linux/lynix-compat.h>
-// #include <linux/slab.h>
-// #include <linux/kernel.h>
-// #include <linux/blkdev.h>
-// #include <linux/spinlock.h>
 #include <linux/export.h>
 #include <scsi/scsi.h>
 #include <scsi/scsi_host.h>
@@ -28,8 +24,6 @@
 #include <scsi/scsi_transport.h>
 #include <linux/libata.h>
 #include <uapi/linux/hdreg.h>
-// #include <linux/uaccess.h>
-// #include <linux/suspend.h>
 #include <asm-generic/unaligned.h>
 #include <linux/ioprio.h>
 #include <linux/of.h>
@@ -363,6 +357,7 @@ static int ata_get_identity(struct ata_port *ap, struct scsi_device *sdev,
 int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
 {
 	int rc = 0;
+#if 0
 	u8 sensebuf[SCSI_SENSE_BUFFERSIZE];
 	u8 scsi_cmd[MAX_COMMAND_SIZE];
 	u8 args[4], *argbuf = NULL;
@@ -453,6 +448,7 @@ int ata_cmd_ioctl(struct scsi_device *scsidev, void __user *arg)
 		rc = -EFAULT;
 error:
 	kfree(argbuf);
+#endif
 	return rc;
 }
 
@@ -470,6 +466,7 @@ error:
 int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
 {
 	int rc = 0;
+#if 0
 	u8 sensebuf[SCSI_SENSE_BUFFERSIZE];
 	u8 scsi_cmd[MAX_COMMAND_SIZE];
 	u8 args[7];
@@ -536,6 +533,7 @@ int ata_task_ioctl(struct scsi_device *scsidev, void __user *arg)
 	}
 
  error:
+#endif
 	return rc;
 }
 
@@ -638,7 +636,7 @@ EXPORT_SYMBOL_GPL(ata_scsi_ioctl);
 static struct ata_queued_cmd *ata_scsi_qc_new(struct ata_device *dev,
 					      struct scsi_cmnd *cmd)
 {
-	struct ata_queued_cmd *qc;
+	struct ata_queued_cmd *qc = NULL;
 #if 0
 	qc = ata_qc_new_init(dev, scsi_cmd_to_rq(cmd)->tag);
 	if (qc) {
@@ -1004,7 +1002,7 @@ void ata_scsi_sdev_config(struct scsi_device *sdev)
 	 */
 	sdev->max_device_blocked = 1;
 }
-
+#if 0
 /**
  *	ata_scsi_dma_need_drain - Check whether data transfer may overflow
  *	@rq: request to be checked
@@ -1022,15 +1020,12 @@ void ata_scsi_sdev_config(struct scsi_device *sdev)
  */
 bool ata_scsi_dma_need_drain(struct request *rq)
 {
-#if 0
 	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
 
 	return atapi_cmd_type(scmd->cmnd[0]) == ATAPI_MISC;
-#endif
-	return true;
 }
 EXPORT_SYMBOL_GPL(ata_scsi_dma_need_drain);
-
+#endif
 int ata_scsi_dev_config(struct scsi_device *sdev, struct ata_device *dev)
 {
 #if 0
@@ -2525,6 +2520,7 @@ static void atapi_request_sense(struct ata_queued_cmd *qc)
  */
 static void atapi_fixup_inquiry(struct scsi_cmnd *cmd)
 {
+#if 0
 	u8 buf[4];
 
 	//sg_copy_to_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
@@ -2533,6 +2529,7 @@ static void atapi_fixup_inquiry(struct scsi_cmnd *cmd)
 		buf[3] = 0x32;
 	}
 	//sg_copy_from_buffer(scsi_sglist(cmd), scsi_sg_count(cmd), buf, 4);
+#endif
 }
 
 static void atapi_qc_complete(struct ata_queued_cmd *qc)
@@ -3079,7 +3076,7 @@ static size_t ata_format_dsm_trim_descr(struct scsi_cmnd *cmd, u32 trmax,
 {
 	struct scsi_device *sdp = cmd->device;
 	size_t len = sdp->sector_size;
-	size_t r;
+	size_t r = 0;
 	__le64 *buf;
 	u32 i = 0;
 	unsigned long flags;

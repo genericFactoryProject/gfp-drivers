@@ -7,7 +7,6 @@
  */
 
 #include <linux/device.h>
-// #include <linux/kernel.h>
 #include <linux/export.h>
 #include <linux/pci.h>
 
@@ -42,7 +41,7 @@ int pci_request_irq(struct pci_dev *dev, unsigned int nr, irq_handler_t handler,
 		irqflags |= IRQF_ONESHOT;
 
 	va_start(ap, fmt);
-	devname = kvasprintf(GFP_KERNEL, fmt, ap);
+	devname = kvasprintf(0, fmt, ap);
 	va_end(ap);
 
 	ret = request_threaded_irq(pci_irq_vector(dev, nr), handler, thread_fn,

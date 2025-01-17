@@ -5,20 +5,12 @@
  */
 
 #include <linux/pci.h>
-// #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/device.h>
-#include <linux/mempolicy.h>
 #include <linux/string.h>
-// #include <linux/slab.h>
-#include <linux/sched.h>
-#include <linux/sched/isolation.h>
-#include <linux/cpu.h>
 #include <linux/pm_runtime.h>
 #include <linux/suspend.h>
-#include <linux/kexec.h>
 #include <linux/of_device.h>
-#include <linux/acpi.h>
 #include <linux/dma-map-ops.h>
 #include "pci.h"
 #include "pcie/portdrv.h"
@@ -44,7 +36,7 @@ struct pci_dynid {
  * registered prior to calling this function.
  *
  * CONTEXT:
- * Does GFP_KERNEL allocation.
+ * Does 0 allocation.
  *
  * RETURNS:
  * 0 on success, -errno on failure.
@@ -57,7 +49,7 @@ int pci_add_dynid(struct pci_driver *drv,
 {
 	struct pci_dynid *dynid;
 
-	dynid = kzalloc(sizeof(*dynid), GFP_KERNEL);
+	dynid = kzalloc(sizeof(*dynid), 0);
 	if (!dynid)
 		return -ENOMEM;
 
@@ -202,7 +194,7 @@ static ssize_t new_id_store(struct device_driver *driver, const char *buf,
 		return -EINVAL;
 
 	if (fields != 7) {
-		struct pci_dev *pdev = kzalloc(sizeof(*pdev), GFP_KERNEL);
+		struct pci_dev *pdev = kzalloc(sizeof(*pdev), 0);
 		if (!pdev)
 			return -ENOMEM;
 
@@ -360,38 +352,38 @@ static int pci_call_probe(struct pci_driver *drv, struct pci_dev *dev,
 	node = dev_to_node(&dev->dev);
 	dev->is_probed = 1;
 
-	cpu_hotplug_disable();
+	//cpu_hotplug_disable();
 
 	/*
 	 * Prevent nesting work_on_cpu() for the case where a Virtual Function
 	 * device is probed from work_on_cpu() of the Physical device.
 	 */
-	if (node < 0 || node >= MAX_NUMNODES || !node_online(node) ||
+	if (node < 0 || //|| node >= MAX_NUMNODES || !node_online(node)
 	    pci_physfn_is_probed(dev)) {
 		cpu = nr_cpu_ids;
 	} else {
 		cpumask_var_t wq_domain_mask;
 
-		if (!zalloc_cpumask_var(&wq_domain_mask, GFP_KERNEL)) {
+		if (!zalloc_cpumask_var(&wq_domain_mask, 0)) {
 			error = -ENOMEM;
 			goto out;
 		}
-		cpumask_and(wq_domain_mask,
-			    housekeeping_cpumask(HK_TYPE_WQ),
-			    housekeeping_cpumask(HK_TYPE_DOMAIN));
+		//cpumask_and(wq_domain_mask,
+		//	    housekeeping_cpumask(HK_TYPE_WQ),
+		//	    housekeeping_cpumask(HK_TYPE_DOMAIN));
 
-		cpu = cpumask_any_and(cpumask_of_node(node),
-				      wq_domain_mask);
+		//cpu = cpumask_any_and(cpumask_of_node(node),
+		//		      wq_domain_mask);
 		free_cpumask_var(wq_domain_mask);
 	}
 
 	if (cpu < nr_cpu_ids)
-		error = work_on_cpu(cpu, local_pci_probe, &ddi);
+		error = 0; //work_on_cpu(cpu, local_pci_probe, &ddi);
 	else
 		error = local_pci_probe(&ddi);
 out:
 	dev->is_probed = 0;
-	cpu_hotplug_enable();
+	//cpu_hotplug_enable();
 	return error;
 }
 
@@ -518,8 +510,8 @@ static void pci_device_shutdown(struct device *dev)
 	 * If it is not a kexec reboot, firmware will hit the PCI
 	 * devices with big hammer and stop their DMA any way.
 	 */
-	if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
-		pci_clear_master(pci_dev);
+	//if (kexec_in_progress && (pci_dev->current_state <= PCI_D3hot))
+	//	pci_clear_master(pci_dev);
 }
 
 #ifdef CONFIG_PM
@@ -1404,8 +1396,8 @@ int __pci_register_driver(struct pci_driver *drv, struct module *owner,
 	/* initialize common driver fields */
 	drv->driver.name = drv->name;
 	drv->driver.bus = &pci_bus_type;
-	drv->driver.owner = owner;
-	drv->driver.mod_name = mod_name;
+	//drv->driver.owner = owner;
+	//drv->driver.mod_name = mod_name;
 	drv->driver.groups = drv->groups;
 	drv->driver.dev_groups = drv->dev_groups;
 
@@ -1609,12 +1601,14 @@ static int pci_dma_configure(struct device *dev)
 	if (IS_ENABLED(CONFIG_OF) && bridge->parent &&
 	    bridge->parent->of_node) {
 		ret = of_dma_configure(dev, bridge->parent->of_node, true);
-	} else if (has_acpi_companion(bridge)) {
+	}
+	#if 0
+	else if (has_acpi_companion(bridge)) {
 		struct acpi_device *adev = to_acpi_device_node(bridge->fwnode);
 
 		ret = acpi_dma_configure(dev, acpi_get_dma_attr(adev));
 	}
-
+	#endif
 	pci_put_host_bridge_device(bridge);
 	return ret;
 }
@@ -1626,9 +1620,9 @@ struct bus_type pci_bus_type = {
 	.probe		= pci_device_probe,
 	.remove		= pci_device_remove,
 	.shutdown	= pci_device_shutdown,
-	.dev_groups	= pci_dev_groups,
-	.bus_groups	= pci_bus_groups,
-	.drv_groups	= pci_drv_groups,
+	//.dev_groups	= pci_dev_groups,
+	//.bus_groups	= pci_bus_groups,
+	//.drv_groups	= pci_drv_groups,
 	.pm		= PCI_PM_OPS_PTR,
 	.num_vf		= pci_bus_num_vf,
 	.dma_configure	= pci_dma_configure,

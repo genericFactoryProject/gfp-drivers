@@ -129,10 +129,10 @@ static inline int gpio_request_array(const struct gpio *array, size_t num)
 
 static inline void gpio_free(unsigned gpio)
 {
-	might_sleep();
+	//might_sleep();
 
 	/* GPIO can never have been requested */
-	WARN_ON(1);
+	//WARN_ON(1);
 }
 
 static inline void gpio_free_array(const struct gpio *array, size_t num)

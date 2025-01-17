@@ -8,16 +8,13 @@
 
 #include <linux/device.h>
 #include <linux/export.h>
-#include <linux/fs.h>
 #include <linux/idr.h>
 #include <linux/init.h>
 #include <linux/kref.h>
-// #include <linux/module.h>
 #include <linux/nvmem-consumer.h>
 #include <linux/nvmem-provider.h>
 #include <linux/gpio/consumer.h>
 #include <linux/of.h>
-// #include <linux/slab.h>
 
 struct nvmem_device {
 	struct module		*owner;
@@ -492,7 +489,7 @@ static int nvmem_cell_info_to_nvmem_cell_entry(struct nvmem_device *nvmem,
 	if (err)
 		return err;
 
-	cell->name = kstrdup_const(info->name, GFP_KERNEL);
+	cell->name = kstrdup_const(info->name, 0);
 	if (!cell->name)
 		return -ENOMEM;
 
@@ -515,12 +512,12 @@ static int nvmem_add_cells(struct nvmem_device *nvmem,
 	struct nvmem_cell_entry **cells;
 	int i, rval;
 
-	cells = kcalloc(ncells, sizeof(*cells), GFP_KERNEL);
+	cells = kcalloc(ncells, sizeof(*cells), 0);
 	if (!cells)
 		return -ENOMEM;
 
 	for (i = 0; i < ncells; i++) {
-		cells[i] = kzalloc(sizeof(**cells), GFP_KERNEL);
+		cells[i] = kzalloc(sizeof(**cells), 0);
 		if (!cells[i]) {
 			rval = -ENOMEM;
 			goto err;
@@ -587,7 +584,7 @@ static int nvmem_add_cells_from_table(struct nvmem_device *nvmem)
 			for (i = 0; i < table->ncells; i++) {
 				info = &table->cells[i];
 
-				cell = kzalloc(sizeof(*cell), GFP_KERNEL);
+				cell = kzalloc(sizeof(*cell), 0);
 				if (!cell) {
 					rval = -ENOMEM;
 					goto out;
@@ -699,7 +696,7 @@ static int nvmem_add_cells_from_of(struct nvmem_device *nvmem)
 			return -EINVAL;
 		}
 
-		cell = kzalloc(sizeof(*cell), GFP_KERNEL);
+		cell = kzalloc(sizeof(*cell), 0);
 		if (!cell) {
 			of_node_put(child);
 			return -ENOMEM;
@@ -708,7 +705,7 @@ static int nvmem_add_cells_from_of(struct nvmem_device *nvmem)
 		cell->nvmem = nvmem;
 		cell->offset = be32_to_cpup(addr++);
 		cell->bytes = be32_to_cpup(addr);
-		cell->name = kasprintf(GFP_KERNEL, "%pOFn", child);
+		cell->name = kasprintf(0, "%pOFn", child);
 
 		addr = of_get_property(child, "bits", &len);
 		if (addr && len == (2 * sizeof(u32))) {
@@ -759,11 +756,11 @@ struct nvmem_device *nvmem_register(const struct nvmem_config *config)
 	if (!config->reg_read && !config->reg_write)
 		return ERR_PTR(-EINVAL);
 
-	nvmem = kzalloc(sizeof(*nvmem), GFP_KERNEL);
+	nvmem = kzalloc(sizeof(*nvmem), 0);
 	if (!nvmem)
 		return ERR_PTR(-ENOMEM);
 
-	rval  = ida_alloc(&nvmem_ida, GFP_KERNEL);
+	rval  = ida_alloc(&nvmem_ida, 0);
 	if (rval < 0) {
 		kfree(nvmem);
 		return ERR_PTR(rval);
@@ -785,9 +782,9 @@ struct nvmem_device *nvmem_register(const struct nvmem_config *config)
 	INIT_LIST_HEAD(&nvmem->cells);
 
 	nvmem->id = rval;
-	nvmem->owner = config->owner;
-	if (!nvmem->owner && config->dev->driver)
-		nvmem->owner = config->dev->driver->owner;
+	//nvmem->owner = config->owner;
+	//if (!nvmem->owner && config->dev->driver)
+	//	nvmem->owner = config->dev->driver->owner;
 	nvmem->stride = config->stride ?: 1;
 	nvmem->word_size = config->word_size ?: 1;
 	nvmem->size = config->size;
@@ -889,8 +886,8 @@ static void nvmem_device_release(struct kref *kref)
 
 	blocking_notifier_call_chain(&nvmem_notifier, NVMEM_REMOVE, nvmem);
 
-	if (nvmem->flags & FLAG_COMPAT)
-		device_remove_bin_file(nvmem->base_dev, &nvmem->eeprom);
+	//if (nvmem->flags & FLAG_COMPAT)
+	//	device_remove_bin_file(nvmem->base_dev, &nvmem->eeprom);
 
 	nvmem_device_remove_all_cells(nvmem);
 	device_unregister(&nvmem->dev);
@@ -955,7 +952,7 @@ static struct nvmem_device *__nvmem_device_get(void *data,
 	mutex_unlock(&nvmem_mutex);
 	if (!nvmem)
 		return ERR_PTR(-EPROBE_DEFER);
-
+#if 0
 	if (!try_module_get(nvmem->owner)) {
 		dev_err(&nvmem->dev,
 			"could not increase module refcount for cell %s\n",
@@ -964,7 +961,7 @@ static struct nvmem_device *__nvmem_device_get(void *data,
 		put_device(&nvmem->dev);
 		return ERR_PTR(-EINVAL);
 	}
-
+#endif
 	kref_get(&nvmem->refcnt);
 
 	return nvmem;
@@ -973,7 +970,7 @@ static struct nvmem_device *__nvmem_device_get(void *data,
 static void __nvmem_device_put(struct nvmem_device *nvmem)
 {
 	put_device(&nvmem->dev);
-	module_put(nvmem->owner);
+	//module_put(nvmem->owner);
 	kref_put(&nvmem->refcnt, nvmem_device_release);
 }
 
@@ -1107,7 +1104,7 @@ struct nvmem_device *devm_nvmem_device_get(struct device *dev, const char *id)
 {
 	struct nvmem_device **ptr, *nvmem;
 
-	ptr = devres_alloc(devm_nvmem_device_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_nvmem_device_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -1128,12 +1125,12 @@ static struct nvmem_cell *nvmem_create_cell(struct nvmem_cell_entry *entry, cons
 	struct nvmem_cell *cell;
 	const char *name = NULL;
 
-	cell = kzalloc(sizeof(*cell), GFP_KERNEL);
+	cell = kzalloc(sizeof(*cell), 0);
 	if (!cell)
 		return ERR_PTR(-ENOMEM);
 
 	if (id) {
-		name = kstrdup_const(id, GFP_KERNEL);
+		name = kstrdup_const(id, 0);
 		if (!name) {
 			kfree(cell);
 			return ERR_PTR(-ENOMEM);
@@ -1311,7 +1308,7 @@ struct nvmem_cell *devm_nvmem_cell_get(struct device *dev, const char *id)
 {
 	struct nvmem_cell **ptr, *cell;
 
-	ptr = devres_alloc(devm_nvmem_cell_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_nvmem_cell_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -1452,7 +1449,7 @@ void *nvmem_cell_read(struct nvmem_cell *cell, size_t *len)
 	if (!nvmem)
 		return ERR_PTR(-EINVAL);
 
-	buf = kzalloc(cell->entry->bytes, GFP_KERNEL);
+	buf = kzalloc(cell->entry->bytes, 0);
 	if (!buf)
 		return ERR_PTR(-ENOMEM);
 
@@ -1474,7 +1471,7 @@ static void *nvmem_cell_prepare_write_buffer(struct nvmem_cell_entry *cell,
 	u8 v, *p, *buf, *b, pbyte, pbits;
 
 	nbits = cell->nbits;
-	buf = kzalloc(cell->bytes, GFP_KERNEL);
+	buf = kzalloc(cell->bytes, 0);
 	if (!buf)
 		return ERR_PTR(-ENOMEM);
 

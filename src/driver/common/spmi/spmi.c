@@ -2,11 +2,8 @@
 /*
  * Copyright (c) 2012-2015, The Linux Foundation. All rights reserved.
  */
-// #include <linux/kernel.h>
 #include <linux/errno.h>
 #include <linux/idr.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 #include <linux/platform_device.h>
@@ -14,8 +11,7 @@
 #include <linux/pm_runtime.h>
 
 #include <dt-bindings/spmi/spmi.h>
-#define CREATE_TRACE_POINTS
-#include <trace/events/spmi.h>
+//#define CREATE_TRACE_POINTS
 
 static bool is_registered;
 static DEFINE_IDA(ctrl_ida);
@@ -99,7 +95,7 @@ spmi_cmd(struct spmi_controller *ctrl, u8 opcode, u8 sid)
 		return -EINVAL;
 
 	ret = ctrl->cmd(ctrl, opcode, sid);
-	trace_spmi_cmd(opcode, sid, ret);
+	//trace_spmi_cmd(opcode, sid, ret);
 	return ret;
 }
 
@@ -111,9 +107,9 @@ static inline int spmi_read_cmd(struct spmi_controller *ctrl, u8 opcode,
 	if (!ctrl || !ctrl->read_cmd || ctrl->dev.type != &spmi_ctrl_type)
 		return -EINVAL;
 
-	trace_spmi_read_begin(opcode, sid, addr);
+	//trace_spmi_read_begin(opcode, sid, addr);
 	ret = ctrl->read_cmd(ctrl, opcode, sid, addr, buf, len);
-	trace_spmi_read_end(opcode, sid, addr, ret, len, buf);
+	//trace_spmi_read_end(opcode, sid, addr, ret, len, buf);
 	return ret;
 }
 
@@ -125,9 +121,9 @@ static inline int spmi_write_cmd(struct spmi_controller *ctrl, u8 opcode,
 	if (!ctrl || !ctrl->write_cmd || ctrl->dev.type != &spmi_ctrl_type)
 		return -EINVAL;
 
-	trace_spmi_write_begin(opcode, sid, addr, len, buf);
+	//trace_spmi_write_begin(opcode, sid, addr, len, buf);
 	ret = ctrl->write_cmd(ctrl, opcode, sid, addr, buf, len);
-	trace_spmi_write_end(opcode, sid, addr, ret);
+	//trace_spmi_write_end(opcode, sid, addr, ret);
 	return ret;
 }
 
@@ -397,7 +393,7 @@ struct spmi_device *spmi_device_alloc(struct spmi_controller *ctrl)
 {
 	struct spmi_device *sdev;
 
-	sdev = kzalloc(sizeof(*sdev), GFP_KERNEL);
+	sdev = kzalloc(sizeof(*sdev), 0);
 	if (!sdev)
 		return NULL;
 
@@ -429,7 +425,7 @@ struct spmi_controller *spmi_controller_alloc(struct device *parent,
 	if (WARN_ON(!parent))
 		return NULL;
 
-	ctrl = kzalloc(sizeof(*ctrl) + size, GFP_KERNEL);
+	ctrl = kzalloc(sizeof(*ctrl) + size, 0);
 	if (!ctrl)
 		return NULL;
 
@@ -440,7 +436,7 @@ struct spmi_controller *spmi_controller_alloc(struct device *parent,
 	ctrl->dev.of_node = parent->of_node;
 	spmi_controller_set_drvdata(ctrl, &ctrl[1]);
 
-	id = ida_simple_get(&ctrl_ida, 0, 0, GFP_KERNEL);
+	id = ida_simple_get(&ctrl_ida, 0, 0, 0);
 	if (id < 0) {
 		dev_err(parent,
 			"unable to allocate SPMI controller identifier.\n");
@@ -574,7 +570,7 @@ EXPORT_SYMBOL_GPL(spmi_controller_remove);
 int __spmi_driver_register(struct spmi_driver *sdrv, struct module *owner)
 {
 	sdrv->driver.bus = &spmi_bus_type;
-	sdrv->driver.owner = owner;
+	//sdrv->driver.owner = owner;
 	return driver_register(&sdrv->driver);
 }
 EXPORT_SYMBOL_GPL(__spmi_driver_register);
@@ -600,4 +596,4 @@ postcore_initcall(spmi_init);
 
 MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("SPMI module");
-MODULE_ALIAS("platform:spmi");
+//MODULE_ALIAS("platform:spmi");

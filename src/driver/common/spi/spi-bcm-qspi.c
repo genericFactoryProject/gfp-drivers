@@ -12,16 +12,15 @@
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/ioport.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/platform_device.h>
-// #include <linux/slab.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi-mem.h>
-#include <linux/sysfs.h>
+//#include <linux/sysfs.h>
 #include <linux/types.h>
+#include <linux/jiffies.h>
+
 #include "spi-bcm-qspi.h"
 
 #define DRIVER_NAME "bcm_qspi"
@@ -245,8 +244,8 @@ struct bcm_qspi {
 	bool big_endian;
 	int num_irqs;
 	struct bcm_qspi_dev_id *dev_ids;
-	struct completion mspi_done;
-	struct completion bspi_done;
+	//struct completion mspi_done;
+	//struct completion bspi_done;
 	u8 mspi_maj_rev;
 	u8 mspi_min_rev;
 	bool mspi_spcr3_sysclk;
@@ -1081,7 +1080,7 @@ static int bcm_qspi_bspi_exec_mem_op(struct spi_device *spi,
 		else
 			rdlen = len;
 
-		reinit_completion(&qspi->bspi_done);
+		//reinit_completion(&qspi->bspi_done);
 		bcm_qspi_enable_bspi(qspi);
 		len_words = (rdlen + 3) >> 2;
 		qspi->bspi_rf_op = op;
@@ -1104,12 +1103,13 @@ static int bcm_qspi_bspi_exec_mem_op(struct spi_device *spi,
 		/* Must flush previous writes before starting BSPI operation */
 		mb();
 		bcm_qspi_bspi_lr_start(qspi);
+#if 0
 		if (!wait_for_completion_timeout(&qspi->bspi_done, timeo)) {
 			dev_err(&qspi->pdev->dev, "timeout waiting for BSPI\n");
 			ret = -ETIMEDOUT;
 			break;
 		}
-
+#endif
 		/* set msg return length */
 		addr += rdlen;
 		len -= rdlen;
@@ -1130,7 +1130,7 @@ static int bcm_qspi_transfer_one(struct spi_master *master,
 		bcm_qspi_chip_select(qspi, spi->chip_select);
 	qspi->trans_pos.trans = trans;
 	qspi->trans_pos.byte = 0;
-
+#if 0
 	while (qspi->trans_pos.byte < trans->len) {
 		reinit_completion(&qspi->mspi_done);
 
@@ -1142,6 +1142,7 @@ static int bcm_qspi_transfer_one(struct spi_master *master,
 
 		read_from_hw(qspi, slots);
 	}
+#endif
 	bcm_qspi_enable_bspi(qspi);
 
 	return 0;
@@ -1255,7 +1256,7 @@ static irqreturn_t bcm_qspi_mspi_l2_isr(int irq, void *dev_id)
 		bcm_qspi_write(qspi, MSPI, MSPI_MSPI_STATUS, status);
 		if (qspi->soc_intc)
 			soc_intc->bcm_qspi_int_ack(soc_intc, MSPI_DONE);
-		complete(&qspi->mspi_done);
+		//complete(&qspi->mspi_done);
 		return IRQ_HANDLED;
 	}
 
@@ -1294,7 +1295,7 @@ static irqreturn_t bcm_qspi_bspi_lr_l2_isr(int irq, void *dev_id)
 
 	status &= INTR_BSPI_LR_SESSION_DONE_MASK;
 	if (qspi->bspi_enabled && status && qspi->bspi_rf_op_len == 0)
-		complete(&qspi->bspi_done);
+		;//complete(&qspi->bspi_done);
 
 	return IRQ_HANDLED;
 }
@@ -1311,7 +1312,7 @@ static irqreturn_t bcm_qspi_bspi_lr_err_l2_isr(int irq, void *dev_id)
 		/* clear soc interrupt */
 		soc_intc->bcm_qspi_int_ack(soc_intc, BSPI_ERR);
 
-	complete(&qspi->bspi_done);
+	//complete(&qspi->bspi_done);
 	return IRQ_HANDLED;
 }
 
@@ -1653,8 +1654,8 @@ int bcm_qspi_probe(struct platform_device *pdev,
 	}
 
 	bcm_qspi_hw_init(qspi);
-	init_completion(&qspi->mspi_done);
-	init_completion(&qspi->bspi_done);
+	//init_completion(&qspi->mspi_done);
+	//init_completion(&qspi->bspi_done);
 	qspi->curr_cs = -1;
 
 	platform_set_drvdata(pdev, qspi);
@@ -1739,4 +1740,4 @@ EXPORT_SYMBOL_GPL(bcm_qspi_pm_ops);
 MODULE_AUTHOR("Kamal Dasu");
 MODULE_DESCRIPTION("Broadcom QSPI driver");
 MODULE_LICENSE("GPL v2");
-MODULE_ALIAS("platform:" DRIVER_NAME);
+//MODULE_ALIAS("platform:" DRIVER_NAME);

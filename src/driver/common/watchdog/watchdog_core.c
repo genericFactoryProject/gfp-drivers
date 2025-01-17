@@ -24,10 +24,8 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-// #include <linux/module.h>	/* For EXPORT_SYMBOL/module stuff/... */
 #include <linux/types.h>	/* For standard types */
 #include <linux/errno.h>	/* For the -ENODEV/... values */
-// #include <linux/kernel.h>	/* For printk/panic/... */
 #include <linux/reboot.h>	/* For restart handler */
 #include <linux/watchdog.h>	/* For watchdog specific items */
 #include <linux/init.h>		/* For __init/__exit/... */
@@ -41,8 +39,8 @@
 static DEFINE_IDA(watchdog_ida);
 
 static int stop_on_reboot = -1;
-module_param(stop_on_reboot, int, 0444);
-MODULE_PARM_DESC(stop_on_reboot, "Stop watchdogs on reboot (0=keep watching, 1=stop)");
+//module_param(stop_on_reboot, int, 0444);
+//MODULE_PARM_DESC(stop_on_reboot, "Stop watchdogs on reboot (0=keep watching, 1=stop)");
 
 /*
  * Deferred Registration infrastructure.
@@ -158,6 +156,7 @@ static int watchdog_reboot_notifier(struct notifier_block *nb,
 	struct watchdog_device *wdd;
 
 	wdd = container_of(nb, struct watchdog_device, reboot_nb);
+#if 0
 	if (code == SYS_DOWN || code == SYS_HALT) {
 		if (watchdog_active(wdd) || watchdog_hw_running(wdd)) {
 			int ret;
@@ -167,7 +166,7 @@ static int watchdog_reboot_notifier(struct notifier_block *nb,
 				return NOTIFY_BAD;
 		}
 	}
-
+#endif
 	return NOTIFY_DONE;
 }
 
@@ -257,11 +256,11 @@ static int __watchdog_register_device(struct watchdog_device *wdd)
 		ret = of_alias_get_id(wdd->parent->of_node, "watchdog");
 		if (ret >= 0)
 			id = ida_simple_get(&watchdog_ida, ret,
-					    ret + 1, GFP_KERNEL);
+					    ret + 1, 0);
 	}
 
 	if (id < 0)
-		id = ida_simple_get(&watchdog_ida, 0, MAX_DOGS, GFP_KERNEL);
+		id = ida_simple_get(&watchdog_ida, 0, MAX_DOGS, 0);
 
 	if (id < 0)
 		return id;
@@ -274,7 +273,7 @@ static int __watchdog_register_device(struct watchdog_device *wdd)
 			return ret;
 
 		/* Retry in case a legacy watchdog module exists */
-		id = ida_simple_get(&watchdog_ida, 1, MAX_DOGS, GFP_KERNEL);
+		id = ida_simple_get(&watchdog_ida, 1, MAX_DOGS, 0);
 		if (id < 0)
 			return id;
 		wdd->id = id;
@@ -299,7 +298,7 @@ static int __watchdog_register_device(struct watchdog_device *wdd)
 			pr_warn("watchdog%d: stop_on_reboot not supported\n", wdd->id);
 		else {
 			wdd->reboot_nb.notifier_call = watchdog_reboot_notifier;
-
+#if 0
 			ret = register_reboot_notifier(&wdd->reboot_nb);
 			if (ret) {
 				pr_err("watchdog%d: Cannot register reboot notifier (%d)\n",
@@ -308,16 +307,18 @@ static int __watchdog_register_device(struct watchdog_device *wdd)
 				ida_simple_remove(&watchdog_ida, id);
 				return ret;
 			}
+#endif
 		}
 	}
 
 	if (wdd->ops->restart) {
 		wdd->restart_nb.notifier_call = watchdog_restart_notifier;
-
+#if 0
 		ret = register_restart_handler(&wdd->restart_nb);
 		if (ret)
 			pr_warn("watchdog%d: Cannot register restart handler (%d)\n",
 				wdd->id, ret);
+#endif
 	}
 
 	if (test_bit(WDOG_NO_PING_ON_SUSPEND, &wdd->status)) {
@@ -370,13 +371,13 @@ static void __watchdog_unregister_device(struct watchdog_device *wdd)
 {
 	if (wdd == NULL)
 		return;
-
+#if 0
 	if (wdd->ops->restart)
 		unregister_restart_handler(&wdd->restart_nb);
 
 	if (test_bit(WDOG_STOP_ON_REBOOT, &wdd->status))
 		unregister_reboot_notifier(&wdd->reboot_nb);
-
+#endif
 	watchdog_dev_unregister(wdd);
 	ida_simple_remove(&watchdog_ida, wdd->id);
 }
@@ -422,7 +423,7 @@ int devm_watchdog_register_device(struct device *dev,
 	int ret;
 
 	rcwdd = devres_alloc(devm_watchdog_unregister_device, sizeof(*rcwdd),
-			     GFP_KERNEL);
+			     0);
 	if (!rcwdd)
 		return -ENOMEM;
 

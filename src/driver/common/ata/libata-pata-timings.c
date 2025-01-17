@@ -6,8 +6,6 @@
  *  Copyright 2003-2004 Jeff Garzik
  */
 
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/libata.h>
 
 /*

@@ -10,20 +10,16 @@
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/init.h>
-// #include <linux/kernel.h>
 #include <linux/leds.h>
 #include <linux/list.h>
-// #include <linux/module.h>
 #include <linux/property.h>
-// #include <linux/slab.h>
-// #include <linux/spinlock.h>
 #include <linux/timer.h>
 #include <uapi/linux/uleds.h>
 #include <linux/of.h>
 #include "leds.h"
 
 static struct class *leds_class;
-
+#if 0
 static ssize_t brightness_show(struct device *dev,
 		struct device_attribute *attr, char *buf)
 {
@@ -102,6 +98,7 @@ static const struct attribute_group *led_groups[] = {
 #endif
 	NULL,
 };
+#endif
 
 #ifdef CONFIG_LEDS_BRIGHTNESS_HW_CHANGED
 static ssize_t brightness_hw_changed_show(struct device *dev,
@@ -172,7 +169,7 @@ void led_classdev_suspend(struct led_classdev *led_cdev)
 {
 	led_cdev->flags |= LED_SUSPENDED;
 	led_set_brightness_nopm(led_cdev, 0);
-	flush_work(&led_cdev->set_brightness_work);
+	//flush_work(&led_cdev->set_brightness_work);
 }
 EXPORT_SYMBOL_GPL(led_classdev_suspend);
 
@@ -241,8 +238,8 @@ struct led_classdev *of_led_get(struct device_node *np, int index)
 
 	led_cdev = dev_get_drvdata(led_dev);
 
-	if (!try_module_get(led_cdev->dev->parent->driver->owner))
-		return ERR_PTR(-ENODEV);
+	//if (!try_module_get(led_cdev->dev->parent->driver->owner))
+	//	return ERR_PTR(-ENODEV);
 
 	return led_cdev;
 }
@@ -254,7 +251,7 @@ EXPORT_SYMBOL_GPL(of_led_get);
  */
 void led_put(struct led_classdev *led_cdev)
 {
-	module_put(led_cdev->dev->parent->driver->owner);
+	//module_put(led_cdev->dev->parent->driver->owner);
 }
 EXPORT_SYMBOL_GPL(led_put);
 
@@ -290,7 +287,7 @@ struct led_classdev *__must_check devm_of_led_get(struct device *dev,
 		return led;
 
 	dr = devres_alloc(devm_led_release, sizeof(struct led_classdev *),
-			  GFP_KERNEL);
+			  0);
 	if (!dr) {
 		led_put(led);
 		return ERR_PTR(-ENOMEM);
@@ -369,8 +366,8 @@ int led_classdev_register_ext(struct device *parent,
 
 	mutex_init(&led_cdev->led_access);
 	mutex_lock(&led_cdev->led_access);
-	led_cdev->dev = device_create_with_groups(leds_class, parent, 0,
-				led_cdev, led_cdev->groups, "%s", final_name);
+	//led_cdev->dev = device_create_with_groups(leds_class, parent, 0,
+	//			led_cdev, led_cdev->groups, "%s", final_name);
 	if (IS_ERR(led_cdev->dev)) {
 		mutex_unlock(&led_cdev->led_access);
 		return PTR_ERR(led_cdev->dev);
@@ -450,7 +447,7 @@ void led_classdev_unregister(struct led_classdev *led_cdev)
 	if (!(led_cdev->flags & LED_RETAIN_AT_SHUTDOWN))
 		led_set_brightness(led_cdev, LED_OFF);
 
-	flush_work(&led_cdev->set_brightness_work);
+	//flush_work(&led_cdev->set_brightness_work);
 
 	if (led_cdev->flags & LED_BRIGHT_HW_CHANGED)
 		led_remove_brightness_hw_changed(led_cdev);
@@ -484,7 +481,7 @@ int devm_led_classdev_register_ext(struct device *parent,
 	struct led_classdev **dr;
 	int rc;
 
-	dr = devres_alloc(devm_led_classdev_release, sizeof(*dr), GFP_KERNEL);
+	dr = devres_alloc(devm_led_classdev_release, sizeof(*dr), 0);
 	if (!dr)
 		return -ENOMEM;
 
@@ -527,11 +524,11 @@ EXPORT_SYMBOL_GPL(devm_led_classdev_unregister);
 
 static int __init leds_init(void)
 {
-	leds_class = class_create(THIS_MODULE, "leds");
+	leds_class = class_create("leds");
 	if (IS_ERR(leds_class))
 		return PTR_ERR(leds_class);
 	leds_class->pm = &leds_class_dev_pm_ops;
-	leds_class->dev_groups = led_groups;
+	//leds_class->dev_groups = led_groups;
 	return 0;
 }
 

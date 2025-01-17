@@ -3,8 +3,10 @@
 #define __LINUX_PWM_H
 
 #include <linux/err.h>
-#include <linux/mutex.h>
+//#include <linux/mutex.h>
+#include <linux/lynix-compat.h>
 #include <linux/of.h>
+#include <linux/math.h>
 
 struct pwm_capture;
 struct seq_file;

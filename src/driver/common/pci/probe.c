@@ -3,7 +3,6 @@
  * PCI detection and setup code
  */
 
-// #include <linux/kernel.h>
 #include <linux/delay.h>
 #include <linux/init.h>
 #include <linux/pci.h>
@@ -11,12 +10,9 @@
 #include <linux/of_device.h>
 #include <linux/of_pci.h>
 #include <linux/pci_hotplug.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
 #include <linux/cpumask.h>
 #include <linux/aer.h>
-#include <linux/acpi.h>
-#include <linux/hypervisor.h>
+// #include <linux/hypervisor.h>
 #include <linux/irqdomain.h>
 #include <linux/pm_runtime.h>
 #include <linux/bitfield.h>
@@ -99,7 +95,7 @@ static void release_pcibus_dev(struct device *dev)
 static struct class pcibus_class = {
 	.name		= "pci_bus",
 	.dev_release	= &release_pcibus_dev,
-	.dev_groups	= pcibus_groups,
+	//.dev_groups	= pcibus_groups,
 };
 
 static int __init pcibus_class_init(void)
@@ -255,7 +251,7 @@ int __pci_read_base(struct pci_dev *dev, enum pci_bar_type type,
 
 	sz64 = pci_size(l64, sz64, mask64);
 	if (!sz64) {
-		pci_info(dev, FW_BUG "reg 0x%x: invalid BAR (can't size)\n",
+		pci_info(dev,  "reg 0x%x: invalid BAR (can't size)\n",
 			 pos);
 		goto fail;
 	}
@@ -967,8 +963,8 @@ static int pci_register_host_bridge(struct pci_host_bridge *bridge)
 	else
 		pr_info("PCI host bridge to bus %s\n", name);
 
-	if (nr_node_ids > 1 && pcibus_to_node(bus) == NUMA_NO_NODE)
-		dev_warn(&bus->dev, "Unknown NUMA node; performance will be reduced\n");
+	//if (nr_node_ids > 1 && pcibus_to_node(bus) == NUMA_NO_NODE)
+	//	dev_warn(&bus->dev, "Unknown NUMA node; performance will be reduced\n");
 
 	/* Coalesce contiguous windows */
 	resource_list_for_each_entry_safe(window, n, &resources) {
@@ -1800,8 +1796,8 @@ static void early_dump_pci_device(struct pci_dev *pdev)
 	for (i = 0; i < 256; i += 4)
 		pci_read_config_dword(pdev, i, &value[i / 4]);
 
-	print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1,
-		       value, 256, false);
+	//print_hex_dump(KERN_INFO, "", DUMP_PREFIX_OFFSET, 16, 1,
+	//	       value, 256, false);
 }
 
 /**
@@ -2873,7 +2869,7 @@ static unsigned int pci_scan_child_bus_extend(struct pci_bus *bus,
 		 * multi-function device to a guest without passing function 0.
 		 * Look for them as well.
 		 */
-		if (jailhouse_paravirt() && nr_devs == 0) {
+		if (nr_devs == 0) { // jailhouse_paravirt() &&
 			for (fn = 1; fn < 8; fn++) {
 				dev = pci_scan_single_device(bus, devfn + fn);
 				if (dev)

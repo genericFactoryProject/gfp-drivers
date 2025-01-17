@@ -8,7 +8,6 @@
  *	David Miller (davem@redhat.com)
  */
 
-// #include <linux/kernel.h>
 #include <linux/pci.h>
 #include <linux/errno.h>
 #include <linux/ioport.h>

@@ -13,12 +13,9 @@
 /*
  */
 
-// #include <linux/module.h>
-// #include <linux/slab.h>
-// #include <linux/kernel.h>
-#include <asm/unaligned.h>
+#include <asm-generic/unaligned.h>
 #include <asm/byteorder.h>
-
+#include <linux/lynix-compat.h>
 #include <linux/hid.h>
 
 static struct hid_driver hid_generic;

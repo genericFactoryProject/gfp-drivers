@@ -26,10 +26,8 @@
 #include <linux/sysfs.h>
 #include <linux/pci.h>
 #include <linux/pci_ids.h>
-// #include <linux/module.h>
 #include <linux/device.h>
 #include <linux/nls.h>
-#include <linux/acpi.h>
 #include <linux/pci-acpi.h>
 #include "pci.h"
 

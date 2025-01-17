@@ -6,8 +6,6 @@
  * Rajendra Nayak <rnayak@ti.com>
  */
 
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/of.h>
 #include <linux/regulator/machine.h>
 #include <linux/regulator/driver.h>
@@ -228,7 +226,7 @@ static int of_get_regulation_constraints(struct device *dev,
 	if (n_phandles) {
 		constraints->max_spread = devm_kzalloc(dev,
 				sizeof(*constraints->max_spread) * n_phandles,
-				GFP_KERNEL);
+				0);
 
 		if (!constraints->max_spread)
 			return -ENOMEM;
@@ -337,7 +335,7 @@ struct regulator_init_data *of_get_regulator_init_data(struct device *dev,
 	if (!node)
 		return NULL;
 
-	init_data = devm_kzalloc(dev, sizeof(*init_data), GFP_KERNEL);
+	init_data = devm_kzalloc(dev, sizeof(*init_data), 0);
 	if (!init_data)
 		return NULL; /* Out of memory? */
 
@@ -395,7 +393,7 @@ int of_regulator_match(struct device *dev, struct device_node *node,
 
 	devm_matches = devres_alloc(devm_of_regulator_put_matches,
 				    sizeof(struct devm_of_regulator_matches),
-				    GFP_KERNEL);
+				    0);
 	if (!devm_matches)
 		return -ENOMEM;
 

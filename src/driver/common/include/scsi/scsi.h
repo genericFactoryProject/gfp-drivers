@@ -12,6 +12,7 @@
 #include <scsi/scsi_common.h>
 #include <scsi/scsi_proto.h>
 #include <scsi/scsi_status.h>
+#include <asm/param.h>
 
 struct scsi_cmnd;
 

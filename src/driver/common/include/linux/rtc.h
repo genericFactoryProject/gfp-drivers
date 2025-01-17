@@ -17,6 +17,8 @@
 #include <linux/interrupt.h>
 #include <linux/nvmem-provider.h>
 #include <uapi/linux/rtc.h>
+#include <linux/time64.h>
+#include <linux/ktime.h>
 
 extern int rtc_month_days(unsigned int month, unsigned int year);
 extern int rtc_year_days(unsigned int day, unsigned int month, unsigned int year);
@@ -35,12 +37,13 @@ static inline time64_t rtc_tm_sub(struct rtc_time *lhs, struct rtc_time *rhs)
 }
 
 #include <linux/device.h>
-#include <linux/seq_file.h>
-#include <linux/cdev.h>
-#include <linux/poll.h>
-#include <linux/mutex.h>
+//#include <linux/seq_file.h>
+// #include <linux/cdev.h>
+//#include <linux/poll.h>
+//#include <linux/mutex.h>
 #include <linux/timerqueue.h>
-#include <linux/workqueue.h>
+//#include <linux/workqueue.h>
+#include <linux/lynix-compat.h>
 
 extern struct class *rtc_class;
 
@@ -93,12 +96,12 @@ struct rtc_device {
 	const struct rtc_class_ops *ops;
 	struct mutex ops_lock;
 
-	struct cdev char_dev;
+	// struct cdev char_dev;
 	unsigned long flags;
 
 	unsigned long irq_data;
 	spinlock_t irq_lock;
-	wait_queue_head_t irq_queue;
+	//wait_queue_head_t irq_queue;
 	struct fasync_struct *async_queue;
 
 	int irq_freq;
@@ -107,7 +110,7 @@ struct rtc_device {
 	struct timerqueue_head timerqueue;
 	struct rtc_timer aie_timer;
 	struct rtc_timer uie_rtctimer;
-	struct hrtimer pie_timer; /* sub second exp, so needs hrtimer */
+	//struct hrtimer pie_timer; /* sub second exp, so needs hrtimer */
 	int pie_enabled;
 	struct work_struct irqwork;
 
@@ -208,7 +211,7 @@ extern int rtc_dev_update_irq_enable_emul(struct rtc_device *rtc,
 void rtc_handle_legacy_irq(struct rtc_device *rtc, int num, int mode);
 void rtc_aie_update_irq(struct rtc_device *rtc);
 void rtc_uie_update_irq(struct rtc_device *rtc);
-enum hrtimer_restart rtc_pie_update_irq(struct hrtimer *timer);
+//enum hrtimer_restart rtc_pie_update_irq(struct hrtimer *timer);
 
 void rtc_timer_init(struct rtc_timer *timer, void (*f)(struct rtc_device *r),
 		    struct rtc_device *rtc);

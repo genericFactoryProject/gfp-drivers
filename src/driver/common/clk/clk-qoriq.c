@@ -14,12 +14,10 @@
 #include <linux/clkdev.h>
 #include <linux/fsl/guts.h>
 #include <linux/io.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/of_address.h>
 #include <linux/of_platform.h>
 #include <linux/of.h>
-// #include <linux/slab.h>
+#include <asm/div64.h>
 
 #define PLL_DIV1	0
 #define PLL_DIV2	1
@@ -974,7 +972,7 @@ static struct clk * __init create_one_cmux(struct clockgen *cg, int idx)
 	u64 max_rate, pct80_rate;
 	u32 clksel;
 
-	hwc = kzalloc(sizeof(*hwc), GFP_KERNEL);
+	hwc = kzalloc(sizeof(*hwc), 0);
 	if (!hwc)
 		return NULL;
 
@@ -1018,7 +1016,7 @@ static struct clk * __init create_one_hwaccel(struct clockgen *cg, int idx)
 {
 	struct mux_hwclock *hwc;
 
-	hwc = kzalloc(sizeof(*hwc), GFP_KERNEL);
+	hwc = kzalloc(sizeof(*hwc), 0);
 	if (!hwc)
 		return NULL;
 
@@ -1314,11 +1312,11 @@ static void __init legacy_pll_init(struct device_node *np, int idx)
 	count = of_property_count_strings(np, "clock-output-names");
 
 	BUILD_BUG_ON(ARRAY_SIZE(pll->div) < 4);
-	subclks = kcalloc(4, sizeof(struct clk *), GFP_KERNEL);
+	subclks = kcalloc(4, sizeof(struct clk *), 0);
 	if (!subclks)
 		return;
 
-	onecell_data = kmalloc(sizeof(*onecell_data), GFP_KERNEL);
+	onecell_data = kmalloc(sizeof(*onecell_data), 0);
 	if (!onecell_data)
 		goto err_clks;
 

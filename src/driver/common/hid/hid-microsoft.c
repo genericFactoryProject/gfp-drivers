@@ -15,7 +15,6 @@
 #include <linux/device.h>
 #include <linux/input.h>
 #include <linux/hid.h>
-// #include <linux/module.h>
 
 #include "hid-ids.h"
 
@@ -319,7 +318,7 @@ static int ms_play_effect(struct input_dev *dev, void *data,
 	ms->strong = ((u32) effect->u.rumble.strong_magnitude * 100) / U16_MAX;
 	ms->weak = ((u32) effect->u.rumble.weak_magnitude * 100) / U16_MAX;
 
-	schedule_work(&ms->ff_worker);
+	//schedule_work(&ms->ff_worker);
 	return 0;
 }
 
@@ -340,11 +339,11 @@ static int ms_init_ff(struct hid_device *hdev)
 		return 0;
 
 	ms->hdev = hdev;
-	INIT_WORK(&ms->ff_worker, ms_ff_worker);
+	//INIT_WORK(&ms->ff_worker, ms_ff_worker);
 
 	ms->output_report_dmabuf = devm_kzalloc(&hdev->dev,
 						sizeof(struct xb1s_ff_report),
-						GFP_KERNEL);
+						0);
 	if (ms->output_report_dmabuf == NULL)
 		return -ENOMEM;
 
@@ -359,7 +358,7 @@ static void ms_remove_ff(struct hid_device *hdev)
 	if (!(ms->quirks & MS_QUIRK_FF))
 		return;
 
-	cancel_work_sync(&ms->ff_worker);
+	//cancel_work_sync(&ms->ff_worker);
 }
 
 static int ms_probe(struct hid_device *hdev, const struct hid_device_id *id)
@@ -368,7 +367,7 @@ static int ms_probe(struct hid_device *hdev, const struct hid_device_id *id)
 	struct ms_data *ms;
 	int ret;
 
-	ms = devm_kzalloc(&hdev->dev, sizeof(*ms), GFP_KERNEL);
+	ms = devm_kzalloc(&hdev->dev, sizeof(*ms), 0);
 	if (ms == NULL)
 		return -ENOMEM;
 

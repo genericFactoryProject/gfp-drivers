@@ -49,7 +49,7 @@ extern struct workqueue_struct *pm_wq;
 
 static inline bool queue_pm_work(struct work_struct *work)
 {
-	return queue_work(pm_wq, work);
+	return false; //queue_work(pm_wq, work);
 }
 
 extern int pm_generic_runtime_suspend(struct device *dev);
@@ -218,7 +218,7 @@ static inline bool pm_runtime_has_no_callbacks(struct device *dev)
  */
 static inline void pm_runtime_mark_last_busy(struct device *dev)
 {
-	WRITE_ONCE(dev->power.last_busy, ktime_get_mono_fast_ns());
+	//WRITE_ONCE(dev->power.last_busy, ktime_get_mono_fast_ns());
 }
 
 /**

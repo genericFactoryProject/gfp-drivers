@@ -9,12 +9,9 @@
 #include <linux/dma-iommu.h>
 #include <linux/irq.h>
 #include <linux/irqdomain.h>
-// #include <linux/kernel.h>
 #include <linux/msi.h>
 #include <linux/of_address.h>
 #include <linux/of_pci.h>
-// #include <linux/slab.h>
-// #include <linux/spinlock.h>
 
 #include <linux/irqchip/arm-gic-v3.h>
 
@@ -275,7 +272,7 @@ int __init mbi_init(struct fwnode_handle *fwnode, struct irq_domain *parent)
 		return -EINVAL;
 
 	mbi_range_nr = n / 2;
-	mbi_ranges = kcalloc(mbi_range_nr, sizeof(*mbi_ranges), GFP_KERNEL);
+	mbi_ranges = kcalloc(mbi_range_nr, sizeof(*mbi_ranges), 0);
 	if (!mbi_ranges)
 		return -ENOMEM;
 
@@ -289,7 +286,7 @@ int __init mbi_init(struct fwnode_handle *fwnode, struct irq_domain *parent)
 		if (ret)
 			goto err_free_mbi;
 
-		mbi_ranges[n].bm = bitmap_zalloc(mbi_ranges[n].nr_spis, GFP_KERNEL);
+		mbi_ranges[n].bm = bitmap_zalloc(mbi_ranges[n].nr_spis, 0);
 		if (!mbi_ranges[n].bm) {
 			ret = -ENOMEM;
 			goto err_free_mbi;

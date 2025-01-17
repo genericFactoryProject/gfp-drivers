@@ -20,10 +20,11 @@
 #include <linux/of_irq.h>
 #include <linux/of_pci.h>
 #include <linux/pci.h>
-// #include <linux/slab.h>
+#include <linux/lynix-compat.h>
+#include <linux/msi.h>
 
-#include <asm/irq.h>
-#include <asm/msi.h>
+//#include <asm/irq.h>
+//#include <asm/msi.h>
 
 /* MSIX message address format: local GIC target */
 #define ALPINE_MSIX_SPI_TARGET_CLUSTER0		BIT(16)
@@ -233,7 +234,7 @@ static int alpine_msix_init(struct device_node *node,
 	struct resource res;
 	int ret;
 
-	priv = kzalloc(sizeof(*priv), GFP_KERNEL);
+	priv = kzalloc(sizeof(*priv), 0);
 	if (!priv)
 		return -ENOMEM;
 
@@ -267,7 +268,7 @@ static int alpine_msix_init(struct device_node *node,
 		goto err_priv;
 	}
 
-	priv->msi_map = bitmap_zalloc(priv->num_spis, GFP_KERNEL);
+	priv->msi_map = bitmap_zalloc(priv->num_spis, 0);
 	if (!priv->msi_map) {
 		ret = -ENOMEM;
 		goto err_priv;

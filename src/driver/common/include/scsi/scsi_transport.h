@@ -15,9 +15,9 @@
 
 struct scsi_transport_template {
 	/* the attribute containers */
-	struct transport_container host_attrs;
-	struct transport_container target_attrs;
-	struct transport_container device_attrs;
+	// struct transport_container host_attrs;
+	// struct transport_container target_attrs;
+	// struct transport_container device_attrs;
 
 	/*
 	 * If set, called from sysfs and legacy procfs rescanning code.

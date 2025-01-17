@@ -8,8 +8,8 @@
 
 #include <linux/dma-mapping.h>
 #include <linux/dma-map-ops.h>
-#include <linux/memblock.h> /* for min_low_pfn */
-#include <linux/mem_encrypt.h>
+//#include <linux/memblock.h> /* for min_low_pfn */
+//#include <linux/mem_encrypt.h>
 #include <linux/swiotlb.h>
 
 extern unsigned int zone_dma_bits;
@@ -71,7 +71,7 @@ static inline dma_addr_t phys_to_dma_unencrypted(struct device *dev,
  */
 static inline dma_addr_t phys_to_dma(struct device *dev, phys_addr_t paddr)
 {
-	return __sme_set(phys_to_dma_unencrypted(dev, paddr));
+	return 0; //__sme_set(phys_to_dma_unencrypted(dev, paddr));
 }
 
 static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t dma_addr)
@@ -83,7 +83,7 @@ static inline phys_addr_t dma_to_phys(struct device *dev, dma_addr_t dma_addr)
 	else
 		paddr = dma_addr;
 
-	return __sme_clr(paddr);
+	return 0; //__sme_clr(paddr);
 }
 #endif /* !CONFIG_ARCH_HAS_PHYS_TO_DMA */
 
@@ -103,9 +103,9 @@ static inline bool dma_capable(struct device *dev, dma_addr_t addr, size_t size,
 
 	if (addr == DMA_MAPPING_ERROR)
 		return false;
-	if (is_ram && !IS_ENABLED(CONFIG_ARCH_DMA_ADDR_T_64BIT) &&
-	    min(addr, end) < phys_to_dma(dev, PFN_PHYS(min_low_pfn)))
-		return false;
+	//if (is_ram && !IS_ENABLED(CONFIG_ARCH_DMA_ADDR_T_64BIT) &&
+	//    min(addr, end) < phys_to_dma(dev, PFN_PHYS(min_low_pfn)))
+	//	return false;
 
 	return end <= min_not_zero(*dev->dma_mask, dev->bus_dma_limit);
 }

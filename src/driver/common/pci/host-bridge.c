@@ -3,9 +3,7 @@
  * Host bridge related code
  */
 
-// #include <linux/kernel.h>
 #include <linux/pci.h>
-// #include <linux/module.h>
 
 #include "pci.h"
 
@@ -30,13 +28,13 @@ struct device *pci_get_host_bridge_device(struct pci_dev *dev)
 	struct pci_bus *root_bus = find_pci_root_bus(dev->bus);
 	struct device *bridge = root_bus->bridge;
 
-	kobject_get(&bridge->kobj);
+	//kobject_get(&bridge->kobj);
 	return bridge;
 }
 
 void  pci_put_host_bridge_device(struct device *dev)
 {
-	kobject_put(&dev->kobj);
+	//kobject_put(&dev->kobj);
 }
 
 void pci_set_host_bridge_release(struct pci_host_bridge *bridge,

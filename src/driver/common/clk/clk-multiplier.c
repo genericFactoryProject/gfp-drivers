@@ -8,9 +8,8 @@
 #include <linux/err.h>
 #include <linux/export.h>
 #include <linux/io.h>
-// #include <linux/kernel.h>
 #include <linux/of.h>
-// #include <linux/slab.h>
+#include <linux/math.h>
 
 static inline u32 clk_mult_readl(struct clk_multiplier *mult)
 {
@@ -130,8 +129,9 @@ static int clk_multiplier_set_rate(struct clk_hw *hw, unsigned long rate,
 	unsigned long flags = 0;
 	unsigned long val;
 
-	if (mult->lock)
+	if (mult->lock) {
 		spin_lock_irqsave(mult->lock, flags);
+	}
 	else
 		__acquire(mult->lock);
 
@@ -140,8 +140,9 @@ static int clk_multiplier_set_rate(struct clk_hw *hw, unsigned long rate,
 	val |= factor << mult->shift;
 	clk_mult_writel(mult, val);
 
-	if (mult->lock)
+	if (mult->lock) {
 		spin_unlock_irqrestore(mult->lock, flags);
+	}
 	else
 		__release(mult->lock);
 

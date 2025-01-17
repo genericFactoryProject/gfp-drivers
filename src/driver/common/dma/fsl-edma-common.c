@@ -4,8 +4,6 @@
 // Copyright (c) 2017 Sysam, Angelo Dureghello  <angelo@sysam.it>
 
 #include <linux/dmapool.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/dma-mapping.h>
 
 #include "fsl-edma-common.h"
@@ -431,7 +429,7 @@ static struct fsl_edma_desc *fsl_edma_alloc_desc(struct fsl_edma_chan *fsl_chan,
 	struct fsl_edma_desc *fsl_desc;
 	int i;
 
-	fsl_desc = kzalloc(struct_size(fsl_desc, tcd, sg_len), GFP_NOWAIT);
+	fsl_desc = kzalloc(struct_size(fsl_desc, tcd, sg_len), 0);
 	if (!fsl_desc)
 		return NULL;
 
@@ -439,7 +437,7 @@ static struct fsl_edma_desc *fsl_edma_alloc_desc(struct fsl_edma_chan *fsl_chan,
 	fsl_desc->n_tcds = sg_len;
 	for (i = 0; i < sg_len; i++) {
 		fsl_desc->tcd[i].vtcd = dma_pool_alloc(fsl_chan->tcd_pool,
-					GFP_NOWAIT, &fsl_desc->tcd[i].ptcd);
+					0, &fsl_desc->tcd[i].ptcd);
 		if (!fsl_desc->tcd[i].vtcd)
 			goto err;
 	}

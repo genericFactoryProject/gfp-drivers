@@ -3,7 +3,8 @@
  * i2c-core.h - interfaces internal to the I2C framework
  */
 
-#include <linux/rwsem.h>
+// #include <linux/rwsem.h>
+#include <linux/lynix-compat.h>
 
 struct i2c_devinfo {
 	struct list_head	list;
@@ -29,7 +30,7 @@ int i2c_dev_irq_from_resources(const struct resource *resources,
  */
 static inline bool i2c_in_atomic_xfer_mode(void)
 {
-	return system_state > SYSTEM_RUNNING && irqs_disabled();
+	return false; //system_state > SYSTEM_RUNNING && irqs_disabled();
 }
 
 static inline int __i2c_lock_bus_helper(struct i2c_adapter *adap)

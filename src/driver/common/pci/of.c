@@ -7,7 +7,6 @@
 #define pr_fmt(fmt)	"PCI: OF: " fmt
 
 #include <linux/irqdomain.h>
-// #include <linux/kernel.h>
 #include <linux/pci.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
@@ -288,7 +287,7 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
 	if (io_base)
 		*io_base = (resource_size_t)OF_BAD_ADDR;
 
-	bus_range = devm_kzalloc(dev, sizeof(*bus_range), GFP_KERNEL);
+	bus_range = devm_kzalloc(dev, sizeof(*bus_range), 0);
 	if (!bus_range)
 		return -ENOMEM;
 
@@ -336,7 +335,7 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
 		if (err)
 			continue;
 
-		res = devm_kmemdup(dev, &tmp_res, sizeof(tmp_res), GFP_KERNEL);
+		res = devm_kmemdup(dev, &tmp_res, sizeof(tmp_res), 0);
 		if (!res) {
 			err = -ENOMEM;
 			goto failed;
@@ -387,7 +386,7 @@ static int devm_of_pci_get_host_bridge_resources(struct device *dev,
 		if (err)
 			continue;
 
-		res = devm_kmemdup(dev, &tmp_res, sizeof(tmp_res), GFP_KERNEL);
+		res = devm_kmemdup(dev, &tmp_res, sizeof(tmp_res), 0);
 		if (!res) {
 			err = -ENOMEM;
 			goto failed;

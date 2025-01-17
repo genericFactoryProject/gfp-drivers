@@ -10,13 +10,13 @@
 #include <linux/device.h>
 #include <linux/mod_devicetable.h>
 // #include <linux/slab.h>
-#include <linux/kthread.h>
-#include <linux/completion.h>
+//#include <linux/kthread.h>
+//#include <linux/completion.h>
 #include <linux/scatterlist.h>
 #include <linux/gpio/consumer.h>
 
 #include <uapi/linux/spi/spi.h>
-#include <linux/acpi.h>
+//#include <linux/acpi.h>
 
 struct dma_chan;
 struct software_node;
@@ -594,8 +594,8 @@ struct spi_controller {
 	 * Over time we expect SPI drivers to be phased over to this API.
 	 */
 	bool				queued;
-	struct kthread_worker		*kworker;
-	struct kthread_work		pump_messages;
+	//struct kthread_worker		*kworker;
+	//struct kthread_work		pump_messages;
 	spinlock_t			queue_lock;
 	struct list_head		queue;
 	struct spi_message		*cur_msg;
@@ -609,7 +609,7 @@ struct spi_controller {
 	char				last_cs;
 	bool				last_cs_mode_high;
 	bool                            fallback;
-	struct completion               xfer_completion;
+	//struct completion               xfer_completion;
 	size_t				max_dma_len;
 
 	int (*prepare_transfer_hardware)(struct spi_controller *ctlr);

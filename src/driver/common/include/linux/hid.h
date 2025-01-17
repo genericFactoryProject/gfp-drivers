@@ -20,12 +20,13 @@
 #include <linux/list.h>
 #include <linux/mod_devicetable.h> /* hid_device_id */
 #include <linux/timer.h>
-#include <linux/workqueue.h>
+// #include <linux/workqueue.h>
 #include <linux/input.h>
-#include <linux/semaphore.h>
-#include <linux/mutex.h>
+// #include <linux/semaphore.h>
+// #include <linux/mutex.h>
 #include <linux/power_supply.h>
 #include <uapi/linux/hid.h>
+#include <linux/lynix-compat.h>
 
 /*
  * We parse each description item into this structure. Short items data
@@ -657,7 +658,7 @@ struct hid_device {							/* device report descriptor */
 	struct dentry *debug_events;
 	struct list_head debug_list;
 	spinlock_t  debug_list_lock;
-	wait_queue_head_t debug_wait;
+	//wait_queue_head_t debug_wait;
 };
 
 #define to_hid_device(pdev) \
@@ -902,7 +903,7 @@ extern int __must_check __hid_register_driver(struct hid_driver *,
 
 /* use a define to avoid include chaining to get THIS_MODULE & friends */
 #define hid_register_driver(driver) \
-	__hid_register_driver(driver, THIS_MODULE, KBUILD_MODNAME)
+	__hid_register_driver(driver, THIS_MODULE, "KBUILD_MODNAME")
 
 extern void hid_unregister_driver(struct hid_driver *);
 
@@ -1052,8 +1053,8 @@ static inline void hid_map_usage(struct hid_input *hidinput,
 	}
 
 	if (unlikely(c > limit || !bmap)) {
-		pr_warn_ratelimited("%s: Invalid code %d type %d\n",
-				    input->name, c, type);
+		//pr_warn_ratelimited("%s: Invalid code %d type %d\n",
+		//		    input->name, c, type);
 		*bit = NULL;
 		return;
 	}

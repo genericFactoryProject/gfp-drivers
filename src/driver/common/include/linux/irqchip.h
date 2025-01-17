@@ -11,7 +11,7 @@
 #ifndef _LINUX_IRQCHIP_H
 #define _LINUX_IRQCHIP_H
 
-#include <linux/acpi.h>
+// //#include <linux/acpi.h>
 // #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
@@ -53,9 +53,7 @@ static struct platform_driver drv_name##_driver = {			\
 			platform_irqchip_probe : NULL,			\
 	.driver = {							\
 		.name = #drv_name,					\
-		.owner = THIS_MODULE,					\
 		.of_match_table = drv_name##_irqchip_match_table,	\
-		.suppress_bind_attrs = true,				\
 	},								\
 };									\
 builtin_platform_driver(drv_name##_driver)

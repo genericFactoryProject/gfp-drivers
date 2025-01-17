@@ -9,9 +9,6 @@
  */
 
 #include <linux/clk.h>
-// #include <linux/kernel.h>
-// #include <linux/gfp.h>
-// #include <linux/module.h>
 #include <linux/pm.h>
 #include <linux/interrupt.h>
 #include <linux/device.h>

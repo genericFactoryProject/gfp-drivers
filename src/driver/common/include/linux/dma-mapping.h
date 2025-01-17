@@ -339,6 +339,10 @@ static inline void dma_unmap_single_attrs(struct device *dev, dma_addr_t addr,
 	return dma_unmap_page_attrs(dev, addr, size, dir, attrs);
 }
 #endif
+
+#define dma_map_single_attrs(x,y,z,k,m) 0
+#define dma_unmap_single_attrs(x,y,z,k,m) 0
+
 static inline void dma_sync_single_range_for_cpu(struct device *dev,
 		dma_addr_t addr, unsigned long offset, size_t size,
 		enum dma_data_direction dir)

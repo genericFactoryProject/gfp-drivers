@@ -8,7 +8,6 @@
  */
 
 #include <linux/pci.h>
-// #include <linux/slab.h>
 #include <linux/export.h>
 #include <linux/string.h>
 #include <linux/delay.h>
@@ -176,7 +175,7 @@ static void pci_read_vf_config_common(struct pci_dev *virtfn)
 	pci_read_config_word(virtfn, PCI_SUBSYSTEM_ID,
 			     &physfn->sriov->subsystem_device);
 }
-
+#if 0
 int pci_iov_sysfs_link(struct pci_dev *dev,
 		struct pci_dev *virtfn, int id)
 {
@@ -285,7 +284,7 @@ const struct attribute_group sriov_vf_dev_attr_group = {
 	.attrs = sriov_vf_dev_attrs,
 	.is_visible = sriov_vf_attrs_are_visible,
 };
-
+#endif
 int pci_iov_add_virtfn(struct pci_dev *dev, int id)
 {
 	int i;
@@ -335,9 +334,9 @@ int pci_iov_add_virtfn(struct pci_dev *dev, int id)
 	}
 
 	pci_device_add(virtfn, virtfn->bus);
-	rc = pci_iov_sysfs_link(dev, virtfn, id);
-	if (rc)
-		goto failed1;
+	//rc = pci_iov_sysfs_link(dev, virtfn, id);
+	//if (rc)
+	//	goto failed1;
 
 	pci_bus_add_device(virtfn);
 
@@ -365,14 +364,14 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
 		return;
 
 	sprintf(buf, "virtfn%u", id);
-	sysfs_remove_link(&dev->dev.kobj, buf);
+	//sysfs_remove_link(&dev->dev.kobj, buf);
 	/*
 	 * pci_stop_dev() could have been called for this virtfn already,
 	 * so the directory for the virtfn may have been removed before.
 	 * Double check to avoid spurious sysfs warnings.
 	 */
-	if (virtfn->dev.kobj.sd)
-		sysfs_remove_link(&virtfn->dev.kobj, "physfn");
+	//if (virtfn->dev.kobj.sd)
+	//	sysfs_remove_link(&virtfn->dev.kobj, "physfn");
 
 	pci_stop_and_remove_bus_device(virtfn);
 	virtfn_remove_bus(dev->bus, virtfn->bus);
@@ -381,7 +380,7 @@ void pci_iov_remove_virtfn(struct pci_dev *dev, int id)
 	pci_dev_put(virtfn);
 	pci_dev_put(dev);
 }
-
+#if 0
 static ssize_t sriov_totalvfs_show(struct device *dev,
 				   struct device_attribute *attr,
 				   char *buf)
@@ -563,7 +562,7 @@ const struct attribute_group sriov_pf_dev_attr_group = {
 	.attrs = sriov_pf_dev_attrs,
 	.is_visible = sriov_pf_attrs_are_visible,
 };
-
+#endif
 int __weak pcibios_sriov_enable(struct pci_dev *pdev, u16 num_vfs)
 {
 	return 0;
@@ -656,11 +655,11 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
 			return -ENOSYS;
 		}
 
-		rc = sysfs_create_link(&dev->dev.kobj,
-					&pdev->dev.kobj, "dep_link");
+		//rc = sysfs_create_link(&dev->dev.kobj,
+		//			&pdev->dev.kobj, "dep_link");
 		pci_dev_put(pdev);
-		if (rc)
-			return rc;
+		//if (rc)
+		//	return rc;
 	}
 
 	iov->initial_VFs = initial;
@@ -684,7 +683,7 @@ static int sriov_enable(struct pci_dev *dev, int nr_virtfn)
 	if (rc)
 		goto err_pcibios;
 
-	kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
+	//kobject_uevent(&dev->dev.kobj, KOBJ_CHANGE);
 	iov->num_VFs = nr_virtfn;
 
 	return 0;
@@ -698,8 +697,8 @@ err_pcibios:
 
 	pcibios_sriov_disable(dev);
 
-	if (iov->link != dev->devfn)
-		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+	//if (iov->link != dev->devfn)
+	//	sysfs_remove_link(&dev->dev.kobj, "dep_link");
 
 	pci_iov_set_numvfs(dev, 0);
 	return rc;
@@ -730,8 +729,8 @@ static void sriov_disable(struct pci_dev *dev)
 
 	pcibios_sriov_disable(dev);
 
-	if (iov->link != dev->devfn)
-		sysfs_remove_link(&dev->dev.kobj, "dep_link");
+	//if (iov->link != dev->devfn)
+	//	sysfs_remove_link(&dev->dev.kobj, "dep_link");
 
 	iov->num_VFs = 0;
 	pci_iov_set_numvfs(dev, 0);

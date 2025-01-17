@@ -10,13 +10,8 @@
 
 #define pr_fmt(fmt) "generic pinconfig core: " fmt
 
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/device.h>
-// #include <linux/slab.h>
-#include <linux/debugfs.h>
-#include <linux/seq_file.h>
 #include <linux/pinctrl/pinctrl.h>
 #include <linux/pinctrl/pinconf.h>
 #include <linux/pinctrl/pinconf-generic.h>
@@ -254,7 +249,7 @@ int pinconf_generic_parse_dt_config(struct device_node *np,
 	max_cfg = ARRAY_SIZE(dt_params);
 	if (pctldev)
 		max_cfg += pctldev->desc->num_custom_params;
-	cfg = kcalloc(max_cfg, sizeof(*cfg), GFP_KERNEL);
+	cfg = kcalloc(max_cfg, sizeof(*cfg), 0);
 	if (!cfg)
 		return -ENOMEM;
 
@@ -277,7 +272,7 @@ int pinconf_generic_parse_dt_config(struct device_node *np,
 	 * Now limit the number of configs to the real number of
 	 * found properties.
 	 */
-	*configs = kmemdup(cfg, ncfg * sizeof(unsigned long), GFP_KERNEL);
+	*configs = kmemdup(cfg, ncfg * sizeof(unsigned long), 0);
 	if (!*configs) {
 		ret = -ENOMEM;
 		goto out;

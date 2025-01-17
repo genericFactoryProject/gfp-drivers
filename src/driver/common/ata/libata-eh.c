@@ -11,8 +11,6 @@
  *  http://www.sata-io.org/
  */
 
-// #include <linux/kernel.h>
-// #include <linux/blkdev.h>
 #include <linux/export.h>
 #include <linux/pci.h>
 #include <scsi/scsi.h>
@@ -25,7 +23,6 @@
 
 #include <linux/libata.h>
 
-// #include <trace/events/libata.h>
 #include "libata.h"
 
 enum {

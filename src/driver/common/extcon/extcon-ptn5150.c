@@ -11,10 +11,7 @@
 #include <linux/err.h>
 #include <linux/i2c.h>
 #include <linux/interrupt.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/regmap.h>
-// #include <linux/slab.h>
 #include <linux/extcon-provider.h>
 #include <linux/gpio/consumer.h>
 
@@ -154,7 +151,7 @@ static irqreturn_t ptn5150_irq_handler(int irq, void *data)
 {
 	struct ptn5150_info *info = data;
 
-	schedule_work(&info->irq_work);
+	//schedule_work(&info->irq_work);
 
 	return IRQ_HANDLED;
 }
@@ -204,7 +201,7 @@ static int ptn5150_i2c_probe(struct i2c_client *i2c)
 	if (!np)
 		return -EINVAL;
 
-	info = devm_kzalloc(&i2c->dev, sizeof(*info), GFP_KERNEL);
+	info = devm_kzalloc(&i2c->dev, sizeof(*info), 0);
 	if (!info)
 		return -ENOMEM;
 	i2c_set_clientdata(i2c, info);
@@ -224,7 +221,7 @@ static int ptn5150_i2c_probe(struct i2c_client *i2c)
 
 	mutex_init(&info->mutex);
 
-	INIT_WORK(&info->irq_work, ptn5150_irq_work);
+	// INIT_WORK(&info->irq_work, ptn5150_irq_work);
 
 	info->regmap = devm_regmap_init_i2c(i2c, &ptn5150_regmap_config);
 	if (IS_ERR(info->regmap)) {

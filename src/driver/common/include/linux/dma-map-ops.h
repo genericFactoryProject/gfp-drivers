@@ -7,7 +7,7 @@
 #define _LINUX_DMA_MAP_OPS_H
 
 #include <linux/dma-mapping.h>
-#include <linux/pgtable.h>
+//#include <linux/pgtable.h>
 
 struct cma;
 
@@ -153,7 +153,7 @@ static inline struct page *dma_alloc_contiguous(struct device *dev, size_t size,
 static inline void dma_free_contiguous(struct device *dev, struct page *page,
 		size_t size)
 {
-	__free_pages(page, get_order(size));
+	//__free_pages(page, get_order(size));
 }
 #endif /* CONFIG_DMA_CMA*/
 

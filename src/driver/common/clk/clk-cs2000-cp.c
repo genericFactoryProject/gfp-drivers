@@ -10,7 +10,6 @@
 #include <linux/clk.h>
 #include <linux/i2c.h>
 #include <linux/of_device.h>
-// #include <linux/module.h>
 #include <linux/regmap.h>
 
 #define CH_MAX 4
@@ -577,7 +576,7 @@ static int cs2000_probe(struct i2c_client *client,
 	struct device *dev = &client->dev;
 	int ret;
 
-	priv = devm_kzalloc(dev, sizeof(*priv), GFP_KERNEL);
+	priv = devm_kzalloc(dev, sizeof(*priv), 0);
 	if (!priv)
 		return -ENOMEM;
 

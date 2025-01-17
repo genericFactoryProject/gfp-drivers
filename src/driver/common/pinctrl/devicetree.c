@@ -8,7 +8,6 @@
 #include <linux/device.h>
 #include <linux/of.h>
 #include <linux/pinctrl/pinctrl.h>
-// #include <linux/slab.h>
 
 #include "core.h"
 #include "devicetree.h"

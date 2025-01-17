@@ -6,22 +6,15 @@
  * Copyright (C) 2011-2012 Avionic Design GmbH
  */
 
-#include <linux/acpi.h>
-// #include <linux/module.h>
 #include <linux/pwm.h>
 #include <linux/radix-tree.h>
 #include <linux/list.h>
-#include <linux/mutex.h>
 #include <linux/err.h>
-// #include <linux/slab.h>
 #include <linux/device.h>
-#include <linux/debugfs.h>
-#include <linux/seq_file.h>
-
+#include <linux/math.h>
 #include <dt-bindings/pwm/pwm.h>
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/pwm.h>
+//#define CREATE_TRACE_POINTS
 
 #define MAX_PWMS 1024
 
@@ -30,7 +23,7 @@ static LIST_HEAD(pwm_lookup_list);
 static DEFINE_MUTEX(pwm_lock);
 static LIST_HEAD(pwm_chips);
 static DECLARE_BITMAP(allocated_pwms, MAX_PWMS);
-static RADIX_TREE(pwm_tree, GFP_KERNEL);
+static RADIX_TREE(pwm_tree, 0);
 
 static struct pwm_device *pwm_to_device(unsigned int pwm)
 {
@@ -96,20 +89,20 @@ static int pwm_device_request(struct pwm_device *pwm, const char *label)
 	if (test_bit(PWMF_REQUESTED, &pwm->flags))
 		return -EBUSY;
 
-	if (!try_module_get(pwm->chip->ops->owner))
-		return -ENODEV;
+	//if (!try_module_get(pwm->chip->ops->owner))
+	//	return -ENODEV;
 
 	if (pwm->chip->ops->request) {
 		err = pwm->chip->ops->request(pwm->chip, pwm);
 		if (err) {
-			module_put(pwm->chip->ops->owner);
+			//module_put(pwm->chip->ops->owner);
 			return err;
 		}
 	}
 
 	if (pwm->chip->ops->get_state) {
 		pwm->chip->ops->get_state(pwm->chip, pwm, &pwm->state);
-		trace_pwm_get(pwm, &pwm->state);
+		//trace_pwm_get(pwm, &pwm->state);
 
 		if (IS_ENABLED(CONFIG_PWM_DEBUG))
 			pwm->last = pwm->state;
@@ -285,7 +278,7 @@ int pwmchip_add(struct pwm_chip *chip)
 
 	chip->base = ret;
 
-	chip->pwms = kcalloc(chip->npwm, sizeof(*pwm), GFP_KERNEL);
+	chip->pwms = kcalloc(chip->npwm, sizeof(*pwm), 0);
 	if (!chip->pwms) {
 		ret = -ENOMEM;
 		goto out;
@@ -468,7 +461,7 @@ static void pwm_apply_state_debug(struct pwm_device *pwm,
 	 */
 
 	chip->ops->get_state(chip, pwm, &s1);
-	trace_pwm_get(pwm, &s1);
+	//trace_pwm_get(pwm, &s1);
 
 	/*
 	 * The lowlevel driver either ignored .polarity (which is a bug) or as
@@ -530,10 +523,10 @@ static void pwm_apply_state_debug(struct pwm_device *pwm,
 		return;
 	}
 
-	trace_pwm_apply(pwm, &s1);
+	//trace_pwm_apply(pwm, &s1);
 
 	chip->ops->get_state(chip, pwm, last);
-	trace_pwm_get(pwm, last);
+	//trace_pwm_get(pwm, last);
 
 	/* reapplication of the current state should give an exact match */
 	if (s1.enabled != last->enabled ||
@@ -654,7 +647,7 @@ int pwm_apply_state(struct pwm_device *pwm, const struct pwm_state *state)
 	if (err)
 		return err;
 
-	trace_pwm_apply(pwm, state);
+	//trace_pwm_apply(pwm, state);
 
 	pwm->state = *state;
 
@@ -905,9 +898,9 @@ static struct pwm_device *acpi_pwm_get(const struct fwnode_handle *fwnode)
 
 	memset(&args, 0, sizeof(args));
 
-	ret = __acpi_node_get_property_reference(fwnode, "pwms", 0, 3, &args);
-	if (ret < 0)
-		return ERR_PTR(ret);
+	//ret = __acpi_node_get_property_reference(fwnode, "pwms", 0, 3, &args);
+	//if (ret < 0)
+	//	return ERR_PTR(ret);
 
 	if (args.nargs < 2)
 		return ERR_PTR(-EPROTO);
@@ -993,14 +986,14 @@ struct pwm_device *pwm_get(struct device *dev, const char *con_id)
 	/* look up via DT first */
 	if (is_of_node(fwnode))
 		return of_pwm_get(dev, to_of_node(fwnode), con_id);
-
+#if 0
 	/* then lookup via ACPI */
 	if (is_acpi_node(fwnode)) {
 		pwm = acpi_pwm_get(fwnode);
 		if (!IS_ERR(pwm) || PTR_ERR(pwm) != -ENOENT)
 			return pwm;
 	}
-
+#endif
 	/*
 	 * We look up the provider in the static table typically provided by
 	 * board setup code. We first try to lookup the consumer device by
@@ -1056,7 +1049,7 @@ struct pwm_device *pwm_get(struct device *dev, const char *con_id)
 		return ERR_PTR(-ENODEV);
 
 	chip = pwmchip_find_by_name(chosen->provider);
-
+#if 0
 	/*
 	 * If the lookup entry specifies a module, load the module and retry
 	 * the PWM chip lookup. This can be used to work around driver load
@@ -1068,7 +1061,7 @@ struct pwm_device *pwm_get(struct device *dev, const char *con_id)
 		if (err == 0)
 			chip = pwmchip_find_by_name(chosen->provider);
 	}
-
+#endif
 	if (!chip)
 		return ERR_PTR(-EPROBE_DEFER);
 
@@ -1111,7 +1104,7 @@ void pwm_put(struct pwm_device *pwm)
 	pwm_set_chip_data(pwm, NULL);
 	pwm->label = NULL;
 
-	module_put(pwm->chip->ops->owner);
+	//module_put(pwm->chip->ops->owner);
 out:
 	mutex_unlock(&pwm_lock);
 }
@@ -1201,8 +1194,8 @@ struct pwm_device *devm_fwnode_pwm_get(struct device *dev,
 
 	if (is_of_node(fwnode))
 		pwm = of_pwm_get(dev, to_of_node(fwnode), con_id);
-	else if (is_acpi_node(fwnode))
-		pwm = acpi_pwm_get(fwnode);
+	//else if (is_acpi_node(fwnode))
+	//	pwm = acpi_pwm_get(fwnode);
 	if (IS_ERR(pwm))
 		return pwm;
 

@@ -5,7 +5,6 @@
  * Copyright (C) 2019-2021 ARM Ltd.
  */
 
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/device.h>
 #include <linux/reset-controller.h>
@@ -101,7 +100,7 @@ static int scmi_reset_probe(struct scmi_device *sdev)
 	if (IS_ERR(reset_ops))
 		return PTR_ERR(reset_ops);
 
-	data = devm_kzalloc(dev, sizeof(*data), GFP_KERNEL);
+	data = devm_kzalloc(dev, sizeof(*data), 0);
 	if (!data)
 		return -ENOMEM;
 

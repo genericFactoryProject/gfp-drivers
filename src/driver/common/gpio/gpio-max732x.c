@@ -10,9 +10,7 @@
  *  Derived from drivers/gpio/pca953x.c
  */
 
-// #include <linux/module.h>
 #include <linux/init.h>
-// #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/gpio/driver.h>
 #include <linux/interrupt.h>
@@ -604,7 +602,7 @@ static struct max732x_platform_data *of_gpio_max732x(struct device *dev)
 {
 	struct max732x_platform_data *pdata;
 
-	pdata = devm_kzalloc(dev, sizeof(*pdata), GFP_KERNEL);
+	pdata = devm_kzalloc(dev, sizeof(*pdata), 0);
 	if (!pdata)
 		return NULL;
 
@@ -634,7 +632,7 @@ static int max732x_probe(struct i2c_client *client,
 		return -EINVAL;
 	}
 
-	chip = devm_kzalloc(&client->dev, sizeof(*chip), GFP_KERNEL);
+	chip = devm_kzalloc(&client->dev, sizeof(*chip), 0);
 	if (chip == NULL)
 		return -ENOMEM;
 	chip->client = client;

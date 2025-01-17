@@ -6,8 +6,8 @@
  * Copyright (C) 2014 Hannes Reinecke <hare@suse.de>
  */
 
-// #include <linux/kernel.h>
 #include <linux/atomic.h>
+#include <linux/lynix-compat.h>
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
@@ -28,11 +28,12 @@ static void scsi_log_release_buffer(char *bufptr)
 
 static inline const char *scmd_name(const struct scsi_cmnd *scmd)
 {
-	struct request *rq = scsi_cmd_to_rq((struct scsi_cmnd *)scmd);
+	//struct request *rq = scsi_cmd_to_rq((struct scsi_cmnd *)scmd);
 
-	if (!rq->q || !rq->q->disk)
-		return NULL;
-	return rq->q->disk->disk_name;
+	//if (!rq->q || !rq->q->disk)
+	//	return NULL;
+	//return rq->q->disk->disk_name;
+	return NULL;
 }
 
 static size_t sdev_format_header(char *logbuf, size_t logbuf_len,
@@ -93,8 +94,8 @@ void scmd_printk(const char *level, const struct scsi_cmnd *scmd,
 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
 	if (!logbuf)
 		return;
-	off = sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
-				 scsi_cmd_to_rq((struct scsi_cmnd *)scmd)->tag);
+	//off = sdev_format_header(logbuf, logbuf_len, scmd_name(scmd),
+	//			 scsi_cmd_to_rq((struct scsi_cmnd *)scmd)->tag);
 	if (off < logbuf_len) {
 		va_start(args, fmt);
 		off += vscnprintf(logbuf + off, logbuf_len - off, fmt, args);
@@ -181,14 +182,14 @@ void scsi_print_command(struct scsi_cmnd *cmd)
 {
 	int k;
 	char *logbuf;
-	size_t off, logbuf_len;
+	size_t off = 0, logbuf_len;
 
 	logbuf = scsi_log_reserve_buffer(&logbuf_len);
 	if (!logbuf)
 		return;
 
-	off = sdev_format_header(logbuf, logbuf_len,
-				 scmd_name(cmd), scsi_cmd_to_rq(cmd)->tag);
+	//off = sdev_format_header(logbuf, logbuf_len,
+	//			 scmd_name(cmd), scsi_cmd_to_rq(cmd)->tag);
 	if (off >= logbuf_len)
 		goto out_printk;
 	off += scnprintf(logbuf + off, logbuf_len - off, "CDB: ");
@@ -208,15 +209,15 @@ void scsi_print_command(struct scsi_cmnd *cmd)
 		for (k = 0; k < cmd->cmd_len; k += 16) {
 			size_t linelen = min(cmd->cmd_len - k, 16);
 
-			off = sdev_format_header(logbuf, logbuf_len,
-						 scmd_name(cmd),
-						 scsi_cmd_to_rq(cmd)->tag);
+			//off = sdev_format_header(logbuf, logbuf_len,
+			//			 scmd_name(cmd),
+			//			 scsi_cmd_to_rq(cmd)->tag);
 			if (!WARN_ON(off > logbuf_len - 58)) {
 				off += scnprintf(logbuf + off, logbuf_len - off,
 						 "CDB[%02x]: ", k);
-				hex_dump_to_buffer(&cmd->cmnd[k], linelen,
-						   16, 1, logbuf + off,
-						   logbuf_len - off, false);
+				//hex_dump_to_buffer(&cmd->cmnd[k], linelen,
+				//		   16, 1, logbuf + off,
+				//		   logbuf_len - off, false);
 			}
 			dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s",
 				   logbuf);
@@ -225,9 +226,9 @@ void scsi_print_command(struct scsi_cmnd *cmd)
 	}
 	if (!WARN_ON(off > logbuf_len - 49)) {
 		off += scnprintf(logbuf + off, logbuf_len - off, " ");
-		hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
-				   logbuf + off, logbuf_len - off,
-				   false);
+		//hex_dump_to_buffer(cmd->cmnd, cmd->cmd_len, 16, 1,
+		//		   logbuf + off, logbuf_len - off,
+		//		   false);
 	}
 out_printk:
 	dev_printk(KERN_INFO, &cmd->device->sdev_gendev, "%s", logbuf);
@@ -306,9 +307,9 @@ scsi_log_dump_sense(const struct scsi_device *sdev, const char *name, int tag,
 
 		off = sdev_format_header(logbuf, logbuf_len,
 					 name, tag);
-		hex_dump_to_buffer(&sense_buffer[i], len, 16, 1,
-				   logbuf + off, logbuf_len - off,
-				   false);
+		//hex_dump_to_buffer(&sense_buffer[i], len, 16, 1,
+		//		   logbuf + off, logbuf_len - off,
+		//		   false);
 		dev_printk(KERN_INFO, &sdev->sdev_gendev, "%s", logbuf);
 	}
 	scsi_log_release_buffer(logbuf);
@@ -373,9 +374,9 @@ EXPORT_SYMBOL(__scsi_print_sense);
 /* Normalize and print sense buffer in SCSI command */
 void scsi_print_sense(const struct scsi_cmnd *cmd)
 {
-	scsi_log_print_sense(cmd->device, scmd_name(cmd),
-			     scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag,
-			     cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE);
+	//scsi_log_print_sense(cmd->device, scmd_name(cmd),
+	///		     scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag,
+	//		     cmd->sense_buffer, SCSI_SENSE_BUFFERSIZE);
 }
 EXPORT_SYMBOL(scsi_print_sense);
 
@@ -383,7 +384,7 @@ void scsi_print_result(const struct scsi_cmnd *cmd, const char *msg,
 		       int disposition)
 {
 	char *logbuf;
-	size_t off, logbuf_len;
+	size_t off = 0, logbuf_len;
 	const char *mlret_string = scsi_mlreturn_string(disposition);
 	const char *hb_string = scsi_hostbyte_string(cmd->result);
 	unsigned long cmd_age = (jiffies - cmd->jiffies_at_alloc) / HZ;
@@ -392,8 +393,8 @@ void scsi_print_result(const struct scsi_cmnd *cmd, const char *msg,
 	if (!logbuf)
 		return;
 
-	off = sdev_format_header(logbuf, logbuf_len, scmd_name(cmd),
-				 scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag);
+	//off = sdev_format_header(logbuf, logbuf_len, scmd_name(cmd),
+	//			 scsi_cmd_to_rq((struct scsi_cmnd *)cmd)->tag);
 
 	if (off >= logbuf_len)
 		goto out_printk;

@@ -7,11 +7,8 @@
 
 #include <linux/device.h>
 #include <linux/hid.h>
-// #include <linux/module.h>
-#include <linux/random.h>
-#include <linux/sched.h>
+// #include <linux/random.h>
 #include <linux/usb.h>
-#include <linux/wait.h>
 
 #include "hid-ids.h"
 
@@ -280,7 +277,7 @@ static enum led_brightness lg_g510_kbd_led_get(struct led_classdev *led_cdev)
 
 	return g15_led->brightness;
 }
-
+#if 0
 static ssize_t color_store(struct device *dev, struct device_attribute *attr,
 			   const char *buf, size_t count)
 {
@@ -343,7 +340,7 @@ static const struct attribute_group *lg_g510_kbd_led_groups[] = {
 	&lg_g510_kbd_led_group,
 	NULL,
 };
-
+#endif
 static void lg_g510_leds_sync_work(struct work_struct *work)
 {
 	struct lg_g15_data *g15 = container_of(work, struct lg_g15_data, work);
@@ -519,7 +516,7 @@ static int lg_g15_event(struct lg_g15_data *g15, u8 *data)
 
 	/* Backlight cycle button pressed? */
 	if (data[1] & 0x80)
-		schedule_work(&g15->work);
+		; //schedule_work(&g15->work);
 
 	input_sync(g15->input);
 	return 0;
@@ -551,7 +548,7 @@ static int lg_g15_v2_event(struct lg_g15_data *g15, u8 *data)
 
 	/* Backlight cycle button pressed? */
 	if (data[2] & 0x01)
-		schedule_work(&g15->work);
+		;//schedule_work(&g15->work);
 
 	input_sync(g15->input);
 	return 0;
@@ -612,7 +609,7 @@ static int lg_g510_leds_event(struct lg_g15_data *g15, u8 *data)
 	 */
 	backlight_disabled = data[1] & 0x04;
 	if (!backlight_disabled)
-		schedule_work(&g15->work);
+		;//schedule_work(&g15->work);
 
 	return 0;
 }
@@ -701,7 +698,7 @@ static int lg_g15_register_led(struct lg_g15_data *g15, int i, const char *name)
 			g15->leds[i].cdev.brightness_get =
 				lg_g510_kbd_led_get;
 			g15->leds[i].cdev.max_brightness = 255;
-			g15->leds[i].cdev.groups = lg_g510_kbd_led_groups;
+			//g15->leds[i].cdev.groups = lg_g510_kbd_led_groups;
 			break;
 		default:
 			g15->leds[i].cdev.brightness_set_blocking =
@@ -776,7 +773,7 @@ static int lg_g15_probe(struct hid_device *hdev, const struct hid_device_id *id)
 	if (!has_ff000000)
 		return hid_hw_start(hdev, HID_CONNECT_DEFAULT);
 
-	g15 = devm_kzalloc(&hdev->dev, sizeof(*g15), GFP_KERNEL);
+	g15 = devm_kzalloc(&hdev->dev, sizeof(*g15), 0);
 	if (!g15)
 		return -ENOMEM;
 
@@ -794,7 +791,7 @@ static int lg_g15_probe(struct hid_device *hdev, const struct hid_device_id *id)
 
 	switch (g15->model) {
 	case LG_G15:
-		INIT_WORK(&g15->work, lg_g15_leds_changed_work);
+		//INIT_WORK(&g15->work, lg_g15_leds_changed_work);
 		/*
 		 * The G15 and G15 v2 use a separate usb-device (on a builtin
 		 * hub) which emulates a keyboard for the F1 - F12 emulation
@@ -806,14 +803,14 @@ static int lg_g15_probe(struct hid_device *hdev, const struct hid_device_id *id)
 		gkeys = 18;
 		break;
 	case LG_G15_V2:
-		INIT_WORK(&g15->work, lg_g15_leds_changed_work);
+		//INIT_WORK(&g15->work, lg_g15_leds_changed_work);
 		connect_mask = HID_CONNECT_HIDRAW;
 		gkeys_settings_output_report = 0x02;
 		gkeys = 6;
 		break;
 	case LG_G510:
 	case LG_G510_USB_AUDIO:
-		INIT_WORK(&g15->work, lg_g510_leds_sync_work);
+		//INIT_WORK(&g15->work, lg_g510_leds_sync_work);
 		connect_mask = HID_CONNECT_HIDINPUT | HID_CONNECT_HIDRAW;
 		gkeys_settings_feature_report = 0x01;
 		gkeys = 18;

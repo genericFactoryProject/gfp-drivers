@@ -7,9 +7,7 @@
  * Author: Will Deacon <will.deacon@arm.com>
  */
 
-// #include <linux/bug.h>
 #include <linux/io-pgtable.h>
-// #include <linux/kernel.h>
 #include <linux/types.h>
 
 static const struct io_pgtable_init_fns *

@@ -58,9 +58,9 @@ struct extcon_dev {
 	struct extcon_cable *cables;
 
 	/* /sys/class/extcon/.../mutually_exclusive/... */
-	struct attribute_group attr_g_muex;
-	struct attribute **attrs_muex;
-	struct device_attribute *d_attrs_muex;
+	//struct attribute_group attr_g_muex;
+	//struct attribute **attrs_muex;
+	//struct device_attribute *d_attrs_muex;
 };
 
 #endif /* __LINUX_EXTCON_INTERNAL_H__ */

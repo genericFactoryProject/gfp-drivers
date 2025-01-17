@@ -7,8 +7,6 @@
  *
  */
 
-#include <linux/acpi.h>
-#include <linux/acpi_iort.h>
 #include <linux/of_device.h>
 #include <linux/of_address.h>
 #include <linux/irq.h>
@@ -32,8 +30,8 @@ static u32 fsl_mc_msi_domain_get_msi_id(struct irq_domain *domain,
 	u32 out_id;
 
 	of_node = irq_domain_get_of_node(domain);
-	out_id = of_node ? of_msi_map_id(&mc_dev->dev, of_node, mc_dev->icid) :
-			iort_msi_map_id(&mc_dev->dev, mc_dev->icid);
+	out_id = of_msi_map_id(&mc_dev->dev, of_node, mc_dev->icid); //of_node ? of_msi_map_id(&mc_dev->dev, of_node, mc_dev->icid) :
+			// iort_msi_map_id(&mc_dev->dev, mc_dev->icid);
 
 	return out_id;
 }

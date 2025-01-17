@@ -15,11 +15,8 @@
 
 #include <linux/device.h>
 #include <linux/hid.h>
-// #include <linux/module.h>
-#include <linux/random.h>
-#include <linux/sched.h>
+//#include <linux/random.h>
 #include <linux/usb.h>
-#include <linux/wait.h>
 
 #include "usbhid/usbhid.h"
 #include "hid-ids.h"
@@ -811,14 +808,14 @@ static int lg_probe(struct hid_device *hdev, const struct hid_device_id *id)
 					HID_FEATURE_REPORT, HID_REQ_SET_REPORT);
 		if (ret >= 0) {
 			/* insert a little delay of 10 jiffies ~ 40ms */
-			wait_queue_head_t wait;
-			init_waitqueue_head (&wait);
-			wait_event_interruptible_timeout(wait, 0,
-							 msecs_to_jiffies(40));
+			//wait_queue_head_t wait;
+			//init_waitqueue_head (&wait);
+			//wait_event_interruptible_timeout(wait, 0,
+			//				 msecs_to_jiffies(40));
 
 			/* Select random Address */
 			buf[1] = 0xB2;
-			get_random_bytes(&buf[2], 2);
+			//get_random_bytes(&buf[2], 2);
 
 			ret = hid_hw_raw_request(hdev, buf[0], buf, sizeof(cbuf),
 					HID_FEATURE_REPORT, HID_REQ_SET_REPORT);

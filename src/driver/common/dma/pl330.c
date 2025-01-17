@@ -7,12 +7,9 @@
  *	Jaswinder Singh <jassi.brar@samsung.com>
  */
 
-#include <linux/debugfs.h>
-// #include <linux/kernel.h>
+#include <lynix-compat.h>
 #include <linux/io.h>
 #include <linux/init.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
 #include <linux/string.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -24,7 +21,6 @@
 #include <linux/of_dma.h>
 #include <linux/err.h>
 #include <linux/pm_runtime.h>
-// #include <linux/bug.h>
 #include <linux/reset.h>
 
 #include "dmaengine.h"
@@ -1882,7 +1878,7 @@ static int dmac_alloc_threads(struct pl330_dmac *pl330)
 
 	/* Allocate 1 Manager and 'chans' Channel threads */
 	pl330->channels = kcalloc(1 + chans, sizeof(*thrd),
-					GFP_KERNEL);
+					0);
 	if (!pl330->channels)
 		return -ENOMEM;
 
@@ -1916,7 +1912,7 @@ static int dmac_alloc_resources(struct pl330_dmac *pl330)
 	 */
 	pl330->mcode_cpu = dma_alloc_attrs(pl330->ddma.dev,
 				chans * pl330->mcbufsz,
-				&pl330->mcode_bus, GFP_KERNEL,
+				&pl330->mcode_bus, 0,
 				DMA_ATTR_PRIVILEGED);
 	if (!pl330->mcode_cpu) {
 		dev_err(pl330->ddma.dev, "%s:%d Can't allocate memory!\n",
@@ -2592,7 +2588,7 @@ static struct dma_pl330_desc *pl330_get_desc(struct dma_pl330_chan *pch)
 		DEFINE_SPINLOCK(lock);
 		LIST_HEAD(pool);
 
-		if (!add_desc(&pool, &lock, GFP_ATOMIC, 1))
+		if (!add_desc(&pool, &lock, 0, 1))
 			return NULL;
 
 		desc = pluck_desc(&pool, &lock);
@@ -3008,7 +3004,7 @@ pl330_probe(struct amba_device *adev, const struct amba_id *id)
 		return ret;
 
 	/* Allocate a new DMAC and its Channels */
-	pl330 = devm_kzalloc(&adev->dev, sizeof(*pl330), GFP_KERNEL);
+	pl330 = devm_kzalloc(&adev->dev, sizeof(*pl330), 0);
 	if (!pl330)
 		return -ENOMEM;
 
@@ -3077,7 +3073,7 @@ pl330_probe(struct amba_device *adev, const struct amba_id *id)
 
 	/* Create a descriptor pool of default size */
 	if (!add_desc(&pl330->desc_pool, &pl330->pool_lock,
-		      GFP_KERNEL, NR_DEFAULT_DESC))
+		      0, NR_DEFAULT_DESC))
 		dev_warn(&adev->dev, "unable to allocate desc\n");
 
 	INIT_LIST_HEAD(&pd->channels);
@@ -3087,7 +3083,7 @@ pl330_probe(struct amba_device *adev, const struct amba_id *id)
 
 	pl330->num_peripherals = num_chan;
 
-	pl330->peripherals = kcalloc(num_chan, sizeof(*pch), GFP_KERNEL);
+	pl330->peripherals = kcalloc(num_chan, sizeof(*pch), 0);
 	if (!pl330->peripherals) {
 		ret = -ENOMEM;
 		goto probe_err2;
@@ -3251,7 +3247,7 @@ MODULE_DEVICE_TABLE(amba, pl330_ids);
 
 static struct amba_driver pl330_driver = {
 	.drv = {
-		.owner = THIS_MODULE,
+		// .owner = THIS_MODULE,
 		.name = "dma-pl330",
 		.pm = &pl330_pm,
 	},

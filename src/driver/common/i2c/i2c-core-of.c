@@ -12,10 +12,9 @@
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/i2c.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
-#include <linux/sysfs.h>
+//#include <linux/sysfs.h>
 
 #include "i2c-core.h"
 
@@ -170,10 +169,10 @@ struct i2c_adapter *of_get_i2c_adapter_by_node(struct device_node *node)
 	if (!adapter)
 		return NULL;
 
-	if (!try_module_get(adapter->owner)) {
-		put_device(&adapter->dev);
-		adapter = NULL;
-	}
+	//if (!try_module_get(adapter->owner)) {
+	//	put_device(&adapter->dev);
+	//	adapter = NULL;
+	//}
 
 	return adapter;
 }

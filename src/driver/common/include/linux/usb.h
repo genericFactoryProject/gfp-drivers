@@ -17,11 +17,12 @@
 #include <linux/list.h>		/* for struct list_head */
 #include <linux/kref.h>		/* for struct kref */
 #include <linux/device.h>	/* for struct device */
-#include <linux/fs.h>		/* for struct file_operations */
-#include <linux/completion.h>	/* for struct completion */
-#include <linux/sched.h>	/* for current && schedule_timeout */
-#include <linux/mutex.h>	/* for struct mutex */
+//#include <linux/fs.h>		/* for struct file_operations */
+//#include <linux/completion.h>	/* for struct completion */
+//#include <linux/sched.h>	/* for current && schedule_timeout */
+//#include <linux/mutex.h>	/* for struct mutex */
 #include <linux/pm_runtime.h>	/* for runtime PM */
+#include <linux/lynix-compat.h>
 
 struct usb_device;
 struct usb_driver;
@@ -1354,7 +1355,7 @@ struct urb;
 
 struct usb_anchor {
 	struct list_head urb_list;
-	wait_queue_head_t wait;
+	//wait_queue_head_t wait;
 	spinlock_t lock;
 	atomic_t suspend_wakeups;
 	unsigned int poisoned:1;
@@ -1364,7 +1365,7 @@ static inline void init_usb_anchor(struct usb_anchor *anchor)
 {
 	memset(anchor, 0, sizeof(*anchor));
 	INIT_LIST_HEAD(&anchor->urb_list);
-	init_waitqueue_head(&anchor->wait);
+	//init_waitqueue_head(&anchor->wait);
 	spin_lock_init(&anchor->lock);
 }
 
@@ -1882,7 +1883,7 @@ struct usb_sg_request {
 	struct urb		**urbs;
 
 	int			count;
-	struct completion	complete;
+	//struct completion	complete;
 };
 
 int usb_sg_init(

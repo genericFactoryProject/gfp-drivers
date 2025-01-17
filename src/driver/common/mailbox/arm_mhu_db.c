@@ -11,9 +11,7 @@
 #include <linux/err.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
-// #include <linux/kernel.h>
 #include <linux/mailbox_controller.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
 
@@ -222,7 +220,7 @@ static struct mbox_chan *mhu_db_mbox_xlate(struct mbox_controller *mbox,
 
 	chan = &mbox->chans[i];
 
-	chan_info = devm_kzalloc(mbox->dev, sizeof(*chan_info), GFP_KERNEL);
+	chan_info = devm_kzalloc(mbox->dev, sizeof(*chan_info), 0);
 	if (!chan_info)
 		return ERR_PTR(-ENOMEM);
 
@@ -273,7 +271,7 @@ static int mhu_db_probe(struct amba_device *adev, const struct amba_id *id)
 		return -EINVAL;
 	}
 
-	mhu = devm_kzalloc(dev, sizeof(*mhu), GFP_KERNEL);
+	mhu = devm_kzalloc(dev, sizeof(*mhu), 0);
 	if (!mhu)
 		return -ENOMEM;
 
@@ -281,7 +279,7 @@ static int mhu_db_probe(struct amba_device *adev, const struct amba_id *id)
 	if (IS_ERR(mhu->base))
 		return PTR_ERR(mhu->base);
 
-	chans = devm_kcalloc(dev, max_chans, sizeof(*chans), GFP_KERNEL);
+	chans = devm_kcalloc(dev, max_chans, sizeof(*chans), 0);
 	if (!chans)
 		return -ENOMEM;
 

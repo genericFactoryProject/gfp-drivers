@@ -10,11 +10,7 @@
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/interrupt.h>
-// #include <linux/kernel.h>
-#include <linux/reboot.h>
 #include <linux/regmap.h>
-// #include <linux/slab.h>
-// #include <linux/spinlock.h>
 #include <linux/regulator/driver.h>
 
 #include "internal.h"
@@ -26,7 +22,7 @@ struct regulator_irq {
 	struct regulator_irq_desc desc;
 	int irq;
 	int retry_cnt;
-	struct delayed_work isr_work;
+	//struct delayed_work isr_work;
 };
 
 /*
@@ -45,7 +41,7 @@ static void rdev_clear_err(struct regulator_dev *rdev, int err)
 	rdev->cached_err &= ~err;
 	spin_unlock(&rdev->err_lock);
 }
-
+#if 0
 static void regulator_notifier_isr_work(struct work_struct *work)
 {
 	struct regulator_irq *h;
@@ -152,7 +148,7 @@ reschedule:
 		mod_delayed_work(system_highpri_wq, &h->isr_work,
 				 msecs_to_jiffies(tmo));
 }
-
+#endif
 static irqreturn_t regulator_notifier_isr(int irq, void *data)
 {
 	struct regulator_irq *h = data;
@@ -246,7 +242,7 @@ static irqreturn_t regulator_notifier_isr(int irq, void *data)
 		regulator_notifier_call_chain(rdev, stat->notifs, NULL);
 		rdev_flag_err(rdev, stat->errors);
 	}
-
+#if 0
 	if (d->irq_off_ms) {
 		if (!d->high_prio)
 			schedule_delayed_work(&h->isr_work,
@@ -256,10 +252,11 @@ static irqreturn_t regulator_notifier_isr(int irq, void *data)
 					 &h->isr_work,
 					 msecs_to_jiffies(d->irq_off_ms));
 	}
-
+#endif
 	return IRQ_HANDLED;
 
 fail_out:
+#if 0
 	if (d->fatal_cnt && h->retry_cnt > d->fatal_cnt) {
 		/* If we have no recovery, just try shut down straight away */
 		if (!d->die) {
@@ -273,7 +270,7 @@ fail_out:
 						       REGULATOR_FORCED_SAFETY_SHUTDOWN_WAIT_MS);
 		}
 	}
-
+#endif
 	return IRQ_NONE;
 }
 
@@ -284,7 +281,7 @@ static int init_rdev_state(struct device *dev, struct regulator_irq *h,
 	int i;
 
 	h->rdata.states = devm_kzalloc(dev, sizeof(*h->rdata.states) *
-				       rdev_amount, GFP_KERNEL);
+				       rdev_amount, 0);
 	if (!h->rdata.states)
 		return -ENOMEM;
 
@@ -346,7 +343,7 @@ void *regulator_irq_helper(struct device *dev,
 	if (!rdev_amount || !d || !d->map_event || !d->name)
 		return ERR_PTR(-EINVAL);
 
-	h = devm_kzalloc(dev, sizeof(*h), GFP_KERNEL);
+	h = devm_kzalloc(dev, sizeof(*h), 0);
 	if (!h)
 		return ERR_PTR(-ENOMEM);
 
@@ -360,8 +357,8 @@ void *regulator_irq_helper(struct device *dev,
 
 	init_rdev_errors(h);
 
-	if (h->desc.irq_off_ms)
-		INIT_DELAYED_WORK(&h->isr_work, regulator_notifier_isr_work);
+	//if (h->desc.irq_off_ms)
+	//	INIT_DELAYED_WORK(&h->isr_work, 0);
 
 	ret = request_threaded_irq(h->irq, NULL, regulator_notifier_isr,
 				   IRQF_ONESHOT | irq_flags, h->desc.name, h);
@@ -390,8 +387,8 @@ void regulator_irq_helper_cancel(void **handle)
 		struct regulator_irq *h = *handle;
 
 		free_irq(h->irq, h);
-		if (h->desc.irq_off_ms)
-			cancel_delayed_work_sync(&h->isr_work);
+		//if (h->desc.irq_off_ms)
+		//	cancel_delayed_work_sync(&h->isr_work);
 
 		h = NULL;
 	}

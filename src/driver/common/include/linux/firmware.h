@@ -5,6 +5,7 @@
 #include <linux/types.h>
 #include <linux/compiler.h>
 // #include <linux/gfp.h>
+#include <linux/lynix-compat.h>
 
 #define FW_ACTION_NOUEVENT 0
 #define FW_ACTION_UEVENT 1

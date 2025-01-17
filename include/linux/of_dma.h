@@ -11,7 +11,7 @@
 #define __LINUX_OF_DMA_H
 
 #include <linux/of.h>
-// #include <linux/dmaengine.h>
+#include <linux/dmaengine.h>
 
 struct device_node;
 

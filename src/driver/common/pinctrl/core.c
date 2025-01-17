@@ -12,16 +12,12 @@
  */
 #define pr_fmt(fmt) "pinctrl core: " fmt
 
-// #include <linux/kernel.h>
 #include <linux/kref.h>
 #include <linux/export.h>
 #include <linux/init.h>
 #include <linux/device.h>
-// #include <linux/slab.h>
 #include <linux/err.h>
 #include <linux/list.h>
-#include <linux/debugfs.h>
-#include <linux/seq_file.h>
 #include <linux/pinctrl/consumer.h>
 #include <linux/pinctrl/pinctrl.h>
 #include <linux/pinctrl/machine.h>
@@ -213,7 +209,7 @@ static int pinctrl_register_one_pin(struct pinctrl_dev *pctldev,
 		return -EINVAL;
 	}
 
-	pindesc = kzalloc(sizeof(*pindesc), GFP_KERNEL);
+	pindesc = kzalloc(sizeof(*pindesc), 0);
 	if (!pindesc)
 		return -ENOMEM;
 
@@ -224,7 +220,7 @@ static int pinctrl_register_one_pin(struct pinctrl_dev *pctldev,
 	if (pin->name) {
 		pindesc->name = pin->name;
 	} else {
-		pindesc->name = kasprintf(GFP_KERNEL, "PIN%u", pin->number);
+		pindesc->name = kasprintf(0, "PIN%u", pin->number);
 		if (!pindesc->name) {
 			kfree(pindesc);
 			return -ENOMEM;
@@ -639,7 +635,7 @@ int pinctrl_generic_add_group(struct pinctrl_dev *pctldev, const char *name,
 
 	selector = pctldev->num_groups;
 
-	group = devm_kzalloc(pctldev->dev, sizeof(*group), GFP_KERNEL);
+	group = devm_kzalloc(pctldev->dev, sizeof(*group), 0);
 	if (!group)
 		return -ENOMEM;
 
@@ -928,7 +924,7 @@ static struct pinctrl_state *create_state(struct pinctrl *p,
 {
 	struct pinctrl_state *state;
 
-	state = kzalloc(sizeof(*state), GFP_KERNEL);
+	state = kzalloc(sizeof(*state), 0);
 	if (!state)
 		return ERR_PTR(-ENOMEM);
 
@@ -956,7 +952,7 @@ static int add_setting(struct pinctrl *p, struct pinctrl_dev *pctldev,
 	if (map->type == PIN_MAP_TYPE_DUMMY_STATE)
 		return 0;
 
-	setting = kzalloc(sizeof(*setting), GFP_KERNEL);
+	setting = kzalloc(sizeof(*setting), 0);
 	if (!setting)
 		return -ENOMEM;
 
@@ -1037,7 +1033,7 @@ static struct pinctrl *create_pinctrl(struct device *dev,
 	 * mapping, this is what consumers will get when requesting
 	 * a pin control handle with pinctrl_get()
 	 */
-	p = kzalloc(sizeof(*p), GFP_KERNEL);
+	p = kzalloc(sizeof(*p), 0);
 	if (!p)
 		return ERR_PTR(-ENOMEM);
 	p->dev = dev;
@@ -1363,7 +1359,7 @@ struct pinctrl *devm_pinctrl_get(struct device *dev)
 {
 	struct pinctrl **ptr, *p;
 
-	ptr = devres_alloc(devm_pinctrl_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_pinctrl_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -1458,7 +1454,7 @@ int pinctrl_register_mappings(const struct pinctrl_map *maps,
 		}
 	}
 
-	maps_node = kzalloc(sizeof(*maps_node), GFP_KERNEL);
+	maps_node = kzalloc(sizeof(*maps_node), 0);
 	if (!maps_node)
 		return -ENOMEM;
 
@@ -1895,7 +1891,7 @@ static void pinctrl_init_device_debugfs(struct pinctrl_dev *pctldev)
 
 	if (pctldev->desc->name &&
 			strcmp(dev_name(pctldev->dev), pctldev->desc->name)) {
-		debugfs_name = devm_kasprintf(pctldev->dev, GFP_KERNEL,
+		debugfs_name = devm_kasprintf(pctldev->dev, 0,
 				"%s-%s", dev_name(pctldev->dev),
 				pctldev->desc->name);
 		if (!debugfs_name) {
@@ -1995,7 +1991,7 @@ pinctrl_init_controller(struct pinctrl_desc *pctldesc, struct device *dev,
 	if (!pctldesc->name)
 		return ERR_PTR(-EINVAL);
 
-	pctldev = kzalloc(sizeof(*pctldev), GFP_KERNEL);
+	pctldev = kzalloc(sizeof(*pctldev), 0);
 	if (!pctldev)
 		return ERR_PTR(-ENOMEM);
 
@@ -2003,12 +1999,12 @@ pinctrl_init_controller(struct pinctrl_desc *pctldesc, struct device *dev,
 	pctldev->owner = pctldesc->owner;
 	pctldev->desc = pctldesc;
 	pctldev->driver_data = driver_data;
-	INIT_RADIX_TREE(&pctldev->pin_desc_tree, GFP_KERNEL);
+	INIT_RADIX_TREE(&pctldev->pin_desc_tree, 0);
 #ifdef CONFIG_GENERIC_PINCTRL_GROUPS
-	INIT_RADIX_TREE(&pctldev->pin_group_tree, GFP_KERNEL);
+	INIT_RADIX_TREE(&pctldev->pin_group_tree, 0);
 #endif
 #ifdef CONFIG_GENERIC_PINMUX_FUNCTIONS
-	INIT_RADIX_TREE(&pctldev->pin_function_tree, GFP_KERNEL);
+	INIT_RADIX_TREE(&pctldev->pin_function_tree, 0);
 #endif
 	INIT_LIST_HEAD(&pctldev->gpio_ranges);
 	INIT_LIST_HEAD(&pctldev->node);
@@ -2253,7 +2249,7 @@ struct pinctrl_dev *devm_pinctrl_register(struct device *dev,
 {
 	struct pinctrl_dev **ptr, *pctldev;
 
-	ptr = devres_alloc(devm_pinctrl_dev_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_pinctrl_dev_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -2289,7 +2285,7 @@ int devm_pinctrl_register_and_init(struct device *dev,
 	struct pinctrl_dev **ptr;
 	int error;
 
-	ptr = devres_alloc(devm_pinctrl_dev_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_pinctrl_dev_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return -ENOMEM;
 

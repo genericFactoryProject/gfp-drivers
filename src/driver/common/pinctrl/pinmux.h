@@ -90,7 +90,7 @@ static inline void pinmux_disable_setting(const struct pinctrl_setting *setting)
 }
 
 #endif
-
+#if 0
 #if defined(CONFIG_PINMUX) && defined(CONFIG_DEBUG_FS)
 
 void pinmux_show_map(struct seq_file *s, const struct pinctrl_map *map);
@@ -116,6 +116,7 @@ static inline void pinmux_init_device_debugfs(struct dentry *devroot,
 {
 }
 
+#endif
 #endif
 
 #ifdef CONFIG_GENERIC_PINMUX_FUNCTIONS

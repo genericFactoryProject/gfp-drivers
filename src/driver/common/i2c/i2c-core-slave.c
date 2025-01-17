@@ -6,7 +6,6 @@
  */
 
 #include <dt-bindings/i2c/i2c.h>
-#include <linux/acpi.h>
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/i2c.h>
@@ -14,8 +13,7 @@
 
 #include "i2c-core.h"
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/i2c_slave.h>
+//#define CREATE_TRACE_POINTS
 
 int i2c_slave_register(struct i2c_client *client, i2c_slave_cb_t slave_cb)
 {
@@ -87,8 +85,8 @@ int i2c_slave_event(struct i2c_client *client,
 {
 	int ret = client->slave_cb(client, event, val);
 
-	if (trace_i2c_slave_enabled())
-		trace_i2c_slave(client, event, val, ret);
+	//if (trace_i2c_slave_enabled())
+	//	trace_i2c_slave(client, event, val, ret);
 
 	return ret;
 }
@@ -119,9 +117,9 @@ bool i2c_detect_slave_mode(struct device *dev)
 				return true;
 			}
 		}
-	} else if (IS_BUILTIN(CONFIG_ACPI) && ACPI_HANDLE(dev)) {
-		dev_dbg(dev, "ACPI slave is not supported yet\n");
-	}
+	} //else if (IS_BUILTIN(CONFIG_ACPI) && ACPI_HANDLE(dev)) {
+	//	dev_dbg(dev, "ACPI slave is not supported yet\n");
+	//}
 	return false;
 }
 EXPORT_SYMBOL_GPL(i2c_detect_slave_mode);

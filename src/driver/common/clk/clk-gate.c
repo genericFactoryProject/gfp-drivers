@@ -8,8 +8,6 @@
 
 #include <linux/clk-provider.h>
 #include <linux/device.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/io.h>
 #include <linux/err.h>
 #include <linux/string.h>
@@ -62,8 +60,9 @@ static void clk_gate_endisable(struct clk_hw *hw, int enable)
 
 	set ^= enable;
 
-	if (gate->lock)
+	if (gate->lock) {
 		spin_lock_irqsave(gate->lock, flags);
+	}
 	else
 		__acquire(gate->lock);
 
@@ -82,8 +81,9 @@ static void clk_gate_endisable(struct clk_hw *hw, int enable)
 
 	clk_gate_writel(gate, reg);
 
-	if (gate->lock)
+	if (gate->lock) {
 		spin_unlock_irqrestore(gate->lock, flags);
+	}
 	else
 		__release(gate->lock);
 }
@@ -145,7 +145,7 @@ struct clk_hw *__clk_hw_register_gate(struct device *dev,
 	}
 
 	/* allocate the gate */
-	gate = kzalloc(sizeof(*gate), GFP_KERNEL);
+	gate = kzalloc(sizeof(*gate), 0);
 	if (!gate)
 		return ERR_PTR(-ENOMEM);
 
@@ -239,7 +239,7 @@ struct clk_hw *__devm_clk_hw_register_gate(struct device *dev,
 {
 	struct clk_hw **ptr, *hw;
 
-	ptr = devres_alloc(devm_clk_hw_release_gate, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_clk_hw_release_gate, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 

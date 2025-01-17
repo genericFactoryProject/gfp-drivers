@@ -18,33 +18,27 @@
  * registers are banked per-cpu for these sources.
  */
 #include <linux/init.h>
-// #include <linux/kernel.h>
 #include <linux/err.h>
-// #include <linux/module.h>
 #include <linux/list.h>
 #include <linux/smp.h>
-#include <linux/cpu.h>
-#include <linux/cpu_pm.h>
 #include <linux/cpumask.h>
 #include <linux/io.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
-#include <linux/acpi.h>
 #include <linux/irqdomain.h>
 #include <linux/interrupt.h>
 #include <linux/percpu.h>
-#include <linux/seq_file.h>
-// #include <linux/slab.h>
 #include <linux/irqchip.h>
 #include <linux/irqchip/chained_irq.h>
 #include <linux/irqchip/arm-gic.h>
-
-#include <asm/cputype.h>
-#include <asm/irq.h>
-#include <asm/exception.h>
-#include <asm/smp_plat.h>
-#include <asm/virt.h>
+#include <linux/sizes.h>
+//#include <asm/cputype.h>
+//#include <asm/irq.h>
+//#include <asm/exception.h>
+//#include <asm/smp_plat.h>
+//#include <asm/virt.h>
+#include <linux/kstrtox.h>
 
 #include "irq-gic-common.h"
 
@@ -332,7 +326,7 @@ static int gic_retrigger(struct irq_data *data)
 {
 	return !gic_irq_set_irqchip_state(data, IRQCHIP_STATE_PENDING, true);
 }
-
+#if 0
 static void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
 {
 	u32 irqstat, irqnr;
@@ -372,7 +366,7 @@ static void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
 		generic_handle_domain_irq(gic->domain, irqnr);
 	} while (1);
 }
-
+#endif
 static void gic_handle_cascade_irq(struct irq_desc *desc)
 {
 	struct gic_chip_data *chip_data = irq_desc_get_handler_data(desc);
@@ -396,7 +390,7 @@ static void gic_handle_cascade_irq(struct irq_desc *desc)
  out:
 	chained_irq_exit(chip, desc);
 }
-
+#if 0
 static void gic_irq_print_chip(struct irq_data *d, struct seq_file *p)
 {
 	struct gic_chip_data *gic = irq_data_get_irq_chip_data(d);
@@ -406,7 +400,7 @@ static void gic_irq_print_chip(struct irq_data *d, struct seq_file *p)
 	else
 		seq_printf(p, "GIC-%d", (int)(gic - &gic_data[0]));
 }
-
+#endif
 void __init gic_cascade_irq(unsigned int gic_nr, unsigned int irq)
 {
 	BUG_ON(gic_nr >= CONFIG_ARM_GIC_MAX_NR);
@@ -863,12 +857,12 @@ static __init void gic_smp_init(void)
 	};
 	int base_sgi;
 
-	cpuhp_setup_state_nocalls(CPUHP_AP_IRQ_GIC_STARTING,
-				  "irqchip/arm/gic:starting",
-				  gic_starting_cpu, NULL);
+	//cpuhp_setup_state_nocalls(CPUHP_AP_IRQ_GIC_STARTING,
+	//			  "irqchip/arm/gic:starting",
+	//			  gic_starting_cpu, NULL);
 
 	base_sgi = __irq_domain_alloc_irqs(gic_data[0].domain, -1, 8,
-					   NUMA_NO_NODE, &sgi_fwspec,
+					   0, &sgi_fwspec,
 					   false, NULL);
 	if (WARN_ON(base_sgi <= 0))
 		return;
@@ -891,7 +885,7 @@ static const struct irq_chip gic_chip = {
 	.ipi_send_mask		= gic_ipi_send_mask,
 	.irq_get_irqchip_state	= gic_irq_get_irqchip_state,
 	.irq_set_irqchip_state	= gic_irq_set_irqchip_state,
-	.irq_print_chip		= gic_irq_print_chip,
+	//.irq_print_chip		= gic_irq_print_chip,
 	.flags			= IRQCHIP_SET_TYPE_MASKED |
 				  IRQCHIP_SKIP_SET_WAKE |
 				  IRQCHIP_MASK_ON_SUSPEND,
@@ -1189,7 +1183,7 @@ static int gic_init_bases(struct gic_chip_data *gic,
 		}
 
 		for_each_possible_cpu(cpu) {
-			u32 mpidr = cpu_logical_map(cpu);
+			u32 mpidr = 0;//cpu_logical_map(cpu);
 			u32 core_id = MPIDR_AFFINITY_LEVEL(mpidr, 0);
 			unsigned long offset = gic->percpu_offset * core_id;
 			*per_cpu_ptr(gic->dist_base.percpu_base, cpu) =
@@ -1284,7 +1278,7 @@ static int __init __gic_init_bases(struct gic_chip_data *gic,
 		for (i = 0; i < NR_GIC_CPU_IF; i++)
 			gic_cpu_map[i] = 0xff;
 
-		set_handle_irq(gic_handle_irq);
+		//set_handle_irq(gic_handle_irq);
 		if (static_branch_likely(&supports_deactivate_key))
 			pr_info("GIC: Using split EOI/Deactivate mode\n");
 	}
@@ -1469,7 +1463,7 @@ int gic_of_init_child(struct device *dev, struct gic_chip_data **gic, int irq)
 	if (!dev || !dev->of_node || !gic || !irq)
 		return -EINVAL;
 
-	*gic = devm_kzalloc(dev, sizeof(**gic), GFP_KERNEL);
+	*gic = devm_kzalloc(dev, sizeof(**gic), 0);
 	if (!*gic)
 		return -ENOMEM;
 

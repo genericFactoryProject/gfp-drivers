@@ -8,24 +8,21 @@
  */
 
 #include <linux/init.h>
-// #include <linux/module.h>
-#include <linux/ioctl.h>
-#include <linux/fs.h>
+//#include <linux/ioctl.h>
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/list.h>
 #include <linux/errno.h>
-#include <linux/mutex.h>
-// #include <linux/slab.h>
-#include <linux/compat.h>
+//#include <linux/compat.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
-#include <linux/acpi.h>
 
 #include <linux/spi/spi.h>
 #include <linux/spi/spidev.h>
 
-#include <linux/uaccess.h>
+#include <linux/bitmap.h>
+#include <linux/kdev_t.h>
+#include <linux/lynix-compat.h>
 
 
 /*
@@ -83,8 +80,8 @@ static LIST_HEAD(device_list);
 static DEFINE_MUTEX(device_list_lock);
 
 static unsigned bufsiz = 4096;
-module_param(bufsiz, uint, S_IRUGO);
-MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
+//module_param(bufsiz, uint, S_IRUGO);
+//MODULE_PARM_DESC(bufsiz, "data bytes in biggest supported SPI message");
 
 /*-------------------------------------------------------------------------*/
 
@@ -140,7 +137,7 @@ spidev_sync_read(struct spidev_data *spidev, size_t len)
 }
 
 /*-------------------------------------------------------------------------*/
-
+#if 0
 /* Read-only message with current device setup */
 static ssize_t
 spidev_read(struct file *filp, char __user *buf, size_t count, loff_t *f_pos)
@@ -670,7 +667,7 @@ static const struct file_operations spidev_fops = {
 	.release =	spidev_release,
 	.llseek =	no_llseek,
 };
-
+#endif
 /*-------------------------------------------------------------------------*/
 
 /* The main reason to have this class is to make mdev/udev create the
@@ -787,8 +784,7 @@ static int spidev_probe(struct spi_device *spi)
 
 		spidev->devt = MKDEV(SPIDEV_MAJOR, minor);
 		dev = device_create(spidev_class, &spi->dev, spidev->devt,
-				    spidev, "spidev%d.%d",
-				    spi->master->bus_num, spi->chip_select);
+				    spidev);
 		status = PTR_ERR_OR_ZERO(dev);
 	} else {
 		dev_dbg(&spi->dev, "no minor number available!\n");
@@ -833,7 +829,7 @@ static struct spi_driver spidev_spi_driver = {
 	.driver = {
 		.name =		"spidev",
 		.of_match_table = of_match_ptr(spidev_dt_ids),
-		.acpi_match_table = ACPI_PTR(spidev_acpi_ids),
+		//.acpi_match_table = ACPI_PTR(spidev_acpi_ids),
 	},
 	.probe =	spidev_probe,
 	.remove =	spidev_remove,
@@ -851,7 +847,7 @@ static struct spi_driver spidev_spi_driver = {
 static int __init spidev_init(void)
 {
 	int status;
-
+#if 0
 	/* Claim our 256 reserved device numbers.  Then register a class
 	 * that will key udev/mdev to add/remove /dev nodes.  Last, register
 	 * the driver which manages those device numbers.
@@ -860,17 +856,17 @@ static int __init spidev_init(void)
 	status = register_chrdev(SPIDEV_MAJOR, "spi", &spidev_fops);
 	if (status < 0)
 		return status;
-
-	spidev_class = class_create(THIS_MODULE, "spidev");
+#endif
+	spidev_class = class_create("spidev");
 	if (IS_ERR(spidev_class)) {
-		unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);
+		//unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);
 		return PTR_ERR(spidev_class);
 	}
 
 	status = spi_register_driver(&spidev_spi_driver);
 	if (status < 0) {
 		class_destroy(spidev_class);
-		unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);
+		//unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);
 	}
 	return status;
 }
@@ -880,11 +876,11 @@ static void __exit spidev_exit(void)
 {
 	spi_unregister_driver(&spidev_spi_driver);
 	class_destroy(spidev_class);
-	unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);
+	//unregister_chrdev(SPIDEV_MAJOR, spidev_spi_driver.driver.name);
 }
 module_exit(spidev_exit);
 
 MODULE_AUTHOR("Andrea Paterniani, <a.paterniani@swapp-eng.it>");
 MODULE_DESCRIPTION("User mode SPI device interface");
 MODULE_LICENSE("GPL");
-MODULE_ALIAS("spi:spidev");
+//MODULE_ALIAS("spi:spidev");

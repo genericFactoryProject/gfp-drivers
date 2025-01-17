@@ -7,11 +7,8 @@
  * Based on preview driver from Silicon Image.
  */
 
-// #include <linux/kernel.h>
-// #include <linux/module.h>
-// #include <linux/gfp.h>
+#include <linux/lynix-compat.h>
 #include <linux/pci.h>
-#include <linux/blkdev.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
 #include <linux/dma-mapping.h>
@@ -414,9 +411,10 @@ static struct ata_port_operations sil24_ops = {
 };
 
 static bool sata_sil24_msi;    /* Disable MSI */
+#if 0
 module_param_named(msi, sata_sil24_msi, bool, S_IRUGO);
 MODULE_PARM_DESC(msi, "Enable MSI (Default: false)");
-
+#endif
 /*
  * Use bits 30-31 of port_flags to encode available port numbers.
  * Current maxium is 4.
@@ -1197,11 +1195,11 @@ static int sil24_port_start(struct ata_port *ap)
 	size_t cb_size = sizeof(*cb) * SIL24_MAX_CMDS;
 	dma_addr_t cb_dma;
 
-	pp = devm_kzalloc(dev, sizeof(*pp), GFP_KERNEL);
+	pp = devm_kzalloc(dev, sizeof(*pp), 0);
 	if (!pp)
 		return -ENOMEM;
 
-	cb = dmam_alloc_coherent(dev, cb_size, &cb_dma, GFP_KERNEL);
+	cb = dmam_alloc_coherent(dev, cb_size, &cb_dma, 0);
 	if (!cb)
 		return -ENOMEM;
 

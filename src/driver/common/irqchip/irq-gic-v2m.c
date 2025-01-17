@@ -12,17 +12,13 @@
 
 #define pr_fmt(fmt) "GICv2m: " fmt
 
-#include <linux/acpi.h>
 #include <linux/dma-iommu.h>
 #include <linux/irq.h>
 #include <linux/irqdomain.h>
-// #include <linux/kernel.h>
 #include <linux/pci.h>
 #include <linux/msi.h>
 #include <linux/of_address.h>
 #include <linux/of_pci.h>
-// #include <linux/slab.h>
-// #include <linux/spinlock.h>
 #include <linux/irqchip/arm-gic.h>
 
 /*
@@ -321,7 +317,7 @@ static int __init gicv2m_init_one(struct fwnode_handle *fwnode,
 	int ret;
 	struct v2m_data *v2m;
 
-	v2m = kzalloc(sizeof(struct v2m_data), GFP_KERNEL);
+	v2m = kzalloc(sizeof(struct v2m_data), 0);
 	if (!v2m)
 		return -ENOMEM;
 
@@ -385,7 +381,7 @@ static int __init gicv2m_init_one(struct fwnode_handle *fwnode,
 			break;
 		}
 	}
-	v2m->bm = bitmap_zalloc(v2m->nr_spis, GFP_KERNEL);
+	v2m->bm = bitmap_zalloc(v2m->nr_spis, 0);
 	if (!v2m->bm) {
 		ret = -ENOMEM;
 		goto err_iounmap;

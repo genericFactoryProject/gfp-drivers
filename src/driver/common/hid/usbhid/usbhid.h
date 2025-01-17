@@ -14,11 +14,12 @@
 #include <linux/types.h>
 // #include <linux/slab.h>
 #include <linux/list.h>
-#include <linux/mutex.h>
+//#include <linux/mutex.h>
 #include <linux/timer.h>
-#include <linux/wait.h>
-#include <linux/workqueue.h>
+//#include <linux/wait.h>
+//#include <linux/workqueue.h>
 #include <linux/input.h>
+#include <linux/lynix-compat.h>
 
 /*  API provided by hid-core.c for USB HID drivers */
 void usbhid_init_reports(struct hid_device *hid);
@@ -87,7 +88,7 @@ struct usbhid_device {
 	unsigned long stop_retry;                                       /* Time to give up, in jiffies */
 	unsigned int retry_delay;                                       /* Delay length in ms */
 	struct work_struct reset_work;                                  /* Task context for resets */
-	wait_queue_head_t wait;						/* For sleeping */
+	//wait_queue_head_t wait;						/* For sleeping */
 };
 
 #define	hid_to_usb_dev(hid_dev) \

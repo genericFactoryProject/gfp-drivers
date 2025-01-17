@@ -633,10 +633,10 @@ struct dev_pm_info {
 	unsigned int		should_wakeup:1;
 #endif
 #ifdef CONFIG_PM
-	struct hrtimer		suspend_timer;
+	//struct hrtimer		suspend_timer;
 	u64			timer_expires;
-	struct work_struct	work;
-	wait_queue_head_t	wait_queue;
+	//struct work_struct	work;
+	//wait_queue_head_t	wait_queue;
 	struct wake_irq		*wakeirq;
 	atomic_t		usage_count;
 	atomic_t		child_count;

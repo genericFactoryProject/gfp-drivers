@@ -22,15 +22,8 @@
  *  September 04, 2002 Mike Anderson (andmike@us.ibm.com)
  */
 
-// #include <linux/module.h>
-#include <linux/blkdev.h>
-// #include <linux/kernel.h>
-// #include <linux/slab.h>
-#include <linux/kthread.h>
 #include <linux/string.h>
-#include <linux/mm.h>
 #include <linux/init.h>
-#include <linux/completion.h>
 #include <linux/transport_class.h>
 #include <linux/platform_device.h>
 #include <linux/pm_runtime.h>
@@ -45,11 +38,11 @@
 
 
 static int shost_eh_deadline = -1;
-
+#if 0
 module_param_named(eh_deadline, shost_eh_deadline, int, S_IRUGO|S_IWUSR);
 MODULE_PARM_DESC(eh_deadline,
 		 "SCSI EH timeout in seconds (should be between 0 and 2^31-1)");
-
+#endif
 static DEFINE_IDA(host_index_ida);
 
 
@@ -61,7 +54,7 @@ static void scsi_host_cls_release(struct device *dev)
 static struct class shost_class = {
 	.name		= "scsi_host",
 	.dev_release	= scsi_host_cls_release,
-	.dev_groups	= scsi_shost_groups,
+	//.dev_groups	= scsi_shost_groups,
 };
 
 /**
@@ -177,7 +170,7 @@ void scsi_remove_host(struct Scsi_Host *shost)
 	spin_unlock_irqrestore(shost->host_lock, flags);
 
 	scsi_autopm_get_host(shost);
-	flush_workqueue(shost->tmf_work_q);
+	//flush_workqueue(shost->tmf_work_q);
 	scsi_forget_host(shost);
 	mutex_unlock(&shost->scan_mutex);
 	scsi_proc_host_rm(shost);
@@ -266,7 +259,7 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
 
 	if (shost->transportt->host_size) {
 		shost->shost_data = kzalloc(shost->transportt->host_size,
-					 GFP_KERNEL);
+					 0);
 		if (shost->shost_data == NULL) {
 			error = -ENOMEM;
 			goto out_del_dev;
@@ -276,9 +269,9 @@ int scsi_add_host_with_dma(struct Scsi_Host *shost, struct device *dev,
 	if (shost->transportt->create_work_queue) {
 		snprintf(shost->work_q_name, sizeof(shost->work_q_name),
 			 "scsi_wq_%d", shost->host_no);
-		shost->work_q = alloc_workqueue("%s",
-			WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | WQ_UNBOUND,
-			1, shost->work_q_name);
+		//shost->work_q = alloc_workqueue("%s",
+		//	WQ_SYSFS | __WQ_LEGACY | WQ_MEM_RECLAIM | WQ_UNBOUND,
+		//	1, shost->work_q_name);
 
 		if (!shost->work_q) {
 			error = -EINVAL;
@@ -325,15 +318,15 @@ static void scsi_host_dev_release(struct device *dev)
 	scsi_proc_hostdir_rm(shost->hostt);
 
 	/* Wait for functions invoked through call_rcu(&scmd->rcu, ...) */
-	rcu_barrier();
-
+	//rcu_barrier();
+#if 0
 	if (shost->tmf_work_q)
 		destroy_workqueue(shost->tmf_work_q);
 	if (shost->ehandler)
 		kthread_stop(shost->ehandler);
 	if (shost->work_q)
 		destroy_workqueue(shost->work_q);
-
+#endif
 	if (shost->shost_state == SHOST_CREATED) {
 		/*
 		 * Free the shost_dev device name here if scsi_host_alloc()
@@ -345,8 +338,8 @@ static void scsi_host_dev_release(struct device *dev)
 		kfree(dev_name(&shost->shost_dev));
 	}
 
-	if (shost->tag_set.tags)
-		scsi_mq_destroy_tags(shost);
+	//if (shost->tag_set.tags)
+	//	scsi_mq_destroy_tags(shost);
 
 	kfree(shost->shost_data);
 
@@ -380,7 +373,7 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
 	struct Scsi_Host *shost;
 	int index;
 
-	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, GFP_KERNEL);
+	shost = kzalloc(sizeof(struct Scsi_Host) + privsize, 0);
 	if (!shost)
 		return NULL;
 
@@ -392,10 +385,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
 	INIT_LIST_HEAD(&shost->eh_abort_list);
 	INIT_LIST_HEAD(&shost->eh_cmd_q);
 	INIT_LIST_HEAD(&shost->starved_list);
-	init_waitqueue_head(&shost->host_wait);
+	//init_waitqueue_head(&shost->host_wait);
 	mutex_init(&shost->scan_mutex);
 
-	index = ida_simple_get(&host_index_ida, 0, 0, GFP_KERNEL);
+	index = ida_simple_get(&host_index_ida, 0, 0, 0);
 	if (index < 0) {
 		kfree(shost);
 		return NULL;
@@ -484,10 +477,10 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
 	shost->shost_dev.parent = &shost->shost_gendev;
 	shost->shost_dev.class = &shost_class;
 	dev_set_name(&shost->shost_dev, "host%d", shost->host_no);
-	shost->shost_dev.groups = sht->shost_groups;
+	//shost->shost_dev.groups = sht->shost_groups;
 
-	shost->ehandler = kthread_run(scsi_error_handler, shost,
-			"scsi_eh_%d", shost->host_no);
+	//shost->ehandler = kthread_run(scsi_error_handler, shost,
+	//		"scsi_eh_%d", shost->host_no);
 	if (IS_ERR(shost->ehandler)) {
 		shost_printk(KERN_WARNING, shost,
 			"error handler thread failed to spawn, error = %ld\n",
@@ -496,9 +489,9 @@ struct Scsi_Host *scsi_host_alloc(struct scsi_host_template *sht, int privsize)
 		goto fail;
 	}
 
-	shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
-					WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS,
-					   1, shost->host_no);
+	//shost->tmf_work_q = alloc_workqueue("scsi_tmf_%d",
+	//				WQ_UNBOUND | WQ_MEM_RECLAIM | WQ_SYSFS,
+	//				   1, shost->host_no);
 	if (!shost->tmf_work_q) {
 		shost_printk(KERN_WARNING, shost,
 			     "failed to create tmf workq\n");
@@ -569,11 +562,11 @@ EXPORT_SYMBOL(scsi_host_get);
 static bool scsi_host_check_in_flight(struct request *rq, void *data,
 				      bool reserved)
 {
-	int *count = data;
-	struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
+	//int *count = data;
+	//struct scsi_cmnd *cmd = blk_mq_rq_to_pdu(rq);
 
-	if (test_bit(SCMD_STATE_INFLIGHT, &cmd->state))
-		(*count)++;
+	//if (test_bit(SCMD_STATE_INFLIGHT, &cmd->state))
+	//	(*count)++;
 
 	return true;
 }
@@ -586,8 +579,8 @@ int scsi_host_busy(struct Scsi_Host *shost)
 {
 	int cnt = 0;
 
-	blk_mq_tagset_busy_iter(&shost->tag_set,
-				scsi_host_check_in_flight, &cnt);
+	//blk_mq_tagset_busy_iter(&shost->tag_set,
+	//			scsi_host_check_in_flight, &cnt);
 	return cnt;
 }
 EXPORT_SYMBOL(scsi_host_busy);
@@ -635,12 +628,12 @@ int scsi_queue_work(struct Scsi_Host *shost, struct work_struct *work)
 		shost_printk(KERN_ERR, shost,
 			"ERROR: Scsi host '%s' attempted to queue scsi-work, "
 			"when no workqueue created.\n", shost->hostt->name);
-		dump_stack();
+		//dump_stack();
 
 		return -EINVAL;
 	}
 
-	return queue_work(shost->work_q, work);
+	return 0; //queue_work(shost->work_q, work);
 }
 EXPORT_SYMBOL_GPL(scsi_queue_work);
 
@@ -654,17 +647,17 @@ void scsi_flush_work(struct Scsi_Host *shost)
 		shost_printk(KERN_ERR, shost,
 			"ERROR: Scsi host '%s' attempted to flush scsi-work, "
 			"when no workqueue created.\n", shost->hostt->name);
-		dump_stack();
+		//dump_stack();
 		return;
 	}
 
-	flush_workqueue(shost->work_q);
+	//flush_workqueue(shost->work_q);
 }
 EXPORT_SYMBOL_GPL(scsi_flush_work);
 
 static bool complete_all_cmds_iter(struct request *rq, void *data, bool rsvd)
 {
-	struct scsi_cmnd *scmd = blk_mq_rq_to_pdu(rq);
+	struct scsi_cmnd *scmd = NULL;//blk_mq_rq_to_pdu(rq);
 	enum scsi_host_status status = *(enum scsi_host_status *)data;
 
 	scsi_dma_unmap(scmd);
@@ -687,8 +680,8 @@ static bool complete_all_cmds_iter(struct request *rq, void *data, bool rsvd)
 void scsi_host_complete_all_commands(struct Scsi_Host *shost,
 				     enum scsi_host_status status)
 {
-	blk_mq_tagset_busy_iter(&shost->tag_set, complete_all_cmds_iter,
-				&status);
+	//blk_mq_tagset_busy_iter(&shost->tag_set, complete_all_cmds_iter,
+	//			&status);
 }
 EXPORT_SYMBOL_GPL(scsi_host_complete_all_commands);
 
@@ -700,10 +693,10 @@ struct scsi_host_busy_iter_data {
 static bool __scsi_host_busy_iter_fn(struct request *req, void *priv,
 				   bool reserved)
 {
-	struct scsi_host_busy_iter_data *iter_data = priv;
-	struct scsi_cmnd *sc = blk_mq_rq_to_pdu(req);
+	//struct scsi_host_busy_iter_data *iter_data = priv;
+	//struct scsi_cmnd *sc = blk_mq_rq_to_pdu(req);
 
-	return iter_data->fn(sc, iter_data->priv, reserved);
+	return true;//iter_data->fn(sc, iter_data->priv, reserved);
 }
 
 /**
@@ -719,12 +712,12 @@ void scsi_host_busy_iter(struct Scsi_Host *shost,
 			 bool (*fn)(struct scsi_cmnd *, void *, bool),
 			 void *priv)
 {
-	struct scsi_host_busy_iter_data iter_data = {
-		.fn = fn,
-		.priv = priv,
-	};
+	//struct scsi_host_busy_iter_data iter_data = {
+	//	.fn = fn,
+	//	.priv = priv,
+	//};
 
-	blk_mq_tagset_busy_iter(&shost->tag_set, __scsi_host_busy_iter_fn,
-				&iter_data);
+	//blk_mq_tagset_busy_iter(&shost->tag_set, __scsi_host_busy_iter_fn,
+	//			&iter_data);
 }
 EXPORT_SYMBOL_GPL(scsi_host_busy_iter);

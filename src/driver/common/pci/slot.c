@@ -6,8 +6,6 @@
  */
 
 #include <linux/kobject.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/err.h>
 #include "pci.h"
@@ -159,7 +157,7 @@ static int rename_slot(struct pci_slot *slot, const char *name)
 
 	return result;
 }
-
+#if 0
 void pci_dev_assign_slot(struct pci_dev *dev)
 {
 	struct pci_slot *slot;
@@ -170,7 +168,7 @@ void pci_dev_assign_slot(struct pci_dev *dev)
 			dev->slot = slot;
 	mutex_unlock(&pci_slot_mutex);
 }
-
+#endif
 static struct pci_slot *get_slot(struct pci_bus *parent, int slot_nr)
 {
 	struct pci_slot *slot;

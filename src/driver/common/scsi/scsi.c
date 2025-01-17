@@ -38,24 +38,17 @@
  *  out_of_space hacks, D. Gilbert (dpg) 990608
  */
 
-// #include <linux/module.h>
 #include <linux/moduleparam.h>
-// #include <linux/kernel.h>
 #include <linux/timer.h>
 #include <linux/string.h>
-// #include <linux/slab.h>
-#include <linux/blkdev.h>
 #include <linux/delay.h>
 #include <linux/init.h>
-#include <linux/completion.h>
 #include <linux/unistd.h>
-// #include <linux/spinlock.h>
-#include <linux/kmod.h>
 #include <linux/interrupt.h>
 #include <linux/notifier.h>
-#include <linux/cpu.h>
-#include <linux/mutex.h>
-#include <asm/unaligned.h>
+#include <asm-generic/unaligned.h>
+#include <linux/lynix-compat.h>
+
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
@@ -69,8 +62,7 @@
 #include "scsi_priv.h"
 #include "scsi_logging.h"
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/scsi.h>
+//#define CREATE_TRACE_POINTS
 
 /*
  * Definitions and constants.
@@ -181,6 +173,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
 				"(result %x)\n", cmd->result));
 
 	good_bytes = scsi_bufflen(cmd);
+	#if 0
 	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(cmd))) {
 		int old_good_bytes = good_bytes;
 		drv = scsi_cmd_to_driver(cmd);
@@ -195,6 +188,7 @@ void scsi_finish_command(struct scsi_cmnd *cmd)
 		if (good_bytes == old_good_bytes)
 			good_bytes -= scsi_get_resid(cmd);
 	}
+	#endif
 	scsi_io_completion(cmd, good_bytes);
 }
 
@@ -223,8 +217,8 @@ int scsi_change_queue_depth(struct scsi_device *sdev, int depth)
 		wmb();
 	}
 
-	if (sdev->request_queue)
-		blk_set_queue_depth(sdev->request_queue, depth);
+	//if (sdev->request_queue)
+	//	blk_set_queue_depth(sdev->request_queue, depth);
 
 	sbitmap_resize(&sdev->budget_map, sdev->queue_depth);
 
@@ -415,7 +409,7 @@ static void scsi_update_vpd_page(struct scsi_device *sdev, u8 page,
 	vpd_buf = scsi_get_vpd_buf(sdev, page);
 	if (!vpd_buf)
 		return;
-
+#if 0
 	mutex_lock(&sdev->inquiry_mutex);
 	vpd_buf = rcu_replace_pointer(*sdev_vpd_buf, vpd_buf,
 				      lockdep_is_held(&sdev->inquiry_mutex));
@@ -423,6 +417,7 @@ static void scsi_update_vpd_page(struct scsi_device *sdev, u8 page,
 
 	if (vpd_buf)
 		kfree_rcu(vpd_buf, rcu);
+#endif
 }
 
 /**
@@ -523,11 +518,11 @@ int scsi_device_get(struct scsi_device *sdev)
 		goto fail;
 	if (!get_device(&sdev->sdev_gendev))
 		goto fail;
-	if (!try_module_get(sdev->host->hostt->module))
-		goto fail_put_device;
+	//if (!try_module_get(sdev->host->hostt->module))
+	//	goto fail_put_device;
 	return 0;
 
-fail_put_device:
+//fail_put_device:
 	put_device(&sdev->sdev_gendev);
 fail:
 	return -ENXIO;
@@ -547,7 +542,7 @@ void scsi_device_put(struct scsi_device *sdev)
 	struct module *mod = sdev->host->hostt->module;
 
 	put_device(&sdev->sdev_gendev);
-	module_put(mod);
+	//module_put(mod);
 }
 EXPORT_SYMBOL(scsi_device_put);
 

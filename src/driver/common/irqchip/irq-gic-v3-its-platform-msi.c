@@ -4,7 +4,6 @@
  * Author: Marc Zyngier <marc.zyngier@arm.com>
  */
 
-#include <linux/acpi_iort.h>
 #include <linux/device.h>
 #include <linux/msi.h>
 #include <linux/of.h>

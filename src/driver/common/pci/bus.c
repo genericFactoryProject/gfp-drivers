@@ -6,13 +6,9 @@
  *	David Miller (davem@redhat.com)
  *	Ivan Kokshaysky (ink@jurassic.park.msu.ru)
  */
-// #include <linux/module.h>
-// #include <linux/kernel.h>
 #include <linux/pci.h>
 #include <linux/errno.h>
 #include <linux/ioport.h>
-#include <linux/proc_fs.h>
-// #include <linux/slab.h>
 
 #include "pci.h"
 

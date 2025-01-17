@@ -25,27 +25,17 @@
  * Do not depend on ABI/API stability.
  */
 
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/lynix-compat.h>
 #include <linux/pci.h>
 #include <linux/init.h>
 #include <linux/list.h>
-// #include <linux/mm.h>
-// #include <linux/spinlock.h>
-// #include <linux/blkdev.h>
 #include <linux/delay.h>
 #include <linux/timer.h>
 #include <linux/time.h>
 #include <linux/interrupt.h>
-// #include <linux/completion.h>
-// #include <linux/suspend.h>
-// #include <linux/workqueue.h>
 #include <linux/scatterlist.h>
 #include <linux/io.h>
 #include <linux/log2.h>
-// #include <linux/slab.h>
-// #include <linux/glob.h>
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
 #include <scsi/scsi_host.h>
@@ -53,15 +43,12 @@
 #include <asm/byteorder.h>
 #include <asm-generic/unaligned.h>
 #include <linux/cdrom.h>
-// #include <linux/ratelimit.h>
-// #include <linux/leds.h>
 #include <linux/pm_runtime.h>
 #include <linux/platform_device.h>
 #include <asm/setup.h>
 #include <linux/ioprio.h>
 
 // #define CREATE_TRACE_POINTS
-// #include <trace/events/libata.h>
 
 #include "libata.h"
 #include "libata-transport.h"

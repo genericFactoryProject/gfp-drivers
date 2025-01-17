@@ -9,25 +9,23 @@
 #define pr_fmt(fmt)	KBUILD_MODNAME	": " fmt
 
 #include <linux/bitops.h>
-// #include <linux/kernel.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
 #include <linux/io.h>
 #include <linux/ioport.h>
 #include <linux/irq.h>
 #include <linux/irqdomain.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
 #include <linux/of_address.h>
 #include <linux/of_platform.h>
 #include <linux/platform_device.h>
-// #include <linux/slab.h>
 #include <linux/smp.h>
 #include <linux/types.h>
 #include <linux/irqchip.h>
 #include <linux/irqchip/chained_irq.h>
 #include <linux/syscore_ops.h>
+#include <linux/lynix-compat.h>
 
 #define IRQS_PER_WORD		32
 #define REG_BYTES_PER_IRQ_WORD	(sizeof(u32) * 4)
@@ -251,7 +249,7 @@ static int __init bcm7038_l1_init_one(struct device_node *dn,
 	}
 
 	cpu = intc->cpus[idx] = kzalloc(sizeof(*cpu) + n_words * sizeof(u32),
-					GFP_KERNEL);
+					0);
 	if (!cpu)
 		return -ENOMEM;
 
@@ -402,7 +400,7 @@ static int __init bcm7038_l1_of_init(struct device_node *dn,
 	struct bcm7038_l1_chip *intc;
 	int idx, ret;
 
-	intc = kzalloc(sizeof(*intc), GFP_KERNEL);
+	intc = kzalloc(sizeof(*intc), 0);
 	if (!intc)
 		return -ENOMEM;
 

@@ -202,11 +202,6 @@ do {									\
 
 #define dev_level_ratelimited(dev_level, dev, fmt, ...)			\
 do {									\
-	static DEFINE_RATELIMIT_STATE(_rs,				\
-				      DEFAULT_RATELIMIT_INTERVAL,	\
-				      DEFAULT_RATELIMIT_BURST);		\
-	if (__ratelimit(&_rs))						\
-		dev_level(dev, fmt, ##__VA_ARGS__);			\
 } while (0)
 
 #define dev_emerg_ratelimited(dev, fmt, ...)				\

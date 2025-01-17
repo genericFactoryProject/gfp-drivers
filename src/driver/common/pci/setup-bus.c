@@ -15,14 +15,11 @@
  */
 
 #include <linux/init.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/errno.h>
 #include <linux/ioport.h>
 #include <linux/cache.h>
-// #include <linux/slab.h>
-#include <linux/acpi.h>
+#include <linux/math64.h>
 #include "pci.h"
 
 unsigned int pci_flags;
@@ -152,8 +149,8 @@ static void pdev_sort_resources(struct pci_dev *dev, struct list_head *head)
 		}
 
 		tmp = kzalloc(sizeof(*tmp), GFP_KERNEL);
-		if (!tmp)
-			panic("%s: kzalloc() failed!\n", __func__);
+		//if (!tmp)
+			//panic("%s: kzalloc() failed!\n", __func__);
 		tmp->res = r;
 		tmp->dev = dev;
 
@@ -1853,8 +1850,8 @@ void __init pci_assign_unassigned_resources(void)
 		pci_assign_unassigned_root_bus_resources(root_bus);
 
 		/* Make sure the root bridge has a companion ACPI device */
-		if (ACPI_HANDLE(root_bus->bridge))
-			acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
+		//if (ACPI_HANDLE(root_bus->bridge))
+		//	acpi_ioapic_add(ACPI_HANDLE(root_bus->bridge));
 	}
 }
 

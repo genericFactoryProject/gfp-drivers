@@ -10,14 +10,14 @@
 #ifndef _LINUX_I2C_H
 #define _LINUX_I2C_H
 
-#include <linux/acpi.h>		/* for acpi_handle */
+// //#include <linux/acpi.h>		/* for acpi_handle */
 #include <linux/bits.h>
 #include <linux/mod_devicetable.h>
 #include <linux/device.h>	/* for struct device */
-#include <linux/sched.h>	/* for completion */
-#include <linux/mutex.h>
+// #include <linux/sched.h>	/* for completion */
+// #include <linux/mutex.h>
 #include <linux/regulator/consumer.h>
-#include <linux/rtmutex.h>
+// #include <linux/rtmutex.h>
 #include <linux/irqdomain.h>		/* for Host Notify IRQ */
 #include <linux/of.h>		/* for struct device_node */
 #include <linux/swab.h>		/* for swab16 */
@@ -361,12 +361,13 @@ struct i2c_client {
 struct i2c_adapter *i2c_verify_adapter(struct device *dev);
 const struct i2c_device_id *i2c_match_id(const struct i2c_device_id *id,
 					 const struct i2c_client *client);
-
+#if 0
 static inline struct i2c_client *kobj_to_i2c_client(struct kobject *kobj)
 {
 	struct device * const dev = kobj_to_dev(kobj);
 	return to_i2c_client(dev);
 }
+#endif
 
 static inline void *i2c_get_clientdata(const struct i2c_client *client)
 {
@@ -737,7 +738,7 @@ struct i2c_adapter {
 
 	int nr;
 	char name[48];
-	struct completion dev_released;
+	// struct completion dev_released;
 
 	struct mutex userspace_clients_lock;
 	struct list_head userspace_clients;
@@ -1016,6 +1017,7 @@ static inline int of_i2c_get_board_info(struct device *dev,
 struct acpi_resource;
 struct acpi_resource_i2c_serialbus;
 
+#if 0
 #if IS_ENABLED(CONFIG_ACPI)
 bool i2c_acpi_get_i2c_resource(struct acpi_resource *ares,
 			       struct acpi_resource_i2c_serialbus **i2c);
@@ -1056,11 +1058,12 @@ static inline bool i2c_acpi_waive_d0_probe(struct device *dev)
 }
 #endif /* CONFIG_ACPI */
 
+
 static inline struct i2c_client *i2c_acpi_new_device(struct device *dev,
 						     int index,
 						     struct i2c_board_info *info)
 {
 	return i2c_acpi_new_device_by_fwnode(dev_fwnode(dev), index, info);
 }
-
+#endif
 #endif /* _LINUX_I2C_H */

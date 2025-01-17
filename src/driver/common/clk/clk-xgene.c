@@ -5,13 +5,13 @@
  * Copyright (c) 2013, Applied Micro Circuits Corporation
  * Author: Loc Ho <lho@apm.com>
  */
-// #include <linux/module.h>
-// #include <linux/spinlock.h>
 #include <linux/io.h>
 #include <linux/of.h>
 #include <linux/clkdev.h>
 #include <linux/clk-provider.h>
 #include <linux/of_address.h>
+#include <asm/div64.h>
+#include <linux/math.h>
 
 /* Register SCU_PCPPLL bit fields */
 #define N_DIV_RD(src)			((src) & 0x000001ff)
@@ -241,15 +241,17 @@ static unsigned long xgene_clk_pmd_recalc_rate(struct clk_hw *hw,
 	u64 ret, scale;
 	u32 val;
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_lock_irqsave(fd->lock, flags);
+	}
 	else
 		__acquire(fd->lock);
 
 	val = readl(fd->reg);
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_unlock_irqrestore(fd->lock, flags);
+	}
 	else
 		__release(fd->lock);
 
@@ -312,8 +314,9 @@ static int xgene_clk_pmd_set_rate(struct clk_hw *hw, unsigned long rate,
 	else
 		scale--;
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_lock_irqsave(fd->lock, flags);
+	}
 	else
 		__acquire(fd->lock);
 
@@ -322,8 +325,9 @@ static int xgene_clk_pmd_set_rate(struct clk_hw *hw, unsigned long rate,
 	val |= (scale << fd->shift);
 	writel(val, fd->reg);
 
-	if (fd->lock)
+	if (fd->lock) {
 		spin_unlock_irqrestore(fd->lock, flags);
+	}
 	else
 		__release(fd->lock);
 

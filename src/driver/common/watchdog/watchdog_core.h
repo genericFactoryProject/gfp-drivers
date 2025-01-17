@@ -24,8 +24,9 @@
  *	This material is provided "AS-IS" and at no charge.
  */
 
-#include <linux/hrtimer.h>
-#include <linux/kthread.h>
+// #include <linux/hrtimer.h>
+// #include <linux/kthread.h>
+#include <linux/ktime.h>
 
 #define MAX_DOGS	32	/* Maximum number of watchdog devices */
 
@@ -39,14 +40,14 @@
  */
 struct watchdog_core_data {
 	struct device dev;
-	struct cdev cdev;
+	// struct cdev cdev;
 	struct watchdog_device *wdd;
 	struct mutex lock;
 	ktime_t last_keepalive;
 	ktime_t last_hw_keepalive;
 	ktime_t open_deadline;
-	struct hrtimer timer;
-	struct kthread_work work;
+	//struct hrtimer timer;
+	//struct kthread_work work;
 #if IS_ENABLED(CONFIG_WATCHDOG_HRTIMER_PRETIMEOUT)
 	struct hrtimer pretimeout_timer;
 #endif

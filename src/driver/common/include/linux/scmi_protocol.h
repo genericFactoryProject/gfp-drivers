@@ -12,6 +12,7 @@
 #include <linux/device.h>
 #include <linux/notifier.h>
 #include <linux/types.h>
+#include <linux/ktime.h>
 
 #define SCMI_MAX_STR_SIZE	16
 #define SCMI_MAX_NUM_RATES	16
@@ -708,7 +709,7 @@ static inline void scmi_driver_unregister(struct scmi_driver *driver) {}
 #endif /* CONFIG_ARM_SCMI_PROTOCOL */
 
 #define scmi_register(driver) \
-	scmi_driver_register(driver, THIS_MODULE, KBUILD_MODNAME)
+	scmi_driver_register(driver, THIS_MODULE, "KBUILD_MODNAME")
 #define scmi_unregister(driver) \
 	scmi_driver_unregister(driver)
 

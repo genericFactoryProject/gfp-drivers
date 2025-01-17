@@ -19,9 +19,9 @@
 static bool force_legacy = false;
 
 #if IS_ENABLED(CONFIG_VIRTIO_PCI_LEGACY)
-module_param(force_legacy, bool, 0444);
-MODULE_PARM_DESC(force_legacy,
-		 "Force legacy mode for transitional virtio 1 devices");
+//module_param(force_legacy, bool, 0444);
+//MODULE_PARM_DESC(force_legacy,
+//		 "Force legacy mode for transitional virtio 1 devices");
 #endif
 
 /* wait for pending irq handlers */
@@ -31,10 +31,10 @@ void vp_synchronize_vectors(struct virtio_device *vdev)
 	int i;
 
 	if (vp_dev->intx_enabled)
-		synchronize_irq(vp_dev->pci_dev->irq);
+		;//synchronize_irq(vp_dev->pci_dev->irq);
 
 	for (i = 0; i < vp_dev->msix_vectors; ++i)
-		synchronize_irq(pci_irq_vector(vp_dev->pci_dev, i));
+		;//synchronize_irq(pci_irq_vector(vp_dev->pci_dev, i));
 }
 
 /* the notify function used when creating a virt queue */
@@ -112,17 +112,17 @@ static int vp_request_msix_vectors(struct virtio_device *vdev, int nvectors,
 
 	vp_dev->msix_names = kmalloc_array(nvectors,
 					   sizeof(*vp_dev->msix_names),
-					   GFP_KERNEL);
+					   0);
 	if (!vp_dev->msix_names)
 		goto error;
 	vp_dev->msix_affinity_masks
 		= kcalloc(nvectors, sizeof(*vp_dev->msix_affinity_masks),
-			  GFP_KERNEL);
+			  0);
 	if (!vp_dev->msix_affinity_masks)
 		goto error;
 	for (i = 0; i < nvectors; ++i)
 		if (!alloc_cpumask_var(&vp_dev->msix_affinity_masks[i],
-					GFP_KERNEL))
+					0))
 			goto error;
 
 	if (desc) {
@@ -178,7 +178,7 @@ static struct virtqueue *vp_setup_vq(struct virtio_device *vdev, unsigned index,
 				     u16 msix_vec)
 {
 	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
-	struct virtio_pci_vq_info *info = kmalloc(sizeof *info, GFP_KERNEL);
+	struct virtio_pci_vq_info *info = kmalloc(sizeof *info, 0);
 	struct virtqueue *vq;
 	unsigned long flags;
 
@@ -286,7 +286,7 @@ static int vp_find_vqs_msix(struct virtio_device *vdev, unsigned nvqs,
 	u16 msix_vec;
 	int i, err, nvectors, allocated_vectors, queue_idx = 0;
 
-	vp_dev->vqs = kcalloc(nvqs, sizeof(*vp_dev->vqs), GFP_KERNEL);
+	vp_dev->vqs = kcalloc(nvqs, sizeof(*vp_dev->vqs), 0);
 	if (!vp_dev->vqs)
 		return -ENOMEM;
 
@@ -357,7 +357,7 @@ static int vp_find_vqs_intx(struct virtio_device *vdev, unsigned nvqs,
 	struct virtio_pci_device *vp_dev = to_vp_device(vdev);
 	int i, err, queue_idx = 0;
 
-	vp_dev->vqs = kcalloc(nvqs, sizeof(*vp_dev->vqs), GFP_KERNEL);
+	vp_dev->vqs = kcalloc(nvqs, sizeof(*vp_dev->vqs), 0);
 	if (!vp_dev->vqs)
 		return -ENOMEM;
 
@@ -516,7 +516,7 @@ static int virtio_pci_probe(struct pci_dev *pci_dev,
 	int rc;
 
 	/* allocate our structure and fill it out */
-	vp_dev = kzalloc(sizeof(struct virtio_pci_device), GFP_KERNEL);
+	vp_dev = kzalloc(sizeof(struct virtio_pci_device), 0);
 	if (!vp_dev)
 		return -ENOMEM;
 

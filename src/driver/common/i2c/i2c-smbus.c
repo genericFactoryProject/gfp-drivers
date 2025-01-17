@@ -11,11 +11,7 @@
 #include <linux/i2c.h>
 #include <linux/i2c-smbus.h>
 #include <linux/interrupt.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/property.h>
-// #include <linux/slab.h>
-#include <linux/workqueue.h>
 
 struct i2c_smbus_alert {
 	struct work_struct	alert;
@@ -121,7 +117,7 @@ static int smbalert_probe(struct i2c_client *ara,
 	int res, irq;
 
 	alert = devm_kzalloc(&ara->dev, sizeof(struct i2c_smbus_alert),
-			     GFP_KERNEL);
+			     0);
 	if (!alert)
 		return -ENOMEM;
 
@@ -134,7 +130,7 @@ static int smbalert_probe(struct i2c_client *ara,
 			return irq;
 	}
 
-	INIT_WORK(&alert->alert, smbalert_work);
+	//INIT_WORK(&alert->alert, smbalert_work);
 	alert->ara = ara;
 
 	if (irq > 0) {
@@ -157,7 +153,7 @@ static int smbalert_remove(struct i2c_client *ara)
 {
 	struct i2c_smbus_alert *alert = i2c_get_clientdata(ara);
 
-	cancel_work_sync(&alert->alert);
+	//cancel_work_sync(&alert->alert);
 	return 0;
 }
 
@@ -192,7 +188,7 @@ int i2c_handle_smbus_alert(struct i2c_client *ara)
 {
 	struct i2c_smbus_alert *alert = i2c_get_clientdata(ara);
 
-	return schedule_work(&alert->alert);
+	return 0; //schedule_work(&alert->alert);
 }
 EXPORT_SYMBOL_GPL(i2c_handle_smbus_alert);
 
@@ -262,7 +258,7 @@ struct i2c_client *i2c_new_slave_host_notify_device(struct i2c_adapter *adapter)
 	int ret;
 
 	status = kzalloc(sizeof(struct i2c_slave_host_notify_status),
-			 GFP_KERNEL);
+			 0);
 	if (!status)
 		return ERR_PTR(-ENOMEM);
 

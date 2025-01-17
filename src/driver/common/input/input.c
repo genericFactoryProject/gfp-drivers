@@ -12,19 +12,15 @@
 #include <linux/types.h>
 #include <linux/idr.h>
 #include <linux/input/mt.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
-#include <linux/random.h>
+#include <linux/rculist.h>
+
+//#include <linux/random.h>
 #include <linux/major.h>
-#include <linux/proc_fs.h>
-#include <linux/sched.h>
-#include <linux/seq_file.h>
-#include <linux/poll.h>
 #include <linux/device.h>
-#include <linux/mutex.h>
-#include <linux/rcupdate.h>
-#include "input-compat.h"
+//#include "input-compat.h"
 #include "input-poller.h"
+
+#include <linux/lynix-compat.h>
 
 MODULE_AUTHOR("Vojtech Pavlik <vojtech@suse.cz>");
 MODULE_DESCRIPTION("Input core");
@@ -385,8 +381,8 @@ static void input_handle_event(struct input_dev *dev,
 		return;
 
 	disposition = input_get_disposition(dev, type, code, &value);
-	if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
-		add_input_randomness(type, code, value);
+	//if (disposition != INPUT_IGNORE_EVENT && type != EV_SYN)
+	//	add_input_randomness(type, code, value);
 
 	if ((disposition & INPUT_PASS_TO_DEVICE) && dev->event)
 		dev->event(dev, type, code, value);
@@ -504,7 +500,7 @@ void input_alloc_absinfo(struct input_dev *dev)
 	if (dev->absinfo)
 		return;
 
-	dev->absinfo = kcalloc(ABS_CNT, sizeof(*dev->absinfo), GFP_KERNEL);
+	dev->absinfo = kcalloc(ABS_CNT, sizeof(*dev->absinfo), 0);
 	if (!dev->absinfo) {
 		dev_err(dev->dev.parent ?: &dev->dev,
 			"%s: unable to allocate memory\n", __func__);
@@ -1214,7 +1210,7 @@ static void input_seq_print_bitmap(struct seq_file *seq, const char *name,
 static int input_devices_seq_show(struct seq_file *seq, void *v)
 {
 	struct input_dev *dev = container_of(v, struct input_dev, node);
-	const char *path = kobject_get_path(&dev->dev.kobj, GFP_KERNEL);
+	const char *path = kobject_get_path(&dev->dev.kobj, 0);
 	struct input_handle *handle;
 
 	seq_printf(seq, "I: Bus=%04x Vendor=%04x Product=%04x Version=%04x\n",
@@ -1375,7 +1371,7 @@ static inline void input_wakeup_procfs_readers(void) { }
 static inline int input_proc_init(void) { return 0; }
 static inline void input_proc_exit(void) { }
 #endif
-
+#if 0
 #define INPUT_DEV_STRING_ATTR_SHOW(name)				\
 static ssize_t input_dev_show_##name(struct device *dev,		\
 				     struct device_attribute *attr,	\
@@ -1391,6 +1387,7 @@ static DEVICE_ATTR(name, S_IRUGO, input_dev_show_##name, NULL)
 INPUT_DEV_STRING_ATTR_SHOW(name);
 INPUT_DEV_STRING_ATTR_SHOW(phys);
 INPUT_DEV_STRING_ATTR_SHOW(uniq);
+#endif
 
 static int input_print_modalias_bits(char *buf, int size,
 				     char name, unsigned long *bm,
@@ -1439,7 +1436,7 @@ static int input_print_modalias(char *buf, int size, struct input_dev *id,
 
 	return len;
 }
-
+#if 0
 static ssize_t input_dev_show_modalias(struct device *dev,
 				       struct device_attribute *attr,
 				       char *buf)
@@ -1622,6 +1619,7 @@ static const struct attribute_group *input_dev_attr_groups[] = {
 	&input_poller_attribute_group,
 	NULL
 };
+#endif
 
 static void input_dev_release(struct device *device)
 {
@@ -1634,9 +1632,9 @@ static void input_dev_release(struct device *device)
 	kfree(dev->vals);
 	kfree(dev);
 
-	module_put(THIS_MODULE);
+	//module_put(THIS_MODULE);
 }
-
+#if 0
 /*
  * Input uevent interface - loading event handlers based on
  * device bitfields.
@@ -1736,7 +1734,7 @@ static int input_dev_uevent(struct device *device, struct kobj_uevent_env *env)
 
 	return 0;
 }
-
+#endif
 #define INPUT_DO_TOGGLE(dev, type, bits, on)				\
 	do {								\
 		int i;							\
@@ -1924,9 +1922,9 @@ static const struct dev_pm_ops input_dev_pm_ops = {
 #endif /* CONFIG_PM */
 
 static const struct device_type input_dev_type = {
-	.groups		= input_dev_attr_groups,
+	//.groups		= input_dev_attr_groups,
 	.release	= input_dev_release,
-	.uevent		= input_dev_uevent,
+	//.uevent		= input_dev_uevent,
 #ifdef CONFIG_PM_SLEEP
 	.pm		= &input_dev_pm_ops,
 #endif
@@ -1934,12 +1932,12 @@ static const struct device_type input_dev_type = {
 
 static char *input_devnode(struct device *dev, umode_t *mode)
 {
-	return kasprintf(GFP_KERNEL, "input/%s", dev_name(dev));
+	return kasprintf(0, "input/%s", dev_name(dev));
 }
 
 struct class input_class = {
 	.name		= "input",
-	.devnode	= input_devnode,
+	//.devnode	= input_devnode,
 };
 EXPORT_SYMBOL_GPL(input_class);
 
@@ -1957,7 +1955,7 @@ struct input_dev *input_allocate_device(void)
 	static atomic_t input_no = ATOMIC_INIT(-1);
 	struct input_dev *dev;
 
-	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+	dev = kzalloc(sizeof(*dev), 0);
 	if (dev) {
 		dev->dev.type = &input_dev_type;
 		dev->dev.class = &input_class;
@@ -1971,7 +1969,7 @@ struct input_dev *input_allocate_device(void)
 		dev_set_name(&dev->dev, "input%lu",
 			     (unsigned long)atomic_inc_return(&input_no));
 
-		__module_get(THIS_MODULE);
+		//__module_get(THIS_MODULE);
 	}
 
 	return dev;
@@ -2023,7 +2021,7 @@ struct input_dev *devm_input_allocate_device(struct device *dev)
 	struct input_devres *devres;
 
 	devres = devres_alloc(devm_input_device_release,
-			      sizeof(*devres), GFP_KERNEL);
+			      sizeof(*devres), 0);
 	if (!devres)
 		return NULL;
 
@@ -2125,7 +2123,7 @@ void input_set_capability(struct input_dev *dev, unsigned int type, unsigned int
 	    code > input_max_code[type]) {
 		pr_err("%s: invalid code %u for type %u\n", __func__, code,
 		       type);
-		dump_stack();
+		//dump_stack();
 		return;
 	}
 
@@ -2169,7 +2167,7 @@ void input_set_capability(struct input_dev *dev, unsigned int type, unsigned int
 
 	default:
 		pr_err("%s: unknown type %u (code %u)\n", __func__, type, code);
-		dump_stack();
+		//dump_stack();
 		return;
 	}
 
@@ -2324,7 +2322,7 @@ int input_register_device(struct input_dev *dev)
 
 	if (dev->devres_managed) {
 		devres = devres_alloc(devm_input_device_unregister,
-				      sizeof(*devres), GFP_KERNEL);
+				      sizeof(*devres), 0);
 		if (!devres)
 			return -ENOMEM;
 
@@ -2345,7 +2343,7 @@ int input_register_device(struct input_dev *dev)
 		dev->hint_events_per_packet = packet_size;
 
 	dev->max_vals = dev->hint_events_per_packet + 2;
-	dev->vals = kcalloc(dev->max_vals, sizeof(*dev->vals), GFP_KERNEL);
+	dev->vals = kcalloc(dev->max_vals, sizeof(*dev->vals), 0);
 	if (!dev->vals) {
 		error = -ENOMEM;
 		goto err_devres_free;
@@ -2371,11 +2369,11 @@ int input_register_device(struct input_dev *dev)
 	if (error)
 		goto err_free_vals;
 
-	path = kobject_get_path(&dev->dev.kobj, GFP_KERNEL);
-	pr_info("%s as %s\n",
-		dev->name ? dev->name : "Unspecified device",
-		path ? path : "N/A");
-	kfree(path);
+	//path = kobject_get_path(&dev->dev.kobj, 0);
+	//pr_info("%s as %s\n",
+	//	dev->name ? dev->name : "Unspecified device",
+	//	path ? path : "N/A");
+	//kfree(path);
 
 	error = mutex_lock_interruptible(&input_mutex);
 	if (error)
@@ -2623,14 +2621,14 @@ int input_get_new_minor(int legacy_base, unsigned int legacy_num,
 		int minor = ida_simple_get(&input_ida,
 					   legacy_base,
 					   legacy_base + legacy_num,
-					   GFP_KERNEL);
+					   0);
 		if (minor >= 0 || !allow_dynamic)
 			return minor;
 	}
 
 	return ida_simple_get(&input_ida,
 			      INPUT_FIRST_DYNAMIC_DEV, INPUT_MAX_CHAR_DEVICES,
-			      GFP_KERNEL);
+			      0);
 }
 EXPORT_SYMBOL(input_get_new_minor);
 
@@ -2660,17 +2658,17 @@ static int __init input_init(void)
 	err = input_proc_init();
 	if (err)
 		goto fail1;
-
+#if 0
 	err = register_chrdev_region(MKDEV(INPUT_MAJOR, 0),
 				     INPUT_MAX_CHAR_DEVICES, "input");
 	if (err) {
 		pr_err("unable to register char major %d", INPUT_MAJOR);
 		goto fail2;
 	}
-
+#endif
 	return 0;
 
- fail2:	input_proc_exit();
+ //fail2:	input_proc_exit();
  fail1:	class_unregister(&input_class);
 	return err;
 }
@@ -2678,8 +2676,8 @@ static int __init input_init(void)
 static void __exit input_exit(void)
 {
 	input_proc_exit();
-	unregister_chrdev_region(MKDEV(INPUT_MAJOR, 0),
-				 INPUT_MAX_CHAR_DEVICES);
+	//unregister_chrdev_region(MKDEV(INPUT_MAJOR, 0),
+	//			 INPUT_MAX_CHAR_DEVICES);
 	class_unregister(&input_class);
 }
 

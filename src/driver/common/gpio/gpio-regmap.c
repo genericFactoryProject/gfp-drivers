@@ -7,8 +7,6 @@
 
 #include <linux/gpio/driver.h>
 #include <linux/gpio/regmap.h>
-// #include <linux/kernel.h>
-// #include <linux/module.h>
 #include <linux/regmap.h>
 
 struct gpio_regmap {

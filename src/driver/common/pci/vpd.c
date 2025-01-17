@@ -8,8 +8,9 @@
 #include <linux/pci.h>
 #include <linux/delay.h>
 #include <linux/export.h>
-#include <linux/sched/signal.h>
-#include <asm/unaligned.h>
+#include <linux/jiffies.h>
+#include <linux/lynix-compat.h>
+#include <asm-generic/unaligned.h>
 #include "pci.h"
 
 #define PCI_VPD_LRDT_TAG_SIZE		3
@@ -184,10 +185,10 @@ static ssize_t pci_vpd_read(struct pci_dev *dev, loff_t pos, size_t count,
 		u32 val;
 		unsigned int i, skip;
 
-		if (fatal_signal_pending(current)) {
-			ret = -EINTR;
-			break;
-		}
+		//if (fatal_signal_pending(current)) {
+		//	ret = -EINTR;
+		//	break;
+		//}
 
 		ret = pci_user_write_config_word(dev, vpd->cap + PCI_VPD_ADDR,
 						 pos & ~3);
@@ -269,7 +270,7 @@ void pci_vpd_init(struct pci_dev *dev)
 	dev->vpd.cap = pci_find_capability(dev, PCI_CAP_ID_VPD);
 	mutex_init(&dev->vpd.lock);
 }
-
+#if 0
 static ssize_t vpd_read(struct file *filp, struct kobject *kobj,
 			struct bin_attribute *bin_attr, char *buf, loff_t off,
 			size_t count)
@@ -309,7 +310,7 @@ const struct attribute_group pci_dev_vpd_attr_group = {
 	.bin_attrs = vpd_attrs,
 	.is_bin_visible = vpd_attr_is_visible,
 };
-
+#endif
 void *pci_vpd_alloc(struct pci_dev *dev, unsigned int *size)
 {
 	unsigned int len;
@@ -546,7 +547,7 @@ DECLARE_PCI_FIXUP_CLASS_EARLY(PCI_VENDOR_ID_INTEL, PCI_ANY_ID,
 static void quirk_blacklist_vpd(struct pci_dev *dev)
 {
 	dev->vpd.len = PCI_VPD_SZ_INVALID;
-	pci_warn(dev, FW_BUG "disabling VPD access (can't determine size of non-standard VPD format)\n");
+	pci_warn(dev,  "disabling VPD access (can't determine size of non-standard VPD format)\n");
 }
 DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x0060, quirk_blacklist_vpd);
 DECLARE_PCI_FIXUP_HEADER(PCI_VENDOR_ID_LSI_LOGIC, 0x007c, quirk_blacklist_vpd);

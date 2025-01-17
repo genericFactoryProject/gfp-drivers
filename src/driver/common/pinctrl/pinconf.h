@@ -65,7 +65,7 @@ static inline int pinconf_set_config(struct pinctrl_dev *pctldev, unsigned pin,
 }
 
 #endif
-
+#if 0
 #if defined(CONFIG_PINCONF) && defined(CONFIG_DEBUG_FS)
 
 void pinconf_show_map(struct seq_file *s, const struct pinctrl_map *map);
@@ -92,7 +92,7 @@ static inline void pinconf_init_device_debugfs(struct dentry *devroot,
 }
 
 #endif
-
+#endif
 /*
  * The following functions are available if the driver uses the generic
  * pin config.

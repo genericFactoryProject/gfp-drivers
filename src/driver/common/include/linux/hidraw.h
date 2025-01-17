@@ -12,7 +12,7 @@ struct hidraw {
 	unsigned int minor;
 	int exist;
 	int open;
-	wait_queue_head_t wait;
+	//wait_queue_head_t wait;
 	struct hid_device *hid;
 	struct device *dev;
 	spinlock_t list_lock;

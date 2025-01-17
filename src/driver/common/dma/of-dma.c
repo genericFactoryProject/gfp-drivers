@@ -9,9 +9,7 @@
 
 #include <linux/device.h>
 #include <linux/err.h>
-// #include <linux/module.h>
-#include <linux/mutex.h>
-// #include <linux/slab.h>
+#include <linux/lynix-compat.h>
 #include <linux/of.h>
 #include <linux/of_dma.h>
 

@@ -36,12 +36,13 @@
 #define REMOTEPROC_H
 
 #include <linux/types.h>
-#include <linux/mutex.h>
+//#include <linux/mutex.h>
 #include <linux/virtio.h>
-#include <linux/cdev.h>
-#include <linux/completion.h>
+// #include <linux/cdev.h>
+//#include <linux/completion.h>
 #include <linux/idr.h>
 #include <linux/of.h>
+#include <linux/lynix-compat.h>
 
 /**
  * struct resource_table - firmware resource table header
@@ -568,7 +569,7 @@ struct rproc {
 	int nb_vdev;
 	u8 elf_class;
 	u16 elf_machine;
-	struct cdev cdev;
+	//struct cdev cdev;
 	bool cdev_put_on_release;
 };
 

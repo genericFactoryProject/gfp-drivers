@@ -7,14 +7,10 @@
 //
 // Author: Liam Girdwood <lrg@slimlogic.co.uk>
 
-// #include <linux/kernel.h>
 #include <linux/init.h>
-#include <linux/debugfs.h>
 #include <linux/device.h>
-// #include <linux/slab.h>
 #include <linux/async.h>
 #include <linux/err.h>
-#include <linux/mutex.h>
 #include <linux/suspend.h>
 #include <linux/delay.h>
 #include <linux/gpio/consumer.h>
@@ -25,15 +21,15 @@
 #include <linux/regulator/coupler.h>
 #include <linux/regulator/driver.h>
 #include <linux/regulator/machine.h>
-// #include <linux/module.h>
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/regulator.h>
+//#define CREATE_TRACE_POINTS
+
+#include <linux/lynix-compat.h>
 
 #include "dummy.h"
 #include "internal.h"
 
-static DEFINE_WW_CLASS(regulator_ww_class);
+//static DEFINE_WW_CLASS(regulator_ww_class);
 static DEFINE_MUTEX(regulator_nesting_mutex);
 static DEFINE_MUTEX(regulator_list_mutex);
 static LIST_HEAD(regulator_map_list);
@@ -144,7 +140,7 @@ static inline int regulator_lock_nested(struct regulator_dev *rdev,
 	int ret = 0;
 
 	mutex_lock(&regulator_nesting_mutex);
-
+#if 0
 	if (!ww_mutex_trylock(&rdev->mutex, ww_ctx)) {
 		if (rdev->mutex_owner == current)
 			rdev->ref_cnt++;
@@ -164,7 +160,7 @@ static inline int regulator_lock_nested(struct regulator_dev *rdev,
 		rdev->ref_cnt++;
 		rdev->mutex_owner = current;
 	}
-
+#endif
 	mutex_unlock(&regulator_nesting_mutex);
 
 	return ret;
@@ -195,12 +191,12 @@ static void regulator_lock(struct regulator_dev *rdev)
 static void regulator_unlock(struct regulator_dev *rdev)
 {
 	mutex_lock(&regulator_nesting_mutex);
-
+#if 0
 	if (--rdev->ref_cnt == 0) {
 		rdev->mutex_owner = NULL;
 		ww_mutex_unlock(&rdev->mutex);
 	}
-
+#endif
 	WARN_ON_ONCE(rdev->ref_cnt < 0);
 
 	mutex_unlock(&regulator_nesting_mutex);
@@ -325,7 +321,7 @@ static void regulator_lock_dependent(struct regulator_dev *rdev,
 	int err;
 
 	mutex_lock(&regulator_list_mutex);
-
+#if 0
 	ww_acquire_init(ww_ctx, &regulator_ww_class);
 
 	do {
@@ -346,7 +342,7 @@ static void regulator_lock_dependent(struct regulator_dev *rdev,
 	} while (err == -EDEADLK);
 
 	ww_acquire_done(ww_ctx);
-
+#endif
 	mutex_unlock(&regulator_list_mutex);
 }
 
@@ -580,7 +576,7 @@ regulator_get_suspend_state_check(struct regulator_dev *rdev, suspend_state_t st
 
 	return rstate;
 }
-
+#if 0
 static ssize_t microvolts_show(struct device *dev,
 			       struct device_attribute *attr, char *buf)
 {
@@ -910,7 +906,7 @@ static ssize_t bypass_show(struct device *dev,
 	return sprintf(buf, "%s\n", report);
 }
 static DEVICE_ATTR_RO(bypass);
-
+#endif
 /* Calculate the new optimum regulator operating mode based on the new total
  * consumer load. All locks held by caller
  */
@@ -1573,8 +1569,8 @@ static int set_supply(struct regulator_dev *rdev,
 
 	rdev_dbg(rdev, "supplied by %s\n", rdev_get_name(supply_rdev));
 
-	if (!try_module_get(supply_rdev->owner))
-		return -ENODEV;
+	//if (!try_module_get(supply_rdev->owner))
+	//	return -ENODEV;
 
 	rdev->supply = create_regulator(supply_rdev, &rdev->dev, "SUPPLY");
 	if (rdev->supply == NULL) {
@@ -1713,7 +1709,7 @@ static ssize_t constraint_flags_read_file(struct file *file,
 }
 
 #endif
-
+#if 0
 static const struct file_operations constraint_flags_fops = {
 #ifdef CONFIG_DEBUG_FS
 	.open = simple_open,
@@ -1721,7 +1717,7 @@ static const struct file_operations constraint_flags_fops = {
 	.llseek = default_llseek,
 #endif
 };
-
+#endif
 #define REG_STR_SIZE	64
 
 static struct regulator *create_regulator(struct regulator_dev *rdev,
@@ -1735,10 +1731,10 @@ static struct regulator *create_regulator(struct regulator_dev *rdev,
 		char buf[REG_STR_SIZE];
 		int size;
 
-		size = snprintf(buf, REG_STR_SIZE, "%s-%s",
-				dev->kobj.name, supply_name);
-		if (size >= REG_STR_SIZE)
-			return NULL;
+		//size = snprintf(buf, REG_STR_SIZE, "%s-%s",
+		//		dev->kobj.name, supply_name);
+		//if (size >= REG_STR_SIZE)
+		//	return NULL;
 
 		supply_name = kstrdup(buf, GFP_KERNEL);
 		if (supply_name == NULL)
@@ -1764,7 +1760,7 @@ static struct regulator *create_regulator(struct regulator_dev *rdev,
 
 	if (dev) {
 		regulator->dev = dev;
-
+#if 0
 		/* Add a link to the device sysfs entry */
 		err = sysfs_create_link_nowarn(&rdev->dev.kobj, &dev->kobj,
 					       supply_name);
@@ -1773,8 +1769,9 @@ static struct regulator *create_regulator(struct regulator_dev *rdev,
 				  dev->kobj.name, ERR_PTR(err));
 			/* non-fatal */
 		}
+#endif
 	}
-
+#if 0
 	if (err != -EEXIST)
 		regulator->debugfs = debugfs_create_dir(supply_name, rdev->debugfs);
 	if (!regulator->debugfs) {
@@ -1790,7 +1787,7 @@ static struct regulator *create_regulator(struct regulator_dev *rdev,
 				    regulator->debugfs, regulator,
 				    &constraint_flags_fops);
 	}
-
+#endif
 	/*
 	 * Check now if the regulator is an always on regulator - if
 	 * it is then we don't need to do nearly so much work for
@@ -2113,17 +2110,17 @@ struct regulator *_regulator_get(struct device *dev, const char *id,
 		put_device(&rdev->dev);
 		return regulator;
 	}
-
+#if 0
 	if (!try_module_get(rdev->owner)) {
 		regulator = ERR_PTR(-EPROBE_DEFER);
 		put_device(&rdev->dev);
 		return regulator;
 	}
-
+#endif
 	regulator = create_regulator(rdev, dev, id);
 	if (regulator == NULL) {
 		regulator = ERR_PTR(-ENOMEM);
-		module_put(rdev->owner);
+		//module_put(rdev->owner);
 		put_device(&rdev->dev);
 		return regulator;
 	}
@@ -2222,14 +2219,14 @@ static void destroy_regulator(struct regulator *regulator)
 {
 	struct regulator_dev *rdev = regulator->rdev;
 
-	debugfs_remove_recursive(regulator->debugfs);
+	//debugfs_remove_recursive(regulator->debugfs);
 
 	if (regulator->dev) {
 		if (regulator->device_link)
 			device_link_remove(regulator->dev, &rdev->dev);
 
 		/* remove any sysfs entries */
-		sysfs_remove_link(&rdev->dev.kobj, regulator->supply_name);
+		//sysfs_remove_link(&rdev->dev.kobj, regulator->supply_name);
 	}
 
 	regulator_lock(rdev);
@@ -2251,7 +2248,7 @@ static void _regulator_put(struct regulator *regulator)
 	if (IS_ERR_OR_NULL(regulator))
 		return;
 
-	lockdep_assert_held_once(&regulator_list_mutex);
+	//lockdep_assert_held_once(&regulator_list_mutex);
 
 	/* Docs say you must disable before calling regulator_put() */
 	WARN_ON(regulator->enable_count);
@@ -2260,7 +2257,7 @@ static void _regulator_put(struct regulator *regulator)
 
 	destroy_regulator(regulator);
 
-	module_put(rdev->owner);
+	//module_put(rdev->owner);
 	put_device(&rdev->dev);
 }
 
@@ -2593,7 +2590,7 @@ static int _regulator_do_enable(struct regulator_dev *rdev)
 		delay = 0;
 	}
 
-	trace_regulator_enable(rdev_get_name(rdev));
+	//trace_regulator_enable(rdev_get_name(rdev));
 
 	if (rdev->desc->off_on_delay && rdev->last_off) {
 		/* if needed, keep a distance of off_on_delay from last time
@@ -2625,7 +2622,7 @@ static int _regulator_do_enable(struct regulator_dev *rdev)
 	 * this for bulk operations so that the regulators can ramp
 	 * together.
 	 */
-	trace_regulator_enable_delay(rdev_get_name(rdev));
+	//trace_regulator_enable_delay(rdev_get_name(rdev));
 
 	/* If poll_enabled_time is set, poll upto the delay calculated
 	 * above, delaying poll_enabled_time uS to check if the regulator
@@ -2659,7 +2656,7 @@ static int _regulator_do_enable(struct regulator_dev *rdev)
 		_regulator_enable_delay(delay);
 	}
 
-	trace_regulator_enable_complete(rdev_get_name(rdev));
+	//trace_regulator_enable_complete(rdev_get_name(rdev));
 
 	return 0;
 }
@@ -2688,7 +2685,7 @@ static int _regulator_handle_consumer_enable(struct regulator *regulator)
 {
 	struct regulator_dev *rdev = regulator->rdev;
 
-	lockdep_assert_held_once(&rdev->mutex.base);
+	////lockdep_assert_held_once(&rdev->mutex.base);
 
 	regulator->enable_count++;
 	if (regulator->uA_load && regulator->enable_count == 1)
@@ -2709,7 +2706,7 @@ static int _regulator_handle_consumer_disable(struct regulator *regulator)
 {
 	struct regulator_dev *rdev = regulator->rdev;
 
-	lockdep_assert_held_once(&rdev->mutex.base);
+	//lockdep_assert_held_once(&rdev->mutex.base);
 
 	if (!regulator->enable_count) {
 		rdev_err(rdev, "Underflow of regulator enable count\n");
@@ -2729,7 +2726,7 @@ static int _regulator_enable(struct regulator *regulator)
 	struct regulator_dev *rdev = regulator->rdev;
 	int ret;
 
-	lockdep_assert_held_once(&rdev->mutex.base);
+	//lockdep_assert_held_once(&rdev->mutex.base);
 
 	if (rdev->use_count == 0 && rdev->supply) {
 		ret = _regulator_enable(rdev->supply);
@@ -2802,12 +2799,12 @@ err_disable_supply:
 int regulator_enable(struct regulator *regulator)
 {
 	struct regulator_dev *rdev = regulator->rdev;
-	struct ww_acquire_ctx ww_ctx;
+	//struct ww_acquire_ctx ww_ctx;
 	int ret;
 
-	regulator_lock_dependent(rdev, &ww_ctx);
+	//regulator_lock_dependent(rdev, &ww_ctx);
 	ret = _regulator_enable(regulator);
-	regulator_unlock_dependent(rdev, &ww_ctx);
+	//regulator_unlock_dependent(rdev, &ww_ctx);
 
 	return ret;
 }
@@ -2817,7 +2814,7 @@ static int _regulator_do_disable(struct regulator_dev *rdev)
 {
 	int ret;
 
-	trace_regulator_disable(rdev_get_name(rdev));
+	//trace_regulator_disable(rdev_get_name(rdev));
 
 	if (rdev->ena_pin) {
 		if (rdev->ena_gpio_state) {
@@ -2836,7 +2833,7 @@ static int _regulator_do_disable(struct regulator_dev *rdev)
 	if (rdev->desc->off_on_delay)
 		rdev->last_off = ktime_get();
 
-	trace_regulator_disable_complete(rdev_get_name(rdev));
+	//trace_regulator_disable_complete(rdev_get_name(rdev));
 
 	return 0;
 }
@@ -2847,7 +2844,7 @@ static int _regulator_disable(struct regulator *regulator)
 	struct regulator_dev *rdev = regulator->rdev;
 	int ret = 0;
 
-	lockdep_assert_held_once(&rdev->mutex.base);
+	//lockdep_assert_held_once(&rdev->mutex.base);
 
 	if (WARN(rdev->use_count <= 0,
 		 "unbalanced disables for %s\n", rdev_get_name(rdev)))
@@ -2909,12 +2906,12 @@ static int _regulator_disable(struct regulator *regulator)
 int regulator_disable(struct regulator *regulator)
 {
 	struct regulator_dev *rdev = regulator->rdev;
-	struct ww_acquire_ctx ww_ctx;
+	//struct ww_acquire_ctx ww_ctx;
 	int ret;
 
-	regulator_lock_dependent(rdev, &ww_ctx);
+	//regulator_lock_dependent(rdev, &ww_ctx);
 	ret = _regulator_disable(regulator);
-	regulator_unlock_dependent(rdev, &ww_ctx);
+	//regulator_unlock_dependent(rdev, &ww_ctx);
 
 	return ret;
 }
@@ -2925,7 +2922,7 @@ static int _regulator_force_disable(struct regulator_dev *rdev)
 {
 	int ret = 0;
 
-	lockdep_assert_held_once(&rdev->mutex.base);
+	//lockdep_assert_held_once(&rdev->mutex.base);
 
 	ret = _notifier_call_chain(rdev, REGULATOR_EVENT_FORCE_DISABLE |
 			REGULATOR_EVENT_PRE_DISABLE, NULL);
@@ -2958,10 +2955,10 @@ static int _regulator_force_disable(struct regulator_dev *rdev)
 int regulator_force_disable(struct regulator *regulator)
 {
 	struct regulator_dev *rdev = regulator->rdev;
-	struct ww_acquire_ctx ww_ctx;
+	//struct ww_acquire_ctx ww_ctx;
 	int ret;
 
-	regulator_lock_dependent(rdev, &ww_ctx);
+	//regulator_lock_dependent(rdev, &ww_ctx);
 
 	ret = _regulator_force_disable(regulator->rdev);
 
@@ -2976,12 +2973,12 @@ int regulator_force_disable(struct regulator *regulator)
 	if (rdev->use_count != 0 && rdev->supply)
 		_regulator_disable(rdev->supply);
 
-	regulator_unlock_dependent(rdev, &ww_ctx);
+	//regulator_unlock_dependent(rdev, &ww_ctx);
 
 	return ret;
 }
 EXPORT_SYMBOL_GPL(regulator_force_disable);
-
+#if 0
 static void regulator_disable_work(struct work_struct *work)
 {
 	struct regulator_dev *rdev = container_of(work, struct regulator_dev,
@@ -3053,7 +3050,7 @@ int regulator_disable_deferred(struct regulator *regulator, int ms)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(regulator_disable_deferred);
-
+#endif
 static int _regulator_is_enabled(struct regulator_dev *rdev)
 {
 	/* A GPIO control always takes precedence */
@@ -3469,7 +3466,7 @@ static int _regulator_do_set_voltage(struct regulator_dev *rdev,
 	const struct regulator_ops *ops = rdev->desc->ops;
 	int old_uV = regulator_get_voltage_rdev(rdev);
 
-	trace_regulator_set_voltage(rdev_get_name(rdev), min_uV, max_uV);
+	//trace_regulator_set_voltage(rdev_get_name(rdev), min_uV, max_uV);
 
 	min_uV += rdev->constraints->uV_offset;
 	max_uV += rdev->constraints->uV_offset;
@@ -3563,7 +3560,7 @@ static int _regulator_do_set_voltage(struct regulator_dev *rdev,
 	}
 
 out:
-	trace_regulator_set_voltage_complete(rdev_get_name(rdev), best_val);
+	//trace_regulator_set_voltage_complete(rdev_get_name(rdev), best_val);
 
 	return ret;
 }
@@ -3800,7 +3797,7 @@ static int regulator_get_optimal_voltage(struct regulator_dev *rdev,
 		int tmp_min = 0;
 		int tmp_max = INT_MAX;
 
-		lockdep_assert_held_once(&c_rdevs[i]->mutex.base);
+		//lockdep_assert_held_once(&c_rdevs[i]->mutex.base);
 
 		ret = regulator_check_consumers(c_rdevs[i],
 						&tmp_min,
@@ -4026,15 +4023,15 @@ static int regulator_balance_voltage(struct regulator_dev *rdev,
  */
 int regulator_set_voltage(struct regulator *regulator, int min_uV, int max_uV)
 {
-	struct ww_acquire_ctx ww_ctx;
+	//struct ww_acquire_ctx ww_ctx;
 	int ret;
 
-	regulator_lock_dependent(regulator->rdev, &ww_ctx);
+	//regulator_lock_dependent(regulator->rdev, &ww_ctx);
 
 	ret = regulator_set_voltage_unlocked(regulator, min_uV, max_uV,
 					     PM_SUSPEND_ON);
 
-	regulator_unlock_dependent(regulator->rdev, &ww_ctx);
+	//regulator_unlock_dependent(regulator->rdev, &ww_ctx);
 
 	return ret;
 }
@@ -4106,19 +4103,19 @@ static int _regulator_set_suspend_voltage(struct regulator *regulator,
 int regulator_set_suspend_voltage(struct regulator *regulator, int min_uV,
 				  int max_uV, suspend_state_t state)
 {
-	struct ww_acquire_ctx ww_ctx;
+	//struct ww_acquire_ctx ww_ctx;
 	int ret;
 
 	/* PM_SUSPEND_ON is handled by regulator_set_voltage() */
 	if (regulator_check_states(state) || state == PM_SUSPEND_ON)
 		return -EINVAL;
 
-	regulator_lock_dependent(regulator->rdev, &ww_ctx);
+	//regulator_lock_dependent(regulator->rdev, &ww_ctx);
 
 	ret = _regulator_set_suspend_voltage(regulator, min_uV,
 					     max_uV, state);
 
-	regulator_unlock_dependent(regulator->rdev, &ww_ctx);
+	//regulator_unlock_dependent(regulator->rdev, &ww_ctx);
 
 	return ret;
 }
@@ -4347,12 +4344,12 @@ EXPORT_SYMBOL_GPL(regulator_get_voltage_rdev);
  */
 int regulator_get_voltage(struct regulator *regulator)
 {
-	struct ww_acquire_ctx ww_ctx;
+	//struct ww_acquire_ctx ww_ctx;
 	int ret;
 
-	regulator_lock_dependent(regulator->rdev, &ww_ctx);
+	//regulator_lock_dependent(regulator->rdev, &ww_ctx);
 	ret = regulator_get_voltage_rdev(regulator->rdev);
-	regulator_unlock_dependent(regulator->rdev, &ww_ctx);
+	//regulator_unlock_dependent(regulator->rdev, &ww_ctx);
 
 	return ret;
 }
@@ -4643,26 +4640,26 @@ int regulator_allow_bypass(struct regulator *regulator, bool enable)
 		rdev->bypass_count++;
 
 		if (rdev->bypass_count == rdev->open_count) {
-			trace_regulator_bypass_enable(name);
+			//trace_regulator_bypass_enable(name);
 
 			ret = rdev->desc->ops->set_bypass(rdev, enable);
 			if (ret != 0)
 				rdev->bypass_count--;
 			else
-				trace_regulator_bypass_enable_complete(name);
+				;//trace_regulator_bypass_enable_complete(name);
 		}
 
 	} else if (!enable && regulator->bypass) {
 		rdev->bypass_count--;
 
 		if (rdev->bypass_count != rdev->open_count) {
-			trace_regulator_bypass_disable(name);
+			//trace_regulator_bypass_disable(name);
 
 			ret = rdev->desc->ops->set_bypass(rdev, enable);
 			if (ret != 0)
 				rdev->bypass_count++;
 			else
-				trace_regulator_bypass_disable_complete(name);
+				;//trace_regulator_bypass_disable_complete(name);
 		}
 	}
 
@@ -4955,7 +4952,7 @@ int regulator_mode_to_status(unsigned int mode)
 	}
 }
 EXPORT_SYMBOL_GPL(regulator_mode_to_status);
-
+#if 0
 static struct attribute *regulator_dev_attrs[] = {
 	&dev_attr_name.attr,
 	&dev_attr_num_users.attr,
@@ -5062,7 +5059,7 @@ static const struct attribute_group *regulator_dev_groups[] = {
 	&regulator_dev_group,
 	NULL
 };
-
+#endif
 static void regulator_dev_release(struct device *dev)
 {
 	struct regulator_dev *rdev = dev_get_drvdata(dev);
@@ -5084,7 +5081,7 @@ static void rdev_init_debugfs(struct regulator_dev *rdev)
 			 rname);
 		rname = name;
 	}
-
+#if 0
 	rdev->debugfs = debugfs_create_dir(rname, debugfs_root);
 	if (!rdev->debugfs) {
 		rdev_warn(rdev, "Failed to create debugfs directory\n");
@@ -5097,6 +5094,7 @@ static void rdev_init_debugfs(struct regulator_dev *rdev)
 			   &rdev->open_count);
 	debugfs_create_u32("bypass_count", 0444, rdev->debugfs,
 			   &rdev->bypass_count);
+#endif
 }
 
 static int regulator_register_resolve_supply(struct device *dev, void *data)
@@ -5415,7 +5413,7 @@ regulator_register(const struct regulator_desc *regulator_desc,
 		rdev->dev.of_node = of_node_get(config->of_node);
 	}
 
-	ww_mutex_init(&rdev->mutex, &regulator_ww_class);
+	//ww_mutex_init(&rdev->mutex, &regulator_ww_class);
 	rdev->reg_data = config->driver_data;
 	rdev->owner = regulator_desc->owner;
 	rdev->desc = regulator_desc;
@@ -5428,7 +5426,7 @@ regulator_register(const struct regulator_desc *regulator_desc,
 	INIT_LIST_HEAD(&rdev->consumer_list);
 	INIT_LIST_HEAD(&rdev->list);
 	BLOCKING_INIT_NOTIFIER_HEAD(&rdev->notifier);
-	INIT_DELAYED_WORK(&rdev->disable_work, regulator_disable_work);
+	//INIT_DELAYED_WORK(&rdev->disable_work, regulator_disable_work);
 
 	/* preform any regulator specific init */
 	if (init_data && init_data->regulator_init) {
@@ -5574,11 +5572,11 @@ void regulator_unregister(struct regulator_dev *rdev)
 		regulator_put(rdev->supply);
 	}
 
-	flush_work(&rdev->disable_work.work);
+	//flush_work(&rdev->disable_work.work);
 
 	mutex_lock(&regulator_list_mutex);
 
-	debugfs_remove_recursive(rdev->debugfs);
+	//debugfs_remove_recursive(rdev->debugfs);
 	WARN_ON(rdev->open_count);
 	regulator_remove_coupling(rdev);
 	unset_regulator_supplies(rdev);
@@ -5657,7 +5655,7 @@ static const struct dev_pm_ops __maybe_unused regulator_pm_ops = {
 struct class regulator_class = {
 	.name = "regulator",
 	.dev_release = regulator_dev_release,
-	.dev_groups = regulator_dev_groups,
+	//.dev_groups = regulator_dev_groups,
 #ifdef CONFIG_PM
 	.pm = &regulator_pm_ops,
 #endif
@@ -5924,7 +5922,7 @@ static void regulator_summary_lock(struct ww_acquire_ctx *ww_ctx)
 
 	mutex_lock(&regulator_list_mutex);
 
-	ww_acquire_init(ww_ctx, &regulator_ww_class);
+	//ww_acquire_init(ww_ctx, &regulator_ww_class);
 
 	do {
 		if (new_contended_rdev) {
@@ -5989,7 +5987,7 @@ static int __init regulator_init(void)
 	int ret;
 
 	ret = class_register(&regulator_class);
-
+#if 0
 	debugfs_root = debugfs_create_dir("regulator", NULL);
 	if (!debugfs_root)
 		pr_warn("regulator: Failed to create debugfs directory\n");
@@ -6000,6 +5998,7 @@ static int __init regulator_init(void)
 
 	debugfs_create_file("regulator_summary", 0444, debugfs_root,
 			    NULL, &regulator_summary_fops);
+#endif
 #endif
 	regulator_dummy_init();
 
@@ -6076,8 +6075,8 @@ static void regulator_init_complete_work_function(struct work_struct *work)
 			      regulator_late_cleanup);
 }
 
-static DECLARE_DELAYED_WORK(regulator_init_complete_work,
-			    regulator_init_complete_work_function);
+//static DECLARE_DELAYED_WORK(regulator_init_complete_work,
+//			    regulator_init_complete_work_function);
 
 static int __init regulator_init_complete(void)
 {
@@ -6101,8 +6100,8 @@ static int __init regulator_init_complete(void)
 	 * we'd only do this on systems that need it, and a kernel
 	 * command line option might be useful.
 	 */
-	schedule_delayed_work(&regulator_init_complete_work,
-			      msecs_to_jiffies(30000));
+	//schedule_delayed_work(&regulator_init_complete_work,
+	//		      msecs_to_jiffies(30000));
 
 	return 0;
 }

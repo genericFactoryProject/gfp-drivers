@@ -33,13 +33,11 @@
 
 #include <linux/device.h>
 #include <linux/hid.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/input/mt.h>
 #include <linux/jiffies.h>
 #include <linux/string.h>
 #include <linux/timer.h>
-
+#include <linux/bitmap.h>
 
 MODULE_AUTHOR("Stephane Chatty <chatty@enac.fr>");
 MODULE_AUTHOR("Benjamin Tissoires <benjamin.tissoires@gmail.com>");
@@ -388,7 +386,7 @@ static const struct mt_class mt_classes[] = {
 	},
 	{ }
 };
-
+#if 0
 static ssize_t mt_show_quirks(struct device *dev,
 			   struct device_attribute *attr,
 			   char *buf)
@@ -433,7 +431,7 @@ static struct attribute *sysfs_attrs[] = {
 static const struct attribute_group mt_attribute_group = {
 	.attrs = sysfs_attrs
 };
-
+#endif
 static void mt_get_feature(struct hid_device *hdev, struct hid_report *report)
 {
 	int ret;
@@ -447,7 +445,7 @@ static void mt_get_feature(struct hid_device *hdev, struct hid_report *report)
 	if (hdev->quirks & HID_QUIRK_NO_INIT_REPORTS)
 		return;
 
-	buf = hid_alloc_report_buf(report, GFP_KERNEL);
+	buf = hid_alloc_report_buf(report, 0);
 	if (!buf)
 		return;
 
@@ -518,7 +516,7 @@ static struct mt_usages *mt_allocate_usage(struct hid_device *hdev,
 {
 	struct mt_usages *usage;
 
-	usage = devm_kzalloc(&hdev->dev, sizeof(*usage), GFP_KERNEL);
+	usage = devm_kzalloc(&hdev->dev, sizeof(*usage), 0);
 	if (!usage)
 		return NULL;
 
@@ -548,7 +546,7 @@ static struct mt_application *mt_allocate_application(struct mt_device *td,
 	struct mt_application *mt_application;
 
 	mt_application = devm_kzalloc(&td->hdev->dev, sizeof(*mt_application),
-				      GFP_KERNEL);
+				      0);
 	if (!mt_application)
 		return NULL;
 
@@ -605,7 +603,7 @@ static struct mt_report_data *mt_allocate_report_data(struct mt_device *td,
 	struct hid_field *field;
 	int r, n;
 
-	rdata = devm_kzalloc(&td->hdev->dev, sizeof(*rdata), GFP_KERNEL);
+	rdata = devm_kzalloc(&td->hdev->dev, sizeof(*rdata), 0);
 	if (!rdata)
 		return NULL;
 
@@ -1292,7 +1290,7 @@ static int mt_touch_input_configured(struct hid_device *hdev,
 	app->pending_palm_slots = devm_kcalloc(&hi->input->dev,
 					       BITS_TO_LONGS(td->maxcontacts),
 					       sizeof(long),
-					       GFP_KERNEL);
+					       0);
 	if (!app->pending_palm_slots)
 		return -ENOMEM;
 
@@ -1454,7 +1452,7 @@ static bool mt_need_to_apply_feature(struct hid_device *hdev,
 
 		if (cls->quirks & MT_QUIRK_FORCE_GET_FEATURE) {
 			report_len = hid_report_len(report);
-			buf = hid_alloc_report_buf(report, GFP_KERNEL);
+			buf = hid_alloc_report_buf(report, 0);
 			if (!buf) {
 				hid_err(hdev,
 					"failed to allocate buffer for report\n");
@@ -1615,7 +1613,7 @@ static int mt_input_configured(struct hid_device *hdev, struct hid_input *hi)
 	if (suffix) {
 		name = devm_kzalloc(&hi->input->dev,
 				    strlen(hdev->name) + strlen(suffix) + 2,
-				    GFP_KERNEL);
+				    0);
 		if (name) {
 			sprintf(name, "%s %s", hdev->name, suffix);
 			hi->input->name = name;
@@ -1708,7 +1706,7 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
 		}
 	}
 
-	td = devm_kzalloc(&hdev->dev, sizeof(struct mt_device), GFP_KERNEL);
+	td = devm_kzalloc(&hdev->dev, sizeof(struct mt_device), 0);
 	if (!td) {
 		dev_err(&hdev->dev, "cannot allocate multitouch data\n");
 		return -ENOMEM;
@@ -1756,12 +1754,12 @@ static int mt_probe(struct hid_device *hdev, const struct hid_device_id *id)
 	ret = hid_hw_start(hdev, HID_CONNECT_DEFAULT);
 	if (ret)
 		return ret;
-
+#if 0
 	ret = sysfs_create_group(&hdev->dev.kobj, &mt_attribute_group);
 	if (ret)
 		dev_warn(&hdev->dev, "Cannot allocate sysfs group for %s\n",
 				hdev->name);
-
+#endif
 	mt_set_modes(hdev, HID_LATENCY_NORMAL, true, true);
 
 	return 0;
@@ -1809,7 +1807,7 @@ static void mt_remove(struct hid_device *hdev)
 
 	del_timer_sync(&td->release_timer);
 
-	sysfs_remove_group(&hdev->dev.kobj, &mt_attribute_group);
+	//sysfs_remove_group(&hdev->dev.kobj, &mt_attribute_group);
 	hid_hw_stop(hdev);
 }
 

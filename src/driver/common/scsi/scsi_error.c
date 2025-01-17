@@ -15,18 +15,12 @@
  *	September 30, 2002 Mike Anderson (andmike@us.ibm.com)
  */
 
-// #include <linux/module.h>
-#include <linux/sched.h>
-// #include <linux/gfp.h>
 #include <linux/timer.h>
 #include <linux/string.h>
-// #include <linux/kernel.h>
-#include <linux/freezer.h>
-#include <linux/kthread.h>
 #include <linux/interrupt.h>
-#include <linux/blkdev.h>
 #include <linux/delay.h>
 #include <linux/jiffies.h>
+#include <linux/lynix-compat.h>
 
 #include <scsi/scsi.h>
 #include <scsi/scsi_cmnd.h>
@@ -46,9 +40,8 @@
 #include "scsi_logging.h"
 #include "scsi_transport_api.h"
 
-#include <trace/events/scsi.h>
 
-#include <asm/unaligned.h>
+#include <asm-generic/unaligned.h>
 
 /*
  * These should *probably* be handled by the host itself.
@@ -66,15 +59,15 @@ void scsi_eh_wakeup(struct Scsi_Host *shost)
 	lockdep_assert_held(shost->host_lock);
 
 	if (scsi_host_busy(shost) == shost->host_failed) {
-		trace_scsi_eh_wakeup(shost);
-		wake_up_process(shost->ehandler);
+		//trace_scsi_eh_wakeup(shost);
+		//wake_up_process(shost->ehandler);
 		SCSI_LOG_ERROR_RECOVERY(5, shost_printk(KERN_INFO, shost,
 			"Waking error handler thread\n"));
 	}
 }
 
 /**
- * scsi_schedule_eh - schedule EH for SCSI host
+ * scsi_schedule_eh - //schedule EH for SCSI host
  * @shost:	SCSI host to invoke error handling on.
  *
  * Schedule SCSI EH without scmd.
@@ -132,13 +125,13 @@ static bool scsi_eh_should_retry_cmd(struct scsi_cmnd *cmd)
 
 	return true;
 }
-
+#if 0
 /**
  * scmd_eh_abort_handler - Handle command aborts
  * @work:	command to be aborted.
  *
  * Note: this function must be called only for a command that has timed out.
- * Because the block layer marks a request as complete before it calls
+ * Because the block layer marks a request as //complete before it calls
  * scsi_times_out(), a .scsi_done() call from the LLD for a command that has
  * timed out do not have any effect. Hence it is safe to call
  * scsi_finish_command() from this function.
@@ -217,9 +210,11 @@ out:
 
 	scsi_eh_scmd_add(scmd);
 }
+#endif
+
 
 /**
- * scsi_abort_command - schedule a command abort
+ * scsi_abort_command - //schedule a command abort
  * @scmd:	scmd to abort.
  *
  * We only need to abort commands after a command timeout
@@ -238,7 +233,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
 		SCSI_LOG_ERROR_RECOVERY(3,
 			scmd_printk(KERN_INFO, scmd,
 				    "previous abort failed\n"));
-		BUG_ON(delayed_work_pending(&scmd->abort_work));
+		//BUG_ON(delayed_work_pending(&scmd->abort_work));
 		return FAILED;
 	}
 
@@ -252,7 +247,7 @@ scsi_abort_command(struct scsi_cmnd *scmd)
 	scmd->eh_eflags |= SCSI_EH_ABORT_SCHEDULED;
 	SCSI_LOG_ERROR_RECOVERY(3,
 		scmd_printk(KERN_INFO, scmd, "abort scheduled\n"));
-	queue_delayed_work(shost->tmf_work_q, &scmd->abort_work, HZ / 100);
+	//queue_delayed_work(shost->tmf_work_q, &scmd->abort_work, HZ / 100);
 	return SUCCESS;
 }
 
@@ -266,11 +261,13 @@ scsi_abort_command(struct scsi_cmnd *scmd)
  */
 static void scsi_eh_reset(struct scsi_cmnd *scmd)
 {
+	#if 0
 	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(scmd))) {
 		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
 		if (sdrv->eh_reset)
 			sdrv->eh_reset(scmd);
 	}
+	#endif
 }
 
 static void scsi_eh_inc_host_failed(struct rcu_head *head)
@@ -314,7 +311,7 @@ void scsi_eh_scmd_add(struct scsi_cmnd *scmd)
 	 */
 	call_rcu(&scmd->rcu, scsi_eh_inc_host_failed);
 }
-
+#if 0
 /**
  * scsi_times_out - Timeout function for normal scsi commands.
  * @req:	request that is timing out.
@@ -331,7 +328,7 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
 	enum blk_eh_timer_return rtn = BLK_EH_DONE;
 	struct Scsi_Host *host = scmd->device->host;
 
-	trace_scsi_dispatch_cmd_timeout(scmd);
+	//trace_scsi_dispatch_cmd_timeout(scmd);
 	scsi_log_completion(scmd, TIMEOUT_ERROR);
 
 	if (host->eh_deadline != -1 && !host->last_reset)
@@ -342,7 +339,7 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
 
 	if (rtn == BLK_EH_DONE) {
 		/*
-		 * Set the command to complete first in order to prevent a real
+		 * Set the command to //complete first in order to prevent a real
 		 * completion from releasing the command while error handling
 		 * is using it. If the command was already completed, then the
 		 * lower level driver beat the timeout handler, and it is safe
@@ -363,7 +360,7 @@ enum blk_eh_timer_return scsi_times_out(struct request *req)
 
 	return rtn;
 }
-
+#endif
 /**
  * scsi_block_when_processing_errors - Prevent cmds from being queued.
  * @sdev:	Device on which we are performing recovery.
@@ -379,7 +376,7 @@ int scsi_block_when_processing_errors(struct scsi_device *sdev)
 {
 	int online;
 
-	wait_event(sdev->host->host_wait, !scsi_host_in_recovery(sdev->host));
+	//wait_event(sdev->host->host_wait, !scsi_host_in_recovery(sdev->host));
 
 	online = scsi_device_online(sdev);
 
@@ -512,7 +509,7 @@ static void scsi_report_sense(struct scsi_device *sdev,
 
 	if (evt_type != SDEV_EVT_MAXBITS) {
 		set_bit(evt_type, sdev->pending_events);
-		schedule_work(&sdev->event_work);
+		//schedule_work(&sdev->event_work);
 	}
 }
 
@@ -821,7 +818,7 @@ void scsi_eh_done(struct scsi_cmnd *scmd)
 
 	eh_action = scmd->device->host->eh_action;
 	if (eh_action)
-		complete(eh_action);
+		;//complete(eh_action);
 }
 
 /**
@@ -1002,7 +999,7 @@ void scsi_eh_prep_cmnd(struct scsi_cmnd *scmd, struct scsi_eh_save *ses,
 	/*
 	 * We need saved copies of a number of fields - this is because
 	 * error handling may need to overwrite these with different values
-	 * to run different commands, and once error handling is complete,
+	 * to run different commands, and once error handling is //complete,
 	 * we will need to restore these values prior to running the actual
 	 * command.
 	 */
@@ -1100,7 +1097,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
 {
 	struct scsi_device *sdev = scmd->device;
 	struct Scsi_Host *shost = sdev->host;
-	DECLARE_COMPLETION_ONSTACK(done);
+	//DECLARE_COMPLETION_ONSTACK(done);
 	unsigned long timeleft = timeout, delay;
 	struct scsi_eh_save ses;
 	const unsigned long stall_for = msecs_to_jiffies(100);
@@ -1108,7 +1105,7 @@ static enum scsi_disposition scsi_send_eh_cmnd(struct scsi_cmnd *scmd,
 
 retry:
 	scsi_eh_prep_cmnd(scmd, &ses, cmnd, cmnd_size, sense_bytes);
-	shost->eh_action = &done;
+	//shost->eh_action = &done;
 
 	scsi_log_send(scmd);
 	scmd->submitter = SUBMITTED_BY_SCSI_ERROR_HANDLER;
@@ -1147,7 +1144,7 @@ retry:
 		timeleft = 0;
 		rtn = FAILED;
 	} else {
-		timeleft = wait_for_completion_timeout(&done, timeout);
+		//timeleft = wait_for_completion_timeout(&done, timeout);
 		rtn = SUCCESS;
 	}
 
@@ -1162,7 +1159,7 @@ retry:
 	/*
 	 * If there is time left scsi_eh_done got called, and we will examine
 	 * the actual status codes to see whether the command actually did
-	 * complete normally, else if we have a zero return and no time left,
+	 * //complete normally, else if we have a zero return and no time left,
 	 * the command must still be pending, so abort it and return FAILED.
 	 * If we never actually managed to issue the command, because
 	 * ->queuecommand() kept returning non zero, use the rtn = FAILED
@@ -1212,11 +1209,13 @@ static enum scsi_disposition scsi_request_sense(struct scsi_cmnd *scmd)
 static enum scsi_disposition
 scsi_eh_action(struct scsi_cmnd *scmd, enum scsi_disposition rtn)
 {
+	#if 0
 	if (!blk_rq_is_passthrough(scsi_cmd_to_rq(scmd))) {
 		struct scsi_driver *sdrv = scsi_cmd_to_driver(scmd);
 		if (sdrv->eh_action)
 			rtn = sdrv->eh_action(scmd, rtn);
 	}
+	#endif
 	return rtn;
 }
 
@@ -1774,7 +1773,7 @@ static void scsi_eh_offline_sdevs(struct list_head *work_q,
 	}
 	return;
 }
-
+#if 0
 /**
  * scsi_noretry_cmd - determine if command should be failed fast
  * @scmd:	SCSI cmd to examine.
@@ -1813,7 +1812,7 @@ check_type:
 
 	return 0;
 }
-
+#endif
 /**
  * scsi_decide_disposition - Disposition a cmd on return from LLD.
  * @scmd:	SCSI cmd to examine.
@@ -2008,7 +2007,7 @@ maybe_retry:
 
 static void eh_lock_door_done(struct request *req, blk_status_t status)
 {
-	blk_mq_free_request(req);
+	//blk_mq_free_request(req);
 }
 
 /**
@@ -2024,13 +2023,13 @@ static void eh_lock_door_done(struct request *req, blk_status_t status)
  */
 static void scsi_eh_lock_door(struct scsi_device *sdev)
 {
-	struct scsi_cmnd *scmd;
+	struct scsi_cmnd *scmd = NULL;
 	struct request *req;
 
 	req = scsi_alloc_request(sdev->request_queue, REQ_OP_DRV_IN, 0);
 	if (IS_ERR(req))
 		return;
-	scmd = blk_mq_rq_to_pdu(req);
+	//scmd = blk_mq_rq_to_pdu(req);
 
 	scmd->cmnd[0] = ALLOW_MEDIUM_REMOVAL;
 	scmd->cmnd[1] = 0;
@@ -2040,11 +2039,11 @@ static void scsi_eh_lock_door(struct scsi_device *sdev)
 	scmd->cmnd[5] = 0;
 	scmd->cmd_len = COMMAND_SIZE(scmd->cmnd[0]);
 
-	req->rq_flags |= RQF_QUIET;
-	req->timeout = 10 * HZ;
+	//req->rq_flags |= RQF_QUIET;
+	//req->timeout = 10 * HZ;
 	scmd->allowed = 5;
 
-	blk_execute_rq_nowait(req, true, eh_lock_door_done);
+	//blk_execute_rq_nowait(req, true, eh_lock_door_done);
 }
 
 /**
@@ -2086,7 +2085,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
 			BUG_ON(scsi_host_set_state(shost, SHOST_DEL));
 	spin_unlock_irqrestore(shost->host_lock, flags);
 
-	wake_up(&shost->host_wait);
+	//wake_up(&shost->host_wait);
 
 	/*
 	 * finally we need to re-initiate requests that may be pending.  we will
@@ -2102,7 +2101,7 @@ static void scsi_restart_operations(struct Scsi_Host *shost)
 	 * everything pent up since the last eh run a chance to make forward
 	 * progress before we sync again.  Either we'll immediately re-run
 	 * recovery or scsi_device_unbusy() will wake us again when these
-	 * pending commands complete.
+	 * pending commands //complete.
 	 */
 	spin_lock_irqsave(shost->host_lock, flags);
 	if (shost->host_eh_scheduled)
@@ -2237,9 +2236,9 @@ int scsi_error_handler(void *data)
 		 * should always be in a non running state before the stop
 		 * flag is checked
 		 */
-		set_current_state(TASK_INTERRUPTIBLE);
-		if (kthread_should_stop())
-			break;
+		//set_current_state(TASK_INTERRUPTIBLE);
+		//if (kthread_should_stop())
+		//	break;
 
 		if ((shost->host_failed == 0 && shost->host_eh_scheduled == 0) ||
 		    shost->host_failed != scsi_host_busy(shost)) {
@@ -2247,11 +2246,11 @@ int scsi_error_handler(void *data)
 				shost_printk(KERN_INFO, shost,
 					     "scsi_eh_%d: sleeping\n",
 					     shost->host_no));
-			schedule();
+			//schedule();
 			continue;
 		}
 
-		__set_current_state(TASK_RUNNING);
+		//__set_current_state(TASK_RUNNING);
 		SCSI_LOG_ERROR_RECOVERY(1,
 			shost_printk(KERN_INFO, shost,
 				     "scsi_eh_%d: waking up %d/%d/%d\n",
@@ -2291,7 +2290,7 @@ int scsi_error_handler(void *data)
 		if (!shost->eh_noresume)
 			scsi_autopm_put_host(shost);
 	}
-	__set_current_state(TASK_RUNNING);
+	//__set_current_state(TASK_RUNNING);
 
 	SCSI_LOG_ERROR_RECOVERY(1,
 		shost_printk(KERN_INFO, shost,
@@ -2379,15 +2378,15 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
 	struct Scsi_Host *shost = dev->host;
 	struct request *rq;
 	unsigned long flags;
-	int error = 0, val;
+	int error = 0, val = 0;
 	enum scsi_disposition rtn;
 
-	if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
-		return -EACCES;
+	//if (!capable(CAP_SYS_ADMIN) || !capable(CAP_SYS_RAWIO))
+	//	return -EACCES;
 
-	error = get_user(val, arg);
-	if (error)
-		return error;
+	//error = get_user(val, arg);
+	//if (error)
+	//	return error;
 
 	if (scsi_autopm_get_host(shost) < 0)
 		return -EIO;
@@ -2397,9 +2396,9 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
 			shost->hostt->cmd_size, GFP_KERNEL);
 	if (!rq)
 		goto out_put_autopm_host;
-	blk_rq_init(NULL, rq);
+	//blk_rq_init(NULL, rq);
 
-	scmd = (struct scsi_cmnd *)(rq + 1);
+	scmd = NULL; //(struct scsi_cmnd *)(rq + 1);
 	scsi_init_command(dev, scmd);
 
 	scmd->submitter = SUBMITTED_BY_SCSI_RESET_IOCTL;
@@ -2456,7 +2455,7 @@ scsi_ioctl_reset(struct scsi_device *dev, int __user *arg)
 		shost_printk(KERN_INFO, shost,
 			     "waking up host to restart after TMF\n"));
 
-	wake_up(&shost->host_wait);
+	//wake_up(&shost->host_wait);
 	scsi_run_host_queues(shost);
 
 	kfree(rq);

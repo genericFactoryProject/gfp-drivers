@@ -10,7 +10,8 @@
 
 #include <linux/i2c.h>
 // #include <linux/spinlock.h>
-#include <linux/workqueue.h>
+//#include <linux/workqueue.h>
+#include <linux/lynix-compat.h>
 
 
 /**

@@ -3,13 +3,13 @@
  * SCSI functions used by both the initiator and the target code.
  */
 
-// #include <linux/bug.h>
-// #include <linux/kernel.h>
 #include <linux/string.h>
 #include <linux/errno.h>
-// #include <linux/module.h>
-#include <asm/unaligned.h>
+#include <linux/lynix-compat.h>
+#include <asm-generic/unaligned.h>
 #include <scsi/scsi_common.h>
+#include <linux/export.h>
+
 
 MODULE_LICENSE("GPL v2");
 

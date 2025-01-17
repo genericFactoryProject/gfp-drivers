@@ -8,15 +8,12 @@
 #include <linux/bitfield.h>
 #include <linux/dma-mapping.h>
 #include <linux/interrupt.h>
-// #include <linux/module.h>
-#include <linux/preempt.h>
-#include <linux/highmem.h>
 #include <linux/delay.h>
-// #include <linux/slab.h>
 #include <linux/spi/spi.h>
 #include <linux/spi/spi-mem.h>
 #include <linux/string.h>
 #include <linux/of.h>
+#include <linux/time64.h>
 
 #include "spi-dw.h"
 
@@ -724,13 +721,13 @@ static int dw_spi_exec_mem_op(struct spi_mem *mem, const struct spi_mem_op *op)
 	 * manually restricting the SPI bus frequency using the
 	 * dws->max_mem_freq parameter.
 	 */
-	local_irq_save(flags);
-	preempt_disable();
+	//local_irq_save(flags);
+	//preempt_disable();
 
 	ret = dw_spi_write_then_read(dws, mem->spi);
 
-	local_irq_restore(flags);
-	preempt_enable();
+	//local_irq_restore(flags);
+	//preempt_enable();
 
 	/*
 	 * Wait for the operation being finished and check the controller

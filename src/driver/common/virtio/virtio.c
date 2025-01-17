@@ -1,15 +1,13 @@
 // SPDX-License-Identifier: GPL-2.0-only
 #include <linux/virtio.h>
-// #include <linux/spinlock.h>
 #include <linux/virtio_config.h>
-// #include <linux/module.h>
 #include <linux/idr.h>
 #include <linux/of.h>
 #include <uapi/linux/virtio_ids.h>
 
 /* Unique numbering for virtio devices. */
 static DEFINE_IDA(virtio_index_ida);
-
+#if 0
 static ssize_t device_show(struct device *_d,
 			   struct device_attribute *attr, char *buf)
 {
@@ -69,7 +67,7 @@ static struct attribute *virtio_dev_attrs[] = {
 	NULL,
 };
 ATTRIBUTE_GROUPS(virtio_dev);
-
+#endif
 static inline int virtio_id_match(const struct virtio_device *dev,
 				  const struct virtio_device_id *id)
 {
@@ -333,7 +331,7 @@ static void virtio_dev_remove(struct device *_d)
 static struct bus_type virtio_bus = {
 	.name  = "virtio",
 	.match = virtio_dev_match,
-	.dev_groups = virtio_dev_groups,
+	//.dev_groups = virtio_dev_groups,
 	.uevent = virtio_uevent,
 	.probe = virtio_dev_probe,
 	.remove = virtio_dev_remove,
@@ -413,7 +411,7 @@ int register_virtio_device(struct virtio_device *dev)
 	device_initialize(&dev->dev);
 
 	/* Assign a unique device index and hence name. */
-	err = ida_simple_get(&virtio_index_ida, 0, 0, GFP_KERNEL);
+	err = ida_simple_get(&virtio_index_ida, 0, 0, 0);
 	if (err < 0)
 		goto out;
 
@@ -543,7 +541,7 @@ EXPORT_SYMBOL_GPL(virtio_device_restore);
 static int virtio_init(void)
 {
 	if (bus_register(&virtio_bus) != 0)
-		panic("virtio bus registration failed");
+		;//panic("virtio bus registration failed");
 	return 0;
 }
 

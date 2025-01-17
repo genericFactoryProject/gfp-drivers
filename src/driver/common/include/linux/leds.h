@@ -10,13 +10,13 @@
 
 #include <dt-bindings/leds/common.h>
 #include <linux/device.h>
-#include <linux/kernfs.h>
+//#include <linux/kernfs.h>
 #include <linux/list.h>
-#include <linux/mutex.h>
-#include <linux/rwsem.h>
+//#include <linux/mutex.h>
+//#include <linux/rwsem.h>
 // #include <linux/spinlock.h>
 #include <linux/timer.h>
-#include <linux/workqueue.h>
+//#include <linux/workqueue.h>
 
 struct device;
 struct led_pattern;

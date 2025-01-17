@@ -8,13 +8,10 @@
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/export.h>
-// #include <linux/kernel.h>
 #include <linux/kref.h>
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/reset.h>
 #include <linux/reset-controller.h>
-// #include <linux/slab.h>
 
 static DEFINE_MUTEX(reset_list_mutex);
 static LIST_HEAD(reset_controller_list);
@@ -146,7 +143,7 @@ int devm_reset_controller_register(struct device *dev,
 	int ret;
 
 	rcdevp = devres_alloc(devm_reset_controller_release, sizeof(*rcdevp),
-			      GFP_KERNEL);
+			      0);
 	if (!rcdevp)
 		return -ENOMEM;
 
@@ -770,15 +767,15 @@ __reset_control_get_internal(struct reset_controller_dev *rcdev,
 		}
 	}
 
-	rstc = kzalloc(sizeof(*rstc), GFP_KERNEL);
+	rstc = kzalloc(sizeof(*rstc), 0);
 	if (!rstc)
 		return ERR_PTR(-ENOMEM);
-
+#if 0
 	if (!try_module_get(rcdev->owner)) {
 		kfree(rstc);
 		return ERR_PTR(-ENODEV);
 	}
-
+#endif
 	rstc->rcdev = rcdev;
 	list_add(&rstc->list, &rcdev->reset_control_head);
 	rstc->id = index;
@@ -796,7 +793,7 @@ static void __reset_control_release(struct kref *kref)
 
 	lockdep_assert_held(&reset_list_mutex);
 
-	module_put(rstc->rcdev->owner);
+	//module_put(rstc->rcdev->owner);
 
 	list_del(&rstc->list);
 	kfree(rstc);
@@ -1037,7 +1034,7 @@ __devm_reset_control_get(struct device *dev, const char *id, int index,
 	struct reset_control **ptr, *rstc;
 
 	ptr = devres_alloc(devm_reset_control_release, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -1074,7 +1071,7 @@ int __devm_reset_control_bulk_get(struct device *dev, int num_rstcs,
 	int ret;
 
 	ptr = devres_alloc(devm_reset_control_bulk_release, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return -ENOMEM;
 
@@ -1169,7 +1166,7 @@ of_reset_control_array_get(struct device_node *np, bool shared, bool optional,
 	if (num < 0)
 		return optional ? NULL : ERR_PTR(num);
 
-	resets = kzalloc(struct_size(resets, rstc, num), GFP_KERNEL);
+	resets = kzalloc(struct_size(resets, rstc, num), 0);
 	if (!resets)
 		return ERR_PTR(-ENOMEM);
 
@@ -1216,7 +1213,7 @@ devm_reset_control_array_get(struct device *dev, bool shared, bool optional)
 	struct reset_control **ptr, *rstc;
 
 	ptr = devres_alloc(devm_reset_control_release, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 

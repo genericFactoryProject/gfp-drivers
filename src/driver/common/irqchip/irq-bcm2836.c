@@ -5,7 +5,6 @@
  * Copyright 2015 Broadcom
  */
 
-#include <linux/cpu.h>
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #include <linux/irqchip.h>
@@ -13,7 +12,7 @@
 #include <linux/irqchip/chained_irq.h>
 #include <linux/irqchip/irq-bcm2836.h>
 
-#include <asm/exception.h>
+//#include <asm/exception.h>
 
 struct bcm2836_arm_irqchip_intc {
 	struct irq_domain *domain;
@@ -132,7 +131,7 @@ static int bcm2836_map(struct irq_domain *d, unsigned int irq,
 
 	return 0;
 }
-
+#if 0
 static void
 __exception_irq_entry bcm2836_arm_irqchip_handle_irq(struct pt_regs *regs)
 {
@@ -146,7 +145,7 @@ __exception_irq_entry bcm2836_arm_irqchip_handle_irq(struct pt_regs *regs)
 		generic_handle_domain_irq(intc.domain, hwirq);
 	}
 }
-
+#endif
 #ifdef CONFIG_SMP
 static struct irq_domain *ipi_domain;
 
@@ -269,12 +268,12 @@ static void __init bcm2836_arm_irqchip_smp_init(void)
 	irq_domain_update_bus_token(ipi_domain, DOMAIN_BUS_IPI);
 
 	base_ipi = __irq_domain_alloc_irqs(ipi_domain, -1, BITS_PER_MBOX,
-					   NUMA_NO_NODE, NULL,
+					   0, NULL,
 					   false, NULL);
 
 	if (WARN_ON(!base_ipi))
 		return;
-
+#if 0
 	set_smp_ipi_range(base_ipi, BITS_PER_MBOX);
 
 	irq_set_chained_handler_and_data(mux_irq,
@@ -284,6 +283,7 @@ static void __init bcm2836_arm_irqchip_smp_init(void)
 	cpuhp_setup_state(CPUHP_AP_IRQ_BCM2836_STARTING,
 			  "irqchip/bcm2836:starting", bcm2836_cpu_starting,
 			  bcm2836_cpu_dying);
+#endif
 }
 #else
 #define bcm2836_arm_irqchip_smp_init()	do { } while(0)
@@ -320,7 +320,7 @@ static int __init bcm2836_arm_irqchip_l1_intc_of_init(struct device_node *node,
 {
 	intc.base = of_iomap(node, 0);
 	if (!intc.base) {
-		panic("%pOF: unable to map local interrupt registers\n", node);
+		;//panic("%pOF: unable to map local interrupt registers\n", node);
 	}
 
 	bcm2835_init_local_timer_frequency();
@@ -329,13 +329,13 @@ static int __init bcm2836_arm_irqchip_l1_intc_of_init(struct device_node *node,
 					    &bcm2836_arm_irqchip_intc_ops,
 					    NULL);
 	if (!intc.domain)
-		panic("%pOF: unable to create IRQ domain\n", node);
+		;//panic("%pOF: unable to create IRQ domain\n", node);
 
 	irq_domain_update_bus_token(intc.domain, DOMAIN_BUS_WIRED);
 
 	bcm2836_arm_irqchip_smp_init();
 
-	set_handle_irq(bcm2836_arm_irqchip_handle_irq);
+	//set_handle_irq(bcm2836_arm_irqchip_handle_irq);
 	return 0;
 }
 

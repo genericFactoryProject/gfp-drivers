@@ -5,12 +5,10 @@
  * Copyright 2010-2015 Samuel Thibault <samuel.thibault@ens-lyon.org>
  */
 
-// #include <linux/kernel.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/leds.h>
 #include <linux/input.h>
+#include <linux/bitmap.h>
 
 #if IS_ENABLED(CONFIG_VT)
 #define VT_TRIGGER(_name)	.trigger = _name
@@ -95,7 +93,7 @@ static int input_leds_connect(struct input_handler *handler,
 	if (!num_leds)
 		return -ENXIO;
 
-	leds = kzalloc(struct_size(leds, leds, num_leds), GFP_KERNEL);
+	leds = kzalloc(struct_size(leds, leds, num_leds), 0);
 	if (!leds)
 		return -ENOMEM;
 
@@ -123,7 +121,7 @@ static int input_leds_connect(struct input_handler *handler,
 		led->handle = &leds->handle;
 		led->code = led_code;
 
-		led->cdev.name = kasprintf(GFP_KERNEL, "%s::%s",
+		led->cdev.name = kasprintf("%s::%s",
 					   dev_name(&dev->dev),
 					   input_led_info[led_code].name);
 		if (!led->cdev.name) {

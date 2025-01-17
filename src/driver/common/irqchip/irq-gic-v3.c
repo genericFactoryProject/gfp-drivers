@@ -6,8 +6,6 @@
 
 #define pr_fmt(fmt)	"GICv3: " fmt
 
-#include <linux/acpi.h>
-#include <linux/cpu.h>
 #include <linux/cpu_pm.h>
 #include <linux/delay.h>
 #include <linux/interrupt.h>
@@ -17,17 +15,17 @@
 #include <linux/of_irq.h>
 #include <linux/percpu.h>
 #include <linux/refcount.h>
-// #include <linux/slab.h>
-
+#include <linux/kstrtox.h>
 #include <linux/irqchip.h>
 #include <linux/irqchip/arm-gic-common.h>
 #include <linux/irqchip/arm-gic-v3.h>
 #include <linux/irqchip/irq-partition-percpu.h>
+#include <linux/sizes.h>
 
-#include <asm/cputype.h>
-#include <asm/exception.h>
-#include <asm/smp_plat.h>
-#include <asm/virt.h>
+//#include <asm/cputype.h>
+//#include <asm/exception.h>
+//#include <asm/smp_plat.h>
+//#include <asm/virt.h>
 
 #include "irq-gic-common.h"
 
@@ -213,7 +211,7 @@ static void gic_do_wait_for_rwp(void __iomem *base, u32 bit)
 	while (readl_relaxed(base + GICD_CTLR) & bit) {
 		count--;
 		if (!count) {
-			pr_err_ratelimited("RWP timeout, gone fishing\n");
+			pr_err("RWP timeout, gone fishing\n");
 			return;
 		}
 		cpu_relax();
@@ -277,7 +275,7 @@ static void gic_enable_redist(bool enable)
 		udelay(1);
 	}
 	if (!count)
-		pr_err_ratelimited("redistributor failed to %s...\n",
+		pr_err("redistributor failed to %s...\n",
 				   enable ? "wakeup" : "sleep");
 }
 
@@ -646,11 +644,11 @@ static void gic_deactivate_unhandled(u32 irqnr)
 
 static inline void gic_handle_nmi(u32 irqnr, struct pt_regs *regs)
 {
-	bool irqs_enabled = interrupts_enabled(regs);
+	bool irqs_enabled = 0;//interrupts_enabled(regs);
 	int err;
 
-	if (irqs_enabled)
-		nmi_enter();
+	//if (irqs_enabled)
+	//	nmi_enter();
 
 	if (static_branch_likely(&supports_deactivate_key))
 		gic_write_eoir(irqnr);
@@ -664,8 +662,8 @@ static inline void gic_handle_nmi(u32 irqnr, struct pt_regs *regs)
 	if (err)
 		gic_deactivate_unhandled(irqnr);
 
-	if (irqs_enabled)
-		nmi_exit();
+	//if (irqs_enabled)
+	//	nmi_exit();
 }
 
 static u32 do_read_iar(struct pt_regs *regs)
@@ -701,7 +699,7 @@ static u32 do_read_iar(struct pt_regs *regs)
 
 	return iar;
 }
-
+#if 0
 static asmlinkage void __exception_irq_entry gic_handle_irq(struct pt_regs *regs)
 {
 	u32 irqnr;
@@ -733,7 +731,7 @@ static asmlinkage void __exception_irq_entry gic_handle_irq(struct pt_regs *regs
 		gic_deactivate_unhandled(irqnr);
 	}
 }
-
+#endif
 static u32 gic_get_pribits(void)
 {
 	u32 pribits;
@@ -823,7 +821,7 @@ static void __init gic_dist_init(void)
 	 * Set all global interrupts to the boot CPU only. ARE must be
 	 * enabled.
 	 */
-	affinity = gic_mpidr_to_affinity(cpu_logical_map(smp_processor_id()));
+	affinity = 0;//gic_mpidr_to_affinity(cpu_logical_map(smp_processor_id()));
 	for (i = 32; i < GIC_LINE_NR; i++)
 		gic_write_irouter(affinity, base + GICD_IROUTER + i * 8);
 
@@ -1000,7 +998,7 @@ static void gic_cpu_sys_reg_init(void)
 
 	/* Set priority mask register */
 	if (!gic_prio_masking_enabled()) {
-		write_gicreg(DEFAULT_PMR_VALUE, ICC_PMR_EL1);
+		//write_gicreg(DEFAULT_PMR_VALUE, ICC_PMR_EL1);
 	} else if (gic_supports_nmi()) {
 		/*
 		 * Mismatch configuration with boot CPU, the system is likely
@@ -1032,7 +1030,7 @@ static void gic_cpu_sys_reg_init(void)
 		/* EOI deactivates interrupt too (mode 0) */
 		gic_write_ctlr(ICC_CTLR_EL1_EOImode_drop_dir);
 	}
-
+#if 0
 	/* Always whack Group0 before Group1 */
 	if (group0) {
 		switch(pribits) {
@@ -1065,7 +1063,7 @@ static void gic_cpu_sys_reg_init(void)
 	case 4:
 		write_gicreg(0, ICC_AP1R0_EL1);
 	}
-
+#endif
 	isb();
 
 	/* ... and let's hit the road... */
@@ -1093,7 +1091,7 @@ static void gic_cpu_sys_reg_init(void)
 	 *   - The RS field is treated as 0.
 	 */
 	if (need_rss && (!gic_data.has_rss))
-		pr_crit_once("RSS is required but GICD doesn't support it\n");
+		pr_err("RSS is required but GICD doesn't support it\n");
 }
 
 static bool gicv3_nolpi;
@@ -1233,13 +1231,13 @@ static void __init gic_smp_init(void)
 	};
 	int base_sgi;
 
-	cpuhp_setup_state_nocalls(CPUHP_AP_IRQ_GIC_STARTING,
-				  "irqchip/arm/gicv3:starting",
-				  gic_starting_cpu, NULL);
+	//cpuhp_setup_state_nocalls(CPUHP_AP_IRQ_GIC_STARTING,
+	//			  "irqchip/arm/gicv3:starting",
+	//			  gic_starting_cpu, NULL);
 
 	/* Register all 8 non-secure SGIs */
 	base_sgi = __irq_domain_alloc_irqs(gic_data.domain, -1, 8,
-					   NUMA_NO_NODE, &sgi_fwspec,
+					   0, &sgi_fwspec,
 					   false, NULL);
 	if (WARN_ON(base_sgi <= 0))
 		return;
@@ -1812,7 +1810,7 @@ static int __init gic_init_bases(void __iomem *dist_base,
 			pr_err("Failed to initialize MBIs\n");
 	}
 
-	set_handle_irq(gic_handle_irq);
+	//set_handle_irq(gic_handle_irq);
 
 	gic_update_rdist_properties();
 

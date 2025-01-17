@@ -9,9 +9,7 @@
  * should work for both hardware and software raids.
  */
 #include <linux/init.h>
-// #include <linux/module.h>
 #include <linux/list.h>
-// #include <linux/slab.h>
 #include <linux/string.h>
 #include <linux/raid_class.h>
 #include <scsi/scsi_device.h>
@@ -23,10 +21,10 @@ struct raid_internal {
 	struct raid_template r;
 	struct raid_function_template *f;
 	/* The actual attributes */
-	struct device_attribute private_attrs[RAID_NUM_ATTRS];
+	//struct device_attribute private_attrs[RAID_NUM_ATTRS];
 	/* The array of null terminated pointers to attributes
 	 * needed by scsi_sysfs.c */
-	struct device_attribute *attrs[RAID_NUM_ATTRS + 1];
+	//struct device_attribute *attrs[RAID_NUM_ATTRS + 1];
 };
 
 struct raid_component {
@@ -180,7 +178,7 @@ static ssize_t raid_show_##attr(struct device *dev, 			\
 	code								\
 	return snprintf(buf, 20, #fmt "\n", var);			\
 }
-
+#if 0
 #define raid_attr_ro_states(attr, states, code)				\
 raid_attr_show_internal(attr, %s, name,					\
 	const char *name;						\
@@ -208,7 +206,7 @@ static DEVICE_ATTR(attr, S_IRUGO, raid_show_##attr, NULL)
 raid_attr_ro_state(level);
 raid_attr_ro_fn(resync);
 raid_attr_ro_state_fn(state);
-
+#endif
 static void raid_component_release(struct device *dev)
 {
 	struct raid_component *rc =
@@ -270,15 +268,15 @@ raid_class_attach(struct raid_function_template *ft)
 
 	i->r.raid_attrs.ac.class = &raid_class.class;
 	i->r.raid_attrs.ac.match = raid_match;
-	i->r.raid_attrs.ac.attrs = &i->attrs[0];
+	//i->r.raid_attrs.ac.attrs = &i->attrs[0];
 
 	attribute_container_register(&i->r.raid_attrs.ac);
 
-	i->attrs[count++] = &dev_attr_level;
-	i->attrs[count++] = &dev_attr_resync;
-	i->attrs[count++] = &dev_attr_state;
+	//i->attrs[count++] = &dev_attr_level;
+	//i->attrs[count++] = &dev_attr_resync;
+	//i->attrs[count++] = &dev_attr_state;
 
-	i->attrs[count] = NULL;
+	//i->attrs[count] = NULL;
 	BUG_ON(count > RAID_NUM_ATTRS);
 
 	return &i->r;

@@ -133,7 +133,7 @@ static inline s64 ktime_divns(const ktime_t kt, s64 div)
 	 * Negative divisors could cause an inf loop,
 	 * so bug out here.
 	 */
-	BUG_ON(div < 0);
+	//BUG_ON(div < 0);
 	if (__builtin_constant_p(div) && !(div >> 32)) {
 		s64 ns = kt;
 		u64 tmp = ns < 0 ? -ns : ns;

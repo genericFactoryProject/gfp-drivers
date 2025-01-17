@@ -10,13 +10,10 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-// #include <linux/module.h>
 #include <linux/of.h>
 #include <linux/rtc.h>
 #include <linux/kdev_t.h>
 #include <linux/idr.h>
-// #include <linux/slab.h>
-#include <linux/workqueue.h>
 
 #include "rtc-core.h"
 
@@ -34,7 +31,7 @@ static void rtc_device_release(struct device *dev)
 		timerqueue_del(head, node);
 	mutex_unlock(&rtc->ops_lock);
 
-	cancel_work_sync(&rtc->irqwork);
+	//cancel_work_sync(&rtc->irqwork);
 
 	ida_simple_remove(&rtc_ida, rtc->id);
 	mutex_destroy(&rtc->ops_lock);
@@ -204,7 +201,7 @@ static struct rtc_device *rtc_allocate_device(void)
 {
 	struct rtc_device *rtc;
 
-	rtc = kzalloc(sizeof(*rtc), GFP_KERNEL);
+	rtc = kzalloc(sizeof(*rtc), 0);
 	if (!rtc)
 		return NULL;
 
@@ -221,23 +218,23 @@ static struct rtc_device *rtc_allocate_device(void)
 	rtc->irq_freq = 1;
 	rtc->max_user_freq = 64;
 	rtc->dev.class = rtc_class;
-	rtc->dev.groups = rtc_get_dev_attribute_groups();
+	//rtc->dev.groups = rtc_get_dev_attribute_groups();
 	rtc->dev.release = rtc_device_release;
 
 	mutex_init(&rtc->ops_lock);
 	spin_lock_init(&rtc->irq_lock);
-	init_waitqueue_head(&rtc->irq_queue);
+	//init_waitqueue_head(&rtc->irq_queue);
 
 	/* Init timerqueue */
 	timerqueue_init_head(&rtc->timerqueue);
-	INIT_WORK(&rtc->irqwork, rtc_timer_do_work);
+	//INIT_WORK(&rtc->irqwork, rtc_timer_do_work);
 	/* Init aie timer */
 	rtc_timer_init(&rtc->aie_timer, rtc_aie_update_irq, rtc);
 	/* Init uie timer */
 	rtc_timer_init(&rtc->uie_rtctimer, rtc_uie_update_irq, rtc);
 	/* Init pie timer */
-	hrtimer_init(&rtc->pie_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
-	rtc->pie_timer.function = rtc_pie_update_irq;
+	//hrtimer_init(&rtc->pie_timer, CLOCK_MONOTONIC, HRTIMER_MODE_REL);
+	//rtc->pie_timer.function = rtc_pie_update_irq;
 	rtc->pie_enabled = 0;
 
 	set_bit(RTC_FEATURE_ALARM, rtc->features);
@@ -256,13 +253,13 @@ static int rtc_device_get_id(struct device *dev)
 		of_id = of_alias_get_id(dev->parent->of_node, "rtc");
 
 	if (of_id >= 0) {
-		id = ida_simple_get(&rtc_ida, of_id, of_id + 1, GFP_KERNEL);
+		id = ida_simple_get(&rtc_ida, of_id, of_id + 1, 0);
 		if (id < 0)
 			dev_warn(dev, "/aliases ID %d not available\n", of_id);
 	}
 
 	if (id < 0)
-		id = ida_simple_get(&rtc_ida, 0, 0, GFP_KERNEL);
+		id = ida_simple_get(&rtc_ida, 0, 0, 0);
 
 	return id;
 }
@@ -344,8 +341,8 @@ static void devm_rtc_unregister_device(void *data)
 	 * letting any rtc_class_open() users access it again
 	 */
 	rtc_proc_del_device(rtc);
-	if (!test_bit(RTC_NO_CDEV, &rtc->flags))
-		cdev_device_del(&rtc->char_dev, &rtc->dev);
+	//if (!test_bit(RTC_NO_CDEV, &rtc->flags))
+	//	cdev_device_del(&rtc->char_dev, &rtc->dev);
 	rtc->ops = NULL;
 	mutex_unlock(&rtc->ops_lock);
 }
@@ -411,7 +408,7 @@ int __devm_rtc_register_device(struct module *owner, struct rtc_device *rtc)
 		rtc_initialize_alarm(rtc, &alrm);
 
 	rtc_dev_prepare(rtc);
-
+#if 0
 	err = cdev_device_add(&rtc->char_dev, &rtc->dev);
 	if (err) {
 		set_bit(RTC_NO_CDEV, &rtc->flags);
@@ -421,7 +418,7 @@ int __devm_rtc_register_device(struct module *owner, struct rtc_device *rtc)
 		dev_dbg(rtc->dev.parent, "char device (%d:%d)\n",
 			MAJOR(rtc->dev.devt), rtc->id);
 	}
-
+#endif
 	rtc_proc_add_device(rtc);
 
 	dev_info(rtc->dev.parent, "registered as %s\n",
@@ -475,7 +472,7 @@ EXPORT_SYMBOL_GPL(devm_rtc_device_register);
 
 static int __init rtc_init(void)
 {
-	rtc_class = class_create(THIS_MODULE, "rtc");
+	rtc_class = class_create("rtc");
 	if (IS_ERR(rtc_class)) {
 		pr_err("couldn't create class\n");
 		return PTR_ERR(rtc_class);

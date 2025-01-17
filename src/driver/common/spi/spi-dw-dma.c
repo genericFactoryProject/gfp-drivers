@@ -5,12 +5,10 @@
  * Copyright (c) 2009, 2014 Intel Corporation.
  */
 
-#include <linux/completion.h>
 #include <linux/dma-mapping.h>
 #include <linux/dmaengine.h>
 #include <linux/irqreturn.h>
 #include <linux/jiffies.h>
-// #include <linux/module.h>
 #include <linux/pci.h>
 #include <linux/platform_data/dma-dw.h>
 #include <linux/spi/spi.h>
@@ -122,7 +120,7 @@ static int dw_spi_dma_init_mfld(struct device *dev, struct dw_spi *dws)
 	dws->master->dma_rx = dws->rxchan;
 	dws->master->dma_tx = dws->txchan;
 
-	init_completion(&dws->dma_completion);
+	//init_completion(&dws->dma_completion);
 
 	dw_spi_dma_maxburst_init(dws);
 
@@ -153,7 +151,7 @@ static int dw_spi_dma_init_generic(struct device *dev, struct dw_spi *dws)
 	dws->master->dma_rx = dws->rxchan;
 	dws->master->dma_tx = dws->txchan;
 
-	init_completion(&dws->dma_completion);
+	//init_completion(&dws->dma_completion);
 
 	dw_spi_dma_maxburst_init(dws);
 
@@ -179,7 +177,7 @@ static irqreturn_t dw_spi_dma_transfer_handler(struct dw_spi *dws)
 {
 	dw_spi_check_status(dws, false);
 
-	complete(&dws->dma_completion);
+	//complete(&dws->dma_completion);
 
 	return IRQ_HANDLED;
 }
@@ -213,8 +211,8 @@ static int dw_spi_dma_wait(struct dw_spi *dws, unsigned int len, u32 speed)
 	if (ms > UINT_MAX)
 		ms = UINT_MAX;
 
-	ms = wait_for_completion_timeout(&dws->dma_completion,
-					 msecs_to_jiffies(ms));
+	//ms = wait_for_completion_timeout(&dws->dma_completion,
+	///				 msecs_to_jiffies(ms));
 
 	if (ms == 0) {
 		dev_err(&dws->master->cur_msg->spi->dev,
@@ -264,7 +262,7 @@ static void dw_spi_dma_tx_done(void *arg)
 	if (test_bit(DW_SPI_RX_BUSY, &dws->dma_chan_busy))
 		return;
 
-	complete(&dws->dma_completion);
+	//complete(&dws->dma_completion);
 }
 
 static int dw_spi_dma_config_tx(struct dw_spi *dws)
@@ -365,7 +363,7 @@ static void dw_spi_dma_rx_done(void *arg)
 	if (test_bit(DW_SPI_TX_BUSY, &dws->dma_chan_busy))
 		return;
 
-	complete(&dws->dma_completion);
+	//complete(&dws->dma_completion);
 }
 
 static int dw_spi_dma_config_rx(struct dw_spi *dws)
@@ -442,7 +440,7 @@ static int dw_spi_dma_setup(struct dw_spi *dws, struct spi_transfer *xfer)
 		imr |= DW_SPI_INT_RXUI | DW_SPI_INT_RXOI;
 	dw_spi_umask_intr(dws, imr);
 
-	reinit_completion(&dws->dma_completion);
+	//reinit_completion(&dws->dma_completion);
 
 	dws->transfer_handler = dw_spi_dma_transfer_handler;
 
@@ -568,7 +566,7 @@ static int dw_spi_dma_transfer_one(struct dw_spi *dws,
 		if (ret)
 			break;
 
-		reinit_completion(&dws->dma_completion);
+		//reinit_completion(&dws->dma_completion);
 
 		sg_dma_address(&tx_tmp) += len;
 		sg_dma_address(&rx_tmp) += len;

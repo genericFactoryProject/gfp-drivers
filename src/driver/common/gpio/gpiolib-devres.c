@@ -6,12 +6,10 @@
  * Copyright (c) 2011 John Crispin <john@phrozen.org>
  */
 
-// #include <linux/module.h>
 #include <linux/err.h>
 #include <linux/gpio.h>
 #include <linux/gpio/consumer.h>
 #include <linux/device.h>
-// #include <linux/gfp.h>
 
 #include "gpiolib.h"
 
@@ -116,7 +114,7 @@ struct gpio_desc *__must_check devm_gpiod_get_index(struct device *dev,
 	}
 
 	dr = devres_alloc(devm_gpiod_release, sizeof(struct gpio_desc *),
-			  GFP_KERNEL);
+			  0);
 	if (!dr) {
 		gpiod_put(desc);
 		return ERR_PTR(-ENOMEM);
@@ -171,7 +169,7 @@ struct gpio_desc *devm_gpiod_get_from_of_node(struct device *dev,
 	}
 
 	dr = devres_alloc(devm_gpiod_release, sizeof(struct gpio_desc *),
-			  GFP_KERNEL);
+			  0);
 	if (!dr) {
 		gpiod_put(desc);
 		return ERR_PTR(-ENOMEM);
@@ -209,7 +207,7 @@ struct gpio_desc *devm_fwnode_gpiod_get_index(struct device *dev,
 	struct gpio_desc *desc;
 
 	dr = devres_alloc(devm_gpiod_release, sizeof(struct gpio_desc *),
-			  GFP_KERNEL);
+			  0);
 	if (!dr)
 		return ERR_PTR(-ENOMEM);
 
@@ -271,7 +269,7 @@ struct gpio_descs *__must_check devm_gpiod_get_array(struct device *dev,
 	struct gpio_descs *descs;
 
 	dr = devres_alloc(devm_gpiod_release_array,
-			  sizeof(struct gpio_descs *), GFP_KERNEL);
+			  sizeof(struct gpio_descs *), 0);
 	if (!dr)
 		return ERR_PTR(-ENOMEM);
 
@@ -412,7 +410,7 @@ int devm_gpio_request(struct device *dev, unsigned gpio, const char *label)
 	unsigned *dr;
 	int rc;
 
-	dr = devres_alloc(devm_gpio_release, sizeof(unsigned), GFP_KERNEL);
+	dr = devres_alloc(devm_gpio_release, sizeof(unsigned), 0);
 	if (!dr)
 		return -ENOMEM;
 
@@ -442,7 +440,7 @@ int devm_gpio_request_one(struct device *dev, unsigned gpio,
 	unsigned *dr;
 	int rc;
 
-	dr = devres_alloc(devm_gpio_release, sizeof(unsigned), GFP_KERNEL);
+	dr = devres_alloc(devm_gpio_release, sizeof(unsigned), 0);
 	if (!dr)
 		return -ENOMEM;
 

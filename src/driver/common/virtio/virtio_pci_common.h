@@ -27,7 +27,8 @@
 #include <linux/virtio_pci.h>
 #include <linux/virtio_pci_legacy.h>
 #include <linux/virtio_pci_modern.h>
-#include <linux/highmem.h>
+
+//#include <linux/highmem.h>
 // #include <linux/spinlock.h>
 
 struct virtio_pci_vq_info {

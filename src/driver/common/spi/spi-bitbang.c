@@ -3,14 +3,10 @@
  * polling/bitbanging SPI master controller driver utilities
  */
 
-// #include <linux/spinlock.h>
-#include <linux/workqueue.h>
 #include <linux/interrupt.h>
-// #include <linux/module.h>
 #include <linux/delay.h>
 #include <linux/errno.h>
 #include <linux/platform_device.h>
-// #include <linux/slab.h>
 
 #include <linux/spi/spi.h>
 #include <linux/spi/spi_bitbang.h>

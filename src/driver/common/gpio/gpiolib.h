@@ -14,7 +14,7 @@
 #include <linux/err.h>
 #include <linux/device.h>
 // #include <linux/module.h>
-#include <linux/cdev.h>
+// #include <linux/cdev.h>
 
 #define GPIOCHIP_NAME	"gpiochip"
 
@@ -49,7 +49,7 @@
 struct gpio_device {
 	int			id;
 	struct device		dev;
-	struct cdev		chrdev;
+	// struct cdev		chrdev;
 	struct device		*mockdev;
 	struct module		*owner;
 	struct gpio_chip	*chip;

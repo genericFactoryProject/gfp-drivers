@@ -16,18 +16,12 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-#include <linux/debugfs.h>
-#include <linux/seq_file.h>
 #include <linux/kfifo.h>
-#include <linux/sched/signal.h>
 #include <linux/export.h>
-// #include <linux/slab.h>
-#include <linux/uaccess.h>
-#include <linux/poll.h>
 
 #include <linux/hid.h>
 #include <linux/hid-debug.h>
-
+#if 0
 static struct dentry *hid_debug_root;
 
 struct hid_usage_entry {
@@ -1267,3 +1261,4 @@ void hid_debug_exit(void)
 {
 	debugfs_remove_recursive(hid_debug_root);
 }
+#endif

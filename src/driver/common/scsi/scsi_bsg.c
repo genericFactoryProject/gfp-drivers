@@ -12,6 +12,7 @@
 static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
 		fmode_t mode, unsigned int timeout)
 {
+#if 0
 	struct scsi_cmnd *scmd;
 	struct request *rq;
 	struct bio *bio;
@@ -48,10 +49,10 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
 	ret = 0;
 	if (hdr->dout_xfer_len) {
 		ret = blk_rq_map_user(rq->q, rq, NULL, uptr64(hdr->dout_xferp),
-				hdr->dout_xfer_len, GFP_KERNEL);
+				hdr->dout_xfer_len, 0);
 	} else if (hdr->din_xfer_len) {
 		ret = blk_rq_map_user(rq->q, rq, NULL, uptr64(hdr->din_xferp),
-				hdr->din_xfer_len, GFP_KERNEL);
+				hdr->din_xfer_len, 0);
 	}
 
 	if (ret)
@@ -94,6 +95,8 @@ static int scsi_bsg_sg_io_fn(struct request_queue *q, struct sg_io_v4 *hdr,
 out_put_request:
 	blk_mq_free_request(rq);
 	return ret;
+#endif
+	return 0;
 }
 
 struct bsg_device *scsi_bsg_register_queue(struct scsi_device *sdev)

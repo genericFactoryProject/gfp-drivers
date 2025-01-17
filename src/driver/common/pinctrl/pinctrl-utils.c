@@ -21,10 +21,9 @@
  */
 #include <linux/device.h>
 #include <linux/export.h>
-// #include <linux/kernel.h>
 #include <linux/pinctrl/pinctrl.h>
 #include <linux/of.h>
-// #include <linux/slab.h>
+#include <linux/lynix-compat.h>
 #include "core.h"
 #include "pinctrl-utils.h"
 
@@ -39,7 +38,7 @@ int pinctrl_utils_reserve_map(struct pinctrl_dev *pctldev,
 	if (old_num >= new_num)
 		return 0;
 
-	new_map = krealloc_array(*map, new_num, sizeof(*new_map), GFP_KERNEL);
+	new_map = NULL;//krealloc_array(*map, new_num, sizeof(*new_map), 0);
 	if (!new_map) {
 		dev_err(pctldev->dev, "krealloc(map) failed\n");
 		return -ENOMEM;
@@ -82,7 +81,7 @@ int pinctrl_utils_add_map_configs(struct pinctrl_dev *pctldev,
 		return -ENOSPC;
 
 	dup_configs = kmemdup(configs, num_configs * sizeof(*dup_configs),
-			      GFP_KERNEL);
+			      0);
 	if (!dup_configs)
 		return -ENOMEM;
 
@@ -104,8 +103,8 @@ int pinctrl_utils_add_config(struct pinctrl_dev *pctldev,
 	unsigned new_num = old_num + 1;
 	unsigned long *new_configs;
 
-	new_configs = krealloc(*configs, sizeof(*new_configs) * new_num,
-			       GFP_KERNEL);
+	new_configs = NULL; //krealloc(*configs, sizeof(*new_configs) * new_num,
+			       //0);
 	if (!new_configs) {
 		dev_err(pctldev->dev, "krealloc(configs) failed\n");
 		return -ENOMEM;

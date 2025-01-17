@@ -9,7 +9,6 @@
 #include <linux/device.h>
 #include <linux/err.h>
 #include <linux/of.h>
-// #include <linux/module.h>
 #include <linux/scmi_protocol.h>
 #include <asm/div64.h>
 
@@ -193,7 +192,7 @@ static int scmi_clocks_probe(struct scmi_device *sdev)
 	}
 
 	clk_data = devm_kzalloc(dev, struct_size(clk_data, hws, count),
-				GFP_KERNEL);
+				0);
 	if (!clk_data)
 		return -ENOMEM;
 
@@ -206,7 +205,7 @@ static int scmi_clocks_probe(struct scmi_device *sdev)
 		struct scmi_clk *sclk;
 		const struct clk_ops *scmi_ops;
 
-		sclk = devm_kzalloc(dev, sizeof(*sclk), GFP_KERNEL);
+		sclk = devm_kzalloc(dev, sizeof(*sclk), 0);
 		if (!sclk)
 			return -ENOMEM;
 

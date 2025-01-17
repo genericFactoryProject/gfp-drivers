@@ -7,16 +7,13 @@
  * Author: Richard Purdie <rpurdie@openedhand.com>
  */
 
-// #include <linux/kernel.h>
 #include <linux/leds.h>
 #include <linux/list.h>
-// #include <linux/module.h>
-#include <linux/mutex.h>
 #include <linux/of.h>
 #include <linux/property.h>
-#include <linux/rwsem.h>
-// #include <linux/slab.h>
 #include <uapi/linux/uleds.h>
+#include <linux/lynix-compat.h>
+
 #include "leds.h"
 
 DECLARE_RWSEM(leds_list_lock);
@@ -188,7 +185,7 @@ static void led_blink_setup(struct led_classdev *led_cdev,
 
 void led_init_core(struct led_classdev *led_cdev)
 {
-	INIT_WORK(&led_cdev->set_brightness_work, set_brightness_delayed);
+	//INIT_WORK(&led_cdev->set_brightness_work, set_brightness_delayed);
 
 	timer_setup(&led_cdev->blink_timer, led_timer_function, 0);
 }
@@ -252,7 +249,7 @@ void led_set_brightness(struct led_classdev *led_cdev, unsigned int brightness)
 		 */
 		if (!brightness) {
 			set_bit(LED_BLINK_DISABLE, &led_cdev->work_flags);
-			schedule_work(&led_cdev->set_brightness_work);
+			//schedule_work(&led_cdev->set_brightness_work);
 		} else {
 			set_bit(LED_BLINK_BRIGHTNESS_CHANGE,
 				&led_cdev->work_flags);
@@ -273,7 +270,7 @@ void led_set_brightness_nopm(struct led_classdev *led_cdev, unsigned int value)
 
 	/* If brightness setting can sleep, delegate it to a work queue task */
 	led_cdev->delayed_set_value = value;
-	schedule_work(&led_cdev->set_brightness_work);
+	//schedule_work(&led_cdev->set_brightness_work);
 }
 EXPORT_SYMBOL_GPL(led_set_brightness_nopm);
 

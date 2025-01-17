@@ -10,12 +10,9 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-#include <linux/cpu.h>
-#include <linux/cpufreq.h>
 #include <linux/err.h>
 #include <linux/errno.h>
 #include <linux/export.h>
-// #include <linux/slab.h>
 
 #include "opp.h"
 
@@ -116,7 +113,7 @@ void _dev_pm_opp_cpumask_remove_table(const struct cpumask *cpumask,
 	for_each_cpu(cpu, cpumask) {
 		if (cpu == last_cpu)
 			break;
-
+#if 0
 		cpu_dev = get_cpu_device(cpu);
 		if (!cpu_dev) {
 			pr_err("%s: failed to get cpu%d device\n", __func__,
@@ -125,6 +122,7 @@ void _dev_pm_opp_cpumask_remove_table(const struct cpumask *cpumask,
 		}
 
 		dev_pm_opp_remove_table(cpu_dev);
+#endif
 	}
 }
 
@@ -168,7 +166,7 @@ int dev_pm_opp_set_sharing_cpus(struct device *cpu_dev,
 		if (cpu == cpu_dev->id)
 			continue;
 
-		dev = get_cpu_device(cpu);
+		dev = NULL; //get_cpu_device(cpu);
 		if (!dev) {
 			dev_err(cpu_dev, "%s: failed to get cpu%d device\n",
 				__func__, cpu);

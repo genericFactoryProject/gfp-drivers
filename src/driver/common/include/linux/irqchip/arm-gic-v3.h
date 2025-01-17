@@ -599,7 +599,7 @@
 #define ICC_SGI1R_AFFINITY_3_SHIFT	48
 #define ICC_SGI1R_AFFINITY_3_MASK	(0xffULL << ICC_SGI1R_AFFINITY_3_SHIFT)
 
-#include <asm/arch_gicv3.h>
+// #include <asm/arch_gicv3.h>
 
 #ifndef __ASSEMBLY__
 
@@ -643,13 +643,13 @@ static inline bool gic_enable_sre(void)
 {
 	u32 val;
 
-	val = gic_read_sre();
+	val = 0;//gic_read_sre();
 	if (val & ICC_SRE_EL1_SRE)
 		return true;
 
 	val |= ICC_SRE_EL1_SRE;
-	gic_write_sre(val);
-	val = gic_read_sre();
+	//gic_write_sre(val);
+	//val = gic_read_sre();
 
 	return !!(val & ICC_SRE_EL1_SRE);
 }

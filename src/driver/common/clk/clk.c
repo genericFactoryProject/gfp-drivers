@@ -9,18 +9,15 @@
 #include <linux/clk.h>
 #include <linux/clk-provider.h>
 #include <linux/clk/clk-conf.h>
-// #include <linux/module.h>
-#include <linux/mutex.h>
-// #include <linux/spinlock.h>
 #include <linux/err.h>
 #include <linux/list.h>
-// #include <linux/slab.h>
 #include <linux/of.h>
 #include <linux/device.h>
 #include <linux/init.h>
 #include <linux/pm_runtime.h>
-#include <linux/sched.h>
 #include <linux/clkdev.h>
+#include <linux/lynix-compat.h>
+#include <linux/math.h>
 
 #include "clk.h"
 
@@ -91,8 +88,7 @@ struct clk_core {
 	struct kref		ref;
 };
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/clk.h>
+// #define CREATE_TRACE_POINTS
 
 struct clk {
 	struct clk_core	*core;
@@ -132,6 +128,7 @@ static void clk_pm_runtime_put(struct clk_core *core)
 /***           locking             ***/
 static void clk_prepare_lock(void)
 {
+#if 0
 	if (!mutex_trylock(&prepare_lock)) {
 		if (prepare_owner == current) {
 			prepare_refcnt++;
@@ -143,24 +140,28 @@ static void clk_prepare_lock(void)
 	WARN_ON_ONCE(prepare_refcnt != 0);
 	prepare_owner = current;
 	prepare_refcnt = 1;
+#endif
+	mutex_lock(&prepare_lock);
 }
 
 static void clk_prepare_unlock(void)
 {
+#if 0
 	WARN_ON_ONCE(prepare_owner != current);
 	WARN_ON_ONCE(prepare_refcnt == 0);
 
 	if (--prepare_refcnt)
 		return;
 	prepare_owner = NULL;
+#endif
 	mutex_unlock(&prepare_lock);
 }
 
 static unsigned long clk_enable_lock(void)
 	__acquires(enable_lock)
 {
-	unsigned long flags;
-
+	unsigned long flags = 0;
+#if 0
 	/*
 	 * On UP systems, spin_trylock_irqsave() always returns true, even if
 	 * we already hold the lock. So, in that case, we rely only on
@@ -182,11 +183,15 @@ static unsigned long clk_enable_lock(void)
 	enable_owner = current;
 	enable_refcnt = 1;
 	return flags;
+#endif
+	spin_lock_irqsave(&enable_lock, flags);
+	return flags;
 }
 
 static void clk_enable_unlock(unsigned long flags)
 	__releases(enable_lock)
 {
+#if 0
 	WARN_ON_ONCE(enable_owner != current);
 	WARN_ON_ONCE(enable_refcnt == 0);
 
@@ -195,6 +200,7 @@ static void clk_enable_unlock(unsigned long flags)
 		return;
 	}
 	enable_owner = NULL;
+#endif
 	spin_unlock_irqrestore(&enable_lock, flags);
 }
 
@@ -842,14 +848,14 @@ static void clk_core_unprepare(struct clk_core *core)
 
 	WARN(core->enable_count > 0, "Unpreparing enabled %s\n", core->name);
 
-	trace_clk_unprepare(core);
+	// // trace_clk_unprepare(core);
 
 	if (core->ops->unprepare)
 		core->ops->unprepare(core->hw);
 
 	clk_pm_runtime_put(core);
 
-	trace_clk_unprepare_complete(core);
+	// trace_clk_unprepare_complete(core);
 	clk_core_unprepare(core->parent);
 }
 
@@ -898,12 +904,12 @@ static int clk_core_prepare(struct clk_core *core)
 		if (ret)
 			goto runtime_put;
 
-		trace_clk_prepare(core);
+		// trace_clk_prepare(core);
 
 		if (core->ops->prepare)
 			ret = core->ops->prepare(core->hw);
 
-		trace_clk_prepare_complete(core);
+		// trace_clk_prepare_complete(core);
 
 		if (ret)
 			goto unprepare;
@@ -978,12 +984,12 @@ static void clk_core_disable(struct clk_core *core)
 	if (--core->enable_count > 0)
 		return;
 
-	trace_clk_disable_rcuidle(core);
+	// trace_clk_disable_rcuidle(core);
 
 	if (core->ops->disable)
 		core->ops->disable(core->hw);
 
-	trace_clk_disable_complete_rcuidle(core);
+	// trace_clk_disable_complete_rcuidle(core);
 
 	clk_core_disable(core->parent);
 }
@@ -1037,12 +1043,12 @@ static int clk_core_enable(struct clk_core *core)
 		if (ret)
 			return ret;
 
-		trace_clk_enable_rcuidle(core);
+		// trace_clk_enable_rcuidle(core);
 
 		if (core->ops->enable)
 			ret = core->ops->enable(core->hw);
 
-		trace_clk_enable_complete_rcuidle(core);
+		// trace_clk_enable_complete_rcuidle(core);
 
 		if (ret) {
 			clk_core_disable(core->parent);
@@ -1244,12 +1250,12 @@ static void __init clk_unprepare_unused_subtree(struct clk_core *core)
 		return;
 
 	if (clk_core_is_prepared(core)) {
-		trace_clk_unprepare(core);
+		// trace_clk_unprepare(core);
 		if (core->ops->unprepare_unused)
 			core->ops->unprepare_unused(core->hw);
 		else if (core->ops->unprepare)
 			core->ops->unprepare(core->hw);
-		trace_clk_unprepare_complete(core);
+		// trace_clk_unprepare_complete(core);
 	}
 
 	clk_pm_runtime_put(core);
@@ -1285,12 +1291,12 @@ static void __init clk_disable_unused_subtree(struct clk_core *core)
 	 * back to .disable
 	 */
 	if (clk_core_is_enabled(core)) {
-		trace_clk_disable(core);
+		// trace_clk_disable(core);
 		if (core->ops->disable_unused)
 			core->ops->disable_unused(core->hw);
 		else if (core->ops->disable)
 			core->ops->disable(core->hw);
-		trace_clk_disable_complete(core);
+		// trace_clk_disable_complete(core);
 	}
 
 unlock_out:
@@ -1860,13 +1866,13 @@ static int __clk_set_parent(struct clk_core *core, struct clk_core *parent,
 
 	old_parent = __clk_set_parent_before(core, parent);
 
-	trace_clk_set_parent(core, parent);
+	// trace_clk_set_parent(core, parent);
 
 	/* change clock input source */
 	if (parent && core->ops->set_parent)
 		ret = core->ops->set_parent(core->hw, p_index);
 
-	trace_clk_set_parent_complete(core, parent);
+	// trace_clk_set_parent_complete(core, parent);
 
 	if (ret) {
 		flags = clk_enable_lock();
@@ -2105,7 +2111,7 @@ static void clk_change_rate(struct clk_core *core)
 
 	if (core->new_parent && core->new_parent != core->parent) {
 		old_parent = __clk_set_parent_before(core, core->new_parent);
-		trace_clk_set_parent(core, core->new_parent);
+		//trace_clk_set_parent(core, core->new_parent);
 
 		if (core->ops->set_rate_and_parent) {
 			skip_set_rate = true;
@@ -2116,19 +2122,19 @@ static void clk_change_rate(struct clk_core *core)
 			core->ops->set_parent(core->hw, core->new_parent_index);
 		}
 
-		trace_clk_set_parent_complete(core, core->new_parent);
+		// trace_clk_set_parent_complete(core, core->new_parent);
 		__clk_set_parent_after(core, core->new_parent, old_parent);
 	}
 
 	if (core->flags & CLK_OPS_PARENT_ENABLE)
 		clk_core_prepare_enable(parent);
 
-	trace_clk_set_rate(core, core->new_rate);
+	// trace_clk_set_rate(core, core->new_rate);
 
 	if (!skip_set_rate && core->ops->set_rate)
 		core->ops->set_rate(core->hw, core->new_rate, best_parent_rate);
 
-	trace_clk_set_rate_complete(core, core->new_rate);
+	// trace_clk_set_rate_complete(core, core->new_rate);
 
 	core->rate = clk_recalc(core, best_parent_rate);
 
@@ -2348,7 +2354,7 @@ int clk_set_rate_range(struct clk *clk, unsigned long min, unsigned long max)
 	if (!clk)
 		return 0;
 
-	trace_clk_set_rate_range(clk->core, min, max);
+	// trace_clk_set_rate_range(clk->core, min, max);
 
 	if (min > max) {
 		pr_err("%s: clk %s dev %s con %s: invalid range [%lu, %lu]\n",
@@ -2420,7 +2426,7 @@ int clk_set_min_rate(struct clk *clk, unsigned long rate)
 	if (!clk)
 		return 0;
 
-	trace_clk_set_min_rate(clk->core, rate);
+	// trace_clk_set_min_rate(clk->core, rate);
 
 	return clk_set_rate_range(clk, rate, clk->max_rate);
 }
@@ -2438,7 +2444,7 @@ int clk_set_max_rate(struct clk *clk, unsigned long rate)
 	if (!clk)
 		return 0;
 
-	trace_clk_set_max_rate(clk->core, rate);
+	//trace_clk_set_max_rate(clk->core, rate);
 
 	return clk_set_rate_range(clk, clk->min_rate, rate);
 }
@@ -2650,7 +2656,7 @@ static int clk_core_set_phase_nolock(struct clk_core *core, int degrees)
 	if (clk_core_rate_is_protected(core))
 		return -EBUSY;
 
-	trace_clk_set_phase(core, degrees);
+	// trace_clk_set_phase(core, degrees);
 
 	if (core->ops->set_phase) {
 		ret = core->ops->set_phase(core->hw, degrees);
@@ -2658,7 +2664,7 @@ static int clk_core_set_phase_nolock(struct clk_core *core, int degrees)
 			core->phase = degrees;
 	}
 
-	trace_clk_set_phase_complete(core, degrees);
+	// trace_clk_set_phase_complete(core, degrees);
 
 	return ret;
 }
@@ -2811,7 +2817,7 @@ static int clk_core_set_duty_cycle_nolock(struct clk_core *core,
 	if (clk_core_rate_is_protected(core))
 		return -EBUSY;
 
-	trace_clk_set_duty_cycle(core, duty);
+	//trace_clk_set_duty_cycle(core, duty);
 
 	if (!core->ops->set_duty_cycle)
 		return clk_core_set_duty_cycle_parent_nolock(core, duty);
@@ -2820,7 +2826,7 @@ static int clk_core_set_duty_cycle_nolock(struct clk_core *core,
 	if (!ret)
 		memcpy(&core->duty, duty, sizeof(*duty));
 
-	trace_clk_set_duty_cycle_complete(core, duty);
+	//trace_clk_set_duty_cycle_complete(core, duty);
 
 	return ret;
 }
@@ -3732,13 +3738,13 @@ static struct clk *alloc_clk(struct clk_core *core, const char *dev_id,
 {
 	struct clk *clk;
 
-	clk = kzalloc(sizeof(*clk), GFP_KERNEL);
+	clk = kzalloc(sizeof(*clk), 0);
 	if (!clk)
 		return ERR_PTR(-ENOMEM);
 
 	clk->core = core;
 	clk->dev_id = dev_id;
-	clk->con_id = kstrdup_const(con_id, GFP_KERNEL);
+	clk->con_id = kstrdup_const(con_id, 0);
 	clk->max_rate = ULONG_MAX;
 
 	return clk;
@@ -3785,10 +3791,10 @@ struct clk *clk_hw_create_clk(struct device *dev, struct clk_hw *hw,
 		return clk;
 	clk->dev = dev;
 
-	if (!try_module_get(core->owner)) {
-		free_clk(clk);
-		return ERR_PTR(-ENOENT);
-	}
+	// if (!try_module_get(core->owner)) {
+	//	free_clk(clk);
+	//	return ERR_PTR(-ENOENT);
+	// }
 
 	kref_get(&core->ref);
 	clk_core_link_consumer(core, clk);
@@ -3825,7 +3831,7 @@ static int clk_cpy_name(const char **dst_p, const char *src, bool must_exist)
 		return 0;
 	}
 
-	*dst_p = dst = kstrdup_const(src, GFP_KERNEL);
+	*dst_p = dst = kstrdup_const(src, 0);
 	if (!dst)
 		return -ENOMEM;
 
@@ -3849,7 +3855,7 @@ static int clk_core_populate_parent_map(struct clk_core *core,
 	 * Avoid unnecessary string look-ups of clk_core's possible parents by
 	 * having a cache of names/clk_hw pointers to clk_core pointers.
 	 */
-	parents = kcalloc(num_parents, sizeof(*parents), GFP_KERNEL);
+	parents = kcalloc(num_parents, sizeof(*parents), 0);
 	core->parents = parents;
 	if (!parents)
 		return -ENOMEM;
@@ -3923,13 +3929,13 @@ __clk_register(struct device *dev, struct device_node *np, struct clk_hw *hw)
 	 */
 	hw->init = NULL;
 
-	core = kzalloc(sizeof(*core), GFP_KERNEL);
+	core = kzalloc(sizeof(*core), 0);
 	if (!core) {
 		ret = -ENOMEM;
 		goto fail_out;
 	}
 
-	core->name = kstrdup_const(init->name, GFP_KERNEL);
+	core->name = kstrdup_const(init->name, 0);
 	if (!core->name) {
 		ret = -ENOMEM;
 		goto fail_name;
@@ -3945,8 +3951,8 @@ __clk_register(struct device *dev, struct device_node *np, struct clk_hw *hw)
 		core->rpm_enabled = true;
 	core->dev = dev;
 	core->of_node = np;
-	if (dev && dev->driver)
-		core->owner = dev->driver->owner;
+	// if (dev && dev->driver)
+	//	core->owner = dev->driver->owner;
 	core->hw = hw;
 	core->flags = init->flags;
 	core->num_parents = init->num_parents;
@@ -4240,7 +4246,7 @@ struct clk *devm_clk_register(struct device *dev, struct clk_hw *hw)
 	struct clk *clk;
 	struct clk **clkp;
 
-	clkp = devres_alloc(devm_clk_unregister_cb, sizeof(*clkp), GFP_KERNEL);
+	clkp = devres_alloc(devm_clk_unregister_cb, sizeof(*clkp), 0);
 	if (!clkp)
 		return ERR_PTR(-ENOMEM);
 
@@ -4270,7 +4276,7 @@ int devm_clk_hw_register(struct device *dev, struct clk_hw *hw)
 	struct clk_hw **hwp;
 	int ret;
 
-	hwp = devres_alloc(devm_clk_hw_unregister_cb, sizeof(*hwp), GFP_KERNEL);
+	hwp = devres_alloc(devm_clk_hw_unregister_cb, sizeof(*hwp), 0);
 	if (!hwp)
 		return -ENOMEM;
 
@@ -4361,7 +4367,7 @@ struct clk *devm_clk_hw_get_clk(struct device *dev, struct clk_hw *hw,
 	 */
 	WARN_ON_ONCE(dev != hw->core->dev);
 
-	clkp = devres_alloc(devm_clk_release, sizeof(*clkp), GFP_KERNEL);
+	clkp = devres_alloc(devm_clk_release, sizeof(*clkp), 0);
 	if (!clkp)
 		return ERR_PTR(-ENOMEM);
 
@@ -4412,7 +4418,7 @@ void __clk_put(struct clk *clk)
 
 	clk_prepare_unlock();
 
-	module_put(owner);
+	// module_put(owner);
 
 	free_clk(clk);
 }
@@ -4455,7 +4461,7 @@ int clk_notifier_register(struct clk *clk, struct notifier_block *nb)
 			goto found;
 
 	/* if clk wasn't in the notifier list, allocate new clk_notifier */
-	cn = kzalloc(sizeof(*cn), GFP_KERNEL);
+	cn = kzalloc(sizeof(*cn), 0);
 	if (!cn)
 		goto out;
 
@@ -4504,11 +4510,11 @@ int clk_notifier_unregister(struct clk *clk, struct notifier_block *nb)
 			clk->core->notifier_count--;
 
 			/* XXX the notifier code should handle this better */
-			if (!cn->notifier_head.head) {
-				srcu_cleanup_notifier_head(&cn->notifier_head);
-				list_del(&cn->node);
-				kfree(cn);
-			}
+			// if (!cn->notifier_head.head) {
+			// 	srcu_cleanup_notifier_head(&cn->notifier_head);
+			//	list_del(&cn->node);
+			//	kfree(cn);
+			// }
 			break;
 		}
 	}
@@ -4538,7 +4544,7 @@ int devm_clk_notifier_register(struct device *dev, struct clk *clk,
 	int ret;
 
 	devres = devres_alloc(devm_clk_notifier_release,
-			      sizeof(*devres), GFP_KERNEL);
+			      sizeof(*devres), 0);
 
 	if (!devres)
 		return -ENOMEM;
@@ -4650,7 +4656,7 @@ int of_clk_add_provider(struct device_node *np,
 	if (!np)
 		return 0;
 
-	cp = kzalloc(sizeof(*cp), GFP_KERNEL);
+	cp = kzalloc(sizeof(*cp), 0);
 	if (!cp)
 		return -ENOMEM;
 
@@ -4692,7 +4698,7 @@ int of_clk_add_hw_provider(struct device_node *np,
 	if (!np)
 		return 0;
 
-	cp = kzalloc(sizeof(*cp), GFP_KERNEL);
+	cp = kzalloc(sizeof(*cp), 0);
 	if (!cp)
 		return -ENOMEM;
 
@@ -4764,7 +4770,7 @@ int devm_of_clk_add_hw_provider(struct device *dev,
 	int ret;
 
 	ptr = devres_alloc(devm_of_clk_release_provider, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return -ENOMEM;
 
@@ -5211,7 +5217,7 @@ void __init of_clk_init(const struct of_device_id *matches)
 		if (!of_device_is_available(np))
 			continue;
 
-		parent = kzalloc(sizeof(*parent), GFP_KERNEL);
+		parent = kzalloc(sizeof(*parent), 0);
 		if (!parent) {
 			list_for_each_entry_safe(clk_provider, next,
 						 &clk_provider_list, node) {

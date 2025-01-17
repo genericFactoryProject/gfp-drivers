@@ -7,15 +7,11 @@
  * Copyright (c) 2007,2008 Dmitry Baryshkov
  */
 
-// #include <linux/kernel.h>
 #include <linux/platform_device.h>
-#include <linux/acpi.h>
 #include <linux/list.h>
 #include <linux/property.h>
 #include <linux/mfd/core.h>
 #include <linux/pm_runtime.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
 #include <linux/irqdomain.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
@@ -136,7 +132,7 @@ static int mfd_match_of_node_to_dev(struct platform_device *pdev,
 		return -EAGAIN;
 
 allocate_of_node:
-	of_entry = kzalloc(sizeof(*of_entry), GFP_KERNEL);
+	of_entry = kzalloc(sizeof(*of_entry), 0);
 	if (!of_entry)
 		return -ENOMEM;
 
@@ -172,11 +168,11 @@ static int mfd_add_device(struct device *parent, int id,
 	if (!pdev)
 		goto fail_alloc;
 
-	pdev->mfd_cell = kmemdup(cell, sizeof(*cell), GFP_KERNEL);
+	pdev->mfd_cell = kmemdup(cell, sizeof(*cell), 0);
 	if (!pdev->mfd_cell)
 		goto fail_device;
 
-	res = kcalloc(cell->num_resources, sizeof(*res), GFP_KERNEL);
+	res = kcalloc(cell->num_resources, sizeof(*res), 0);
 	if (!res)
 		goto fail_device;
 
@@ -263,7 +259,7 @@ static int mfd_add_device(struct device *parent, int id,
 			res[r].start = cell->resources[r].start;
 			res[r].end   = cell->resources[r].end;
 		}
-
+#if 0
 		if (!cell->ignore_resource_conflicts) {
 			if (has_acpi_companion(&pdev->dev)) {
 				ret = acpi_check_resource_conflict(&res[r]);
@@ -271,6 +267,7 @@ static int mfd_add_device(struct device *parent, int id,
 					goto fail_res_conflict;
 			}
 		}
+#endif
 	}
 
 	ret = platform_device_add_resources(pdev, res, cell->num_resources);
@@ -418,7 +415,7 @@ int devm_mfd_add_devices(struct device *dev, int id,
 	struct device **ptr;
 	int ret;
 
-	ptr = devres_alloc(devm_mfd_dev_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_mfd_dev_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return -ENOMEM;
 

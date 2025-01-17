@@ -13,7 +13,6 @@
 #include <linux/clk.h>
 #include <linux/errno.h>
 #include <linux/err.h>
-// #include <linux/slab.h>
 #include <linux/device.h>
 #include <linux/export.h>
 #include <linux/pm_domain.h>

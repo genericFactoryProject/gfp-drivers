@@ -6,7 +6,8 @@
 #include <linux/clk-provider.h>
 #include <linux/device.h>
 #include <linux/err.h>
-// #include <linux/slab.h>
+#include <linux/math.h>
+
 
 static u8 clk_composite_get_parent(struct clk_hw *hw)
 {
@@ -243,7 +244,7 @@ static struct clk_hw *__clk_hw_register_composite(struct device *dev,
 	struct clk_ops *clk_composite_ops;
 	int ret;
 
-	composite = kzalloc(sizeof(*composite), GFP_KERNEL);
+	composite = kzalloc(sizeof(*composite), 0);
 	if (!composite)
 		return ERR_PTR(-ENOMEM);
 
@@ -453,7 +454,7 @@ static struct clk_hw *__devm_clk_hw_register_composite(struct device *dev,
 	struct clk_hw **ptr, *hw;
 
 	ptr = devres_alloc(devm_clk_hw_release_composite, sizeof(*ptr),
-			   GFP_KERNEL);
+			   0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 

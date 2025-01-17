@@ -13,20 +13,12 @@
 
 #define pr_fmt(fmt) KBUILD_MODNAME ": " fmt
 
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/init.h>
-// #include <linux/kernel.h>
 #include <linux/list.h>
-#include <linux/mm.h>
-// #include <linux/spinlock.h>
-#include <asm/unaligned.h>
+#include <asm-generic/unaligned.h>
 #include <asm/byteorder.h>
 #include <linux/input.h>
-#include <linux/wait.h>
-#include <linux/vmalloc.h>
-#include <linux/sched.h>
-#include <linux/semaphore.h>
+#include <linux/lynix-compat.h>
 
 #include <linux/hid.h>
 #include <linux/hiddev.h>
@@ -42,13 +34,17 @@
 #define DRIVER_DESC "HID core driver"
 
 int hid_debug = 0;
+#if 0
 module_param_named(debug, hid_debug, int, 0600);
 MODULE_PARM_DESC(debug, "toggle HID debugging messages");
+#endif
 EXPORT_SYMBOL_GPL(hid_debug);
 
 static int hid_ignore_special_drivers = 0;
+#if 0
 module_param_named(ignore_special_drivers, hid_ignore_special_drivers, int, 0600);
 MODULE_PARM_DESC(ignore_special_drivers, "Ignore any special drivers and handle all devices by generic driver");
+#endif
 
 /*
  * Register a new report for a device.
@@ -66,7 +62,7 @@ struct hid_report *hid_register_report(struct hid_device *device,
 	if (report_enum->report_id_hash[id])
 		return report_enum->report_id_hash[id];
 
-	report = kzalloc(sizeof(struct hid_report), GFP_KERNEL);
+	report = kzalloc(sizeof(struct hid_report), 0);
 	if (!report)
 		return NULL;
 
@@ -102,7 +98,7 @@ static struct hid_field *hid_register_field(struct hid_report *report, unsigned 
 
 	field = kzalloc((sizeof(struct hid_field) +
 			 usages * sizeof(struct hid_usage) +
-			 3 * usages * sizeof(unsigned int)), GFP_KERNEL);
+			 3 * usages * sizeof(unsigned int)), 0);
 	if (!field)
 		return NULL;
 
@@ -134,9 +130,9 @@ static int open_collection(struct hid_parser *parser, unsigned type)
 		unsigned int new_size = parser->collection_stack_size +
 					HID_COLLECTION_STACK_SIZE;
 
-		collection_stack = krealloc(parser->collection_stack,
-					    new_size * sizeof(unsigned int),
-					    GFP_KERNEL);
+		collection_stack = NULL; // krealloc(parser->collection_stack,
+					    //new_size * sizeof(unsigned int),
+					    //0);
 		if (!collection_stack)
 			return -ENOMEM;
 
@@ -149,7 +145,7 @@ static int open_collection(struct hid_parser *parser, unsigned type)
 				array3_size(sizeof(struct hid_collection),
 					    parser->device->collection_size,
 					    2),
-				GFP_KERNEL);
+				0);
 		if (collection == NULL) {
 			hid_err(parser->device, "failed to reallocate collection array\n");
 			return -ENOMEM;
@@ -883,7 +879,7 @@ static int hid_scan_report(struct hid_device *hid)
 		hid_parser_reserved
 	};
 
-	parser = vzalloc(sizeof(struct hid_parser));
+	parser = NULL; //vzalloc(sizeof(struct hid_parser));
 	if (!parser)
 		return -ENOMEM;
 
@@ -925,7 +921,7 @@ static int hid_scan_report(struct hid_device *hid)
 	}
 
 	kfree(parser->collection_stack);
-	vfree(parser);
+	//vfree(parser);
 	return 0;
 }
 
@@ -941,7 +937,7 @@ static int hid_scan_report(struct hid_device *hid)
  */
 int hid_parse_report(struct hid_device *hid, __u8 *start, unsigned size)
 {
-	hid->dev_rdesc = kmemdup(start, size, GFP_KERNEL);
+	hid->dev_rdesc = kmemdup(start, size, 0);
 	if (!hid->dev_rdesc)
 		return -ENOMEM;
 	hid->dev_rsize = size;
@@ -1218,7 +1214,7 @@ int hid_open_report(struct hid_device *device)
 		return -ENODEV;
 	size = device->dev_rsize;
 
-	buf = kmemdup(start, size, GFP_KERNEL);
+	buf = kmemdup(start, size, 0);
 	if (buf == NULL)
 		return -ENOMEM;
 
@@ -1227,7 +1223,7 @@ int hid_open_report(struct hid_device *device)
 	else
 		start = buf;
 
-	start = kmemdup(start, size, GFP_KERNEL);
+	start = kmemdup(start, size, 0);
 	kfree(buf);
 	if (start == NULL)
 		return -ENOMEM;
@@ -1235,7 +1231,7 @@ int hid_open_report(struct hid_device *device)
 	device->rdesc = start;
 	device->rsize = size;
 
-	parser = vzalloc(sizeof(struct hid_parser));
+	parser = NULL; //vzalloc(sizeof(struct hid_parser));
 	if (!parser) {
 		ret = -ENOMEM;
 		goto alloc_err;
@@ -1246,7 +1242,7 @@ int hid_open_report(struct hid_device *device)
 	end = start + size;
 
 	device->collection = kcalloc(HID_DEFAULT_NUM_COLLECTIONS,
-				     sizeof(struct hid_collection), GFP_KERNEL);
+				     sizeof(struct hid_collection), 0);
 	if (!device->collection) {
 		ret = -ENOMEM;
 		goto err;
@@ -1286,7 +1282,7 @@ int hid_open_report(struct hid_device *device)
 			hid_setup_resolution_multiplier(device);
 
 			kfree(parser->collection_stack);
-			vfree(parser);
+			//vfree(parser);
 			device->status |= HID_STAT_PARSED;
 
 			return 0;
@@ -1298,7 +1294,7 @@ int hid_open_report(struct hid_device *device)
 err:
 	kfree(parser->collection_stack);
 alloc_err:
-	vfree(parser);
+	//vfree(parser);
 	hid_close_report(device);
 	return ret;
 }
@@ -1378,8 +1374,8 @@ u32 hid_field_extract(const struct hid_device *hid, u8 *report,
 			unsigned offset, unsigned n)
 {
 	if (n > 32) {
-		hid_warn_once(hid, "%s() called with n (%d) > 32! (%s)\n",
-			      __func__, n, current->comm);
+		//hid_warn_once(hid, "%s() called with n (%d) > 32! (%s)\n",
+		//	      __func__, n, current->comm);
 		n = 32;
 	}
 
@@ -1424,16 +1420,16 @@ static void implement(const struct hid_device *hid, u8 *report,
 		      unsigned offset, unsigned n, u32 value)
 {
 	if (unlikely(n > 32)) {
-		hid_warn(hid, "%s() called with n (%d) > 32! (%s)\n",
-			 __func__, n, current->comm);
+		//hid_warn(hid, "%s() called with n (%d) > 32! (%s)\n",
+		//	 __func__, n, current->comm);
 		n = 32;
 	} else if (n < 32) {
 		u32 m = (1U << n) - 1;
 
 		if (unlikely(value > m)) {
-			hid_warn(hid,
-				 "%s() called with too large value %d (n: %d)! (%s)\n",
-				 __func__, value, n, current->comm);
+			//hid_warn(hid,
+			//	 "%s() called with too large value %d (n: %d)! (%s)\n",
+			//	 __func__, value, n, current->comm);
 			WARN_ON(1);
 			value &= m;
 		}
@@ -1758,7 +1754,7 @@ static void hid_report_process_ordering(struct hid_device *hid,
 	}
 
 	/* allocate the memory to process the fields */
-	entries = kcalloc(count, sizeof(*entries), GFP_KERNEL);
+	entries = kcalloc(count, sizeof(*entries), 0);
 	if (!entries)
 		return;
 
@@ -1927,7 +1923,7 @@ int __hid_request(struct hid_device *hid, struct hid_report *report,
 	int ret;
 	u32 len;
 
-	buf = hid_alloc_report_buf(report, GFP_KERNEL);
+	buf = hid_alloc_report_buf(report, 0);
 	if (!buf)
 		return -ENOMEM;
 
@@ -2100,7 +2096,7 @@ static bool hid_hiddev(struct hid_device *hdev)
 	return !!hid_match_id(hdev, hid_hiddev_list);
 }
 
-
+#if 0
 static ssize_t
 read_report_descriptor(struct file *filp, struct kobject *kobj,
 		struct bin_attribute *attr,
@@ -2139,7 +2135,7 @@ static const struct device_attribute dev_attr_country = {
 	.attr = { .name = "country", .mode = 0444 },
 	.show = show_country,
 };
-
+#endif
 int hid_connect(struct hid_device *hdev, unsigned int connect_mask)
 {
 	static const char *types[] = { "Device", "Pointer", "Mouse", "Device",
@@ -2226,10 +2222,10 @@ int hid_connect(struct hid_device *hdev, unsigned int connect_mask)
 		bus = "<UNKNOWN>";
 	}
 
-	ret = device_create_file(&hdev->dev, &dev_attr_country);
-	if (ret)
-		hid_warn(hdev,
-			 "can't create sysfs country code attribute err: %d\n", ret);
+	//ret = device_create_file(&hdev->dev, &dev_attr_country);
+	//if (ret)
+	//	hid_warn(hdev,
+	//		 "can't create sysfs country code attribute err: %d\n", ret);
 
 	hid_info(hdev, "%s: %s HID v%x.%02x %s [%s] on %s\n",
 		 buf, bus, hdev->version >> 8, hdev->version & 0xff,
@@ -2241,7 +2237,7 @@ EXPORT_SYMBOL_GPL(hid_connect);
 
 void hid_disconnect(struct hid_device *hdev)
 {
-	device_remove_file(&hdev->dev, &dev_attr_country);
+	//device_remove_file(&hdev->dev, &dev_attr_country);
 	if (hdev->claimed & HID_CLAIMED_INPUT)
 		hidinput_disconnect(hdev);
 	if (hdev->claimed & HID_CLAIMED_HIDDEV)
@@ -2307,9 +2303,9 @@ int hid_hw_open(struct hid_device *hdev)
 {
 	int ret;
 
-	ret = mutex_lock_killable(&hdev->ll_open_lock);
-	if (ret)
-		return ret;
+	//ret = mutex_lock_killable(&hdev->ll_open_lock);
+	//if (ret)
+	//	return ret;
 
 	if (!hdev->ll_open_count++) {
 		ret = hdev->ll_driver->open(hdev);
@@ -2452,16 +2448,16 @@ static ssize_t new_id_store(struct device_driver *drv, const char *buf,
 {
 	struct hid_driver *hdrv = to_hid_driver(drv);
 	struct hid_dynid *dynid;
-	__u32 bus, vendor, product;
+	__u32 bus = 0, vendor = 0, product = 0;
 	unsigned long driver_data = 0;
-	int ret;
+	int ret = 0;
 
-	ret = sscanf(buf, "%x %x %x %lx",
-			&bus, &vendor, &product, &driver_data);
+	//ret = sscanf(buf, "%x %x %x %lx",
+	//		&bus, &vendor, &product, &driver_data);
 	if (ret < 3)
 		return -EINVAL;
 
-	dynid = kzalloc(sizeof(*dynid), GFP_KERNEL);
+	dynid = kzalloc(sizeof(*dynid), 0);
 	if (!dynid)
 		return -ENOMEM;
 
@@ -2555,10 +2551,10 @@ static int hid_device_probe(struct device *dev)
 	const struct hid_device_id *id;
 	int ret = 0;
 
-	if (down_interruptible(&hdev->driver_input_lock)) {
-		ret = -EINTR;
-		goto end;
-	}
+	//if (down_interruptible(&hdev->driver_input_lock)) {
+	//	ret = -EINTR;
+	//	goto end;
+	//}
 	hdev->io_started = false;
 
 	clear_bit(ffs(HID_STAT_REPROBED), &hdev->status);
@@ -2605,7 +2601,7 @@ static int hid_device_probe(struct device *dev)
 unlock:
 	if (!hdev->io_started)
 		up(&hdev->driver_input_lock);
-end:
+//end:
 	return ret;
 }
 
@@ -2630,7 +2626,7 @@ static void hid_device_remove(struct device *dev)
 	if (!hdev->io_started)
 		up(&hdev->driver_input_lock);
 }
-
+#if 0
 static ssize_t modalias_show(struct device *dev, struct device_attribute *a,
 			     char *buf)
 {
@@ -2654,7 +2650,7 @@ static const struct attribute_group hid_dev_group = {
 	.bin_attrs = hid_dev_bin_attrs,
 };
 __ATTRIBUTE_GROUPS(hid_dev);
-
+#endif
 static int hid_uevent(struct device *dev, struct kobj_uevent_env *env)
 {
 	struct hid_device *hdev = to_hid_device(dev);
@@ -2681,8 +2677,8 @@ static int hid_uevent(struct device *dev, struct kobj_uevent_env *env)
 
 struct bus_type hid_bus_type = {
 	.name		= "hid",
-	.dev_groups	= hid_dev_groups,
-	.drv_groups	= hid_drv_groups,
+	//.dev_groups	= hid_dev_groups,
+	//.drv_groups	= hid_drv_groups,
 	.match		= hid_bus_match,
 	.probe		= hid_device_probe,
 	.remove		= hid_device_remove,
@@ -2765,7 +2761,7 @@ struct hid_device *hid_allocate_device(void)
 	struct hid_device *hdev;
 	int ret = -ENOMEM;
 
-	hdev = kzalloc(sizeof(*hdev), GFP_KERNEL);
+	hdev = kzalloc(sizeof(*hdev), 0);
 	if (hdev == NULL)
 		return ERR_PTR(ret);
 
@@ -2776,7 +2772,7 @@ struct hid_device *hid_allocate_device(void)
 
 	hid_close_report(hdev);
 
-	init_waitqueue_head(&hdev->debug_wait);
+	//init_waitqueue_head(&hdev->debug_wait);
 	INIT_LIST_HEAD(&hdev->debug_list);
 	spin_lock_init(&hdev->debug_list_lock);
 	sema_init(&hdev->driver_input_lock, 1);
@@ -2851,8 +2847,8 @@ int __hid_register_driver(struct hid_driver *hdrv, struct module *owner,
 
 	hdrv->driver.name = hdrv->name;
 	hdrv->driver.bus = &hid_bus_type;
-	hdrv->driver.owner = owner;
-	hdrv->driver.mod_name = mod_name;
+	//hdrv->driver.owner = owner;
+	//hdrv->driver.mod_name = mod_name;
 
 	INIT_LIST_HEAD(&hdrv->dyn_list);
 	spin_lock_init(&hdrv->dyn_lock);

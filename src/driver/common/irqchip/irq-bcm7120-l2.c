@@ -8,9 +8,6 @@
 #define pr_fmt(fmt)	KBUILD_MODNAME	": " fmt
 
 #include <linux/init.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
-// #include <linux/kernel.h>
 #include <linux/platform_device.h>
 #include <linux/of.h>
 #include <linux/of_irq.h>
@@ -20,7 +17,6 @@
 #include <linux/irq.h>
 #include <linux/io.h>
 #include <linux/irqdomain.h>
-#include <linux/reboot.h>
 #include <linux/bitops.h>
 #include <linux/irqchip.h>
 #include <linux/irqchip/chained_irq.h>

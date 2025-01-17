@@ -36,13 +36,12 @@
  */
 
 #include <linux/io.h>
-// #include <linux/slab.h>
 #include <linux/of_address.h>
 #include <linux/of_irq.h>
 #include <linux/irqchip.h>
 #include <linux/irqdomain.h>
 
-#include <asm/exception.h>
+//#include <asm/exception.h>
 
 /* Put the bank and irq (32 bits) into the hwirq */
 #define MAKE_HWIRQ(b, n)	((b << 5) | (n))
@@ -85,8 +84,8 @@ struct armctrl_ic {
 };
 
 static struct armctrl_ic intc __read_mostly;
-static void __exception_irq_entry bcm2835_handle_irq(
-	struct pt_regs *regs);
+//static void __exception_irq_entry bcm2835_handle_irq(
+//	struct pt_regs *regs);
 static void bcm2836_chained_handle_irq(struct irq_desc *desc);
 
 static void armctrl_mask_irq(struct irq_data *d)
@@ -140,12 +139,12 @@ static int __init armctrl_of_init(struct device_node *node,
 
 	base = of_iomap(node, 0);
 	if (!base)
-		panic("%pOF: unable to map IC registers\n", node);
+		;//panic("%pOF: unable to map IC registers\n", node);
 
 	intc.domain = irq_domain_add_linear(node, MAKE_HWIRQ(NR_BANKS, 0),
 			&armctrl_ops, NULL);
 	if (!intc.domain)
-		panic("%pOF: unable to create IRQ domain\n", node);
+		;//panic("%pOF: unable to create IRQ domain\n", node);
 
 	for (b = 0; b < NR_BANKS; b++) {
 		intc.pending[b] = base + reg_pending[b];
@@ -178,12 +177,12 @@ static int __init armctrl_of_init(struct device_node *node,
 		int parent_irq = irq_of_parse_and_map(node, 0);
 
 		if (!parent_irq) {
-			panic("%pOF: unable to get parent interrupt.\n",
-			      node);
+			//panic("%pOF: unable to get parent interrupt.\n",
+		//	      node);
 		}
 		irq_set_chained_handler(parent_irq, bcm2836_chained_handle_irq);
 	} else {
-		set_handle_irq(bcm2835_handle_irq);
+		//set_handle_irq(bcm2835_handle_irq);
 	}
 
 	return 0;
@@ -239,7 +238,7 @@ static u32 get_next_armctrl_hwirq(void)
 	else
 		BUG();
 }
-
+#if 0
 static void __exception_irq_entry bcm2835_handle_irq(
 	struct pt_regs *regs)
 {
@@ -248,7 +247,7 @@ static void __exception_irq_entry bcm2835_handle_irq(
 	while ((hwirq = get_next_armctrl_hwirq()) != ~0)
 		generic_handle_domain_irq(intc.domain, hwirq);
 }
-
+#endif
 static void bcm2836_chained_handle_irq(struct irq_desc *desc)
 {
 	u32 hwirq;

@@ -15,12 +15,11 @@
 #include <linux/i2c.h>
 #include <linux/i2c-smbus.h>
 #include <linux/property.h>
-// #include <linux/slab.h>
+#include <linux/jiffies.h>
 
 #include "i2c-core.h"
 
-#define CREATE_TRACE_POINTS
-#include <trace/events/smbus.h>
+//#define CREATE_TRACE_POINTS
 
 
 /* The SMBus parts */
@@ -564,7 +563,7 @@ s32 __i2c_smbus_xfer(struct i2c_adapter *adapter, u16 addr,
 	res = __i2c_check_suspended(adapter);
 	if (res)
 		return res;
-
+#if 0
 	/* If enabled, the following two tracepoints are conditional on
 	 * read_write and protocol.
 	 */
@@ -572,7 +571,7 @@ s32 __i2c_smbus_xfer(struct i2c_adapter *adapter, u16 addr,
 			  command, protocol, data);
 	trace_smbus_read(adapter, addr, flags, read_write,
 			 command, protocol);
-
+#endif
 	flags &= I2C_M_TEN | I2C_CLIENT_PEC | I2C_CLIENT_SCCB;
 
 	xfer_func = adapter->algo->smbus_xfer;
@@ -608,12 +607,13 @@ s32 __i2c_smbus_xfer(struct i2c_adapter *adapter, u16 addr,
 				      command, protocol, data);
 
 trace:
+#if 0
 	/* If enabled, the reply tracepoint is conditional on read_write. */
 	trace_smbus_reply(adapter, addr, flags, read_write,
 			  command, protocol, data, res);
 	trace_smbus_result(adapter, addr, flags, read_write,
 			   command, protocol, res);
-
+#endif
 	return res;
 }
 EXPORT_SYMBOL(__i2c_smbus_xfer);

@@ -19,7 +19,7 @@
 #include <linux/ata.h>
 // #include <linux/workqueue.h>
 #include <scsi/scsi_host.h>
-// #include <linux/acpi.h>
+// //#include <linux/acpi.h>
 // #include <linux/cdrom.h>
 // #include <linux/sched.h>
 #include <linux/async.h>
@@ -808,7 +808,7 @@ struct ata_port {
 	u8			ctl;	/* cache of ATA control register */
 	u8			last_ctl;	/* Cache last written value */
 	struct ata_link*	sff_pio_task_link; /* link currently used */
-	struct delayed_work	sff_pio_task;
+	// struct delayed_work	sff_pio_task;
 #ifdef CONFIG_ATA_BMDMA
 	struct ata_bmdma_prd	*bmdma_prd;	/* BMDMA SG list */
 	dma_addr_t		bmdma_prd_dma;	/* and its DMA mapping */
@@ -1079,9 +1079,9 @@ extern int ata_scsi_ioctl(struct scsi_device *dev, unsigned int cmd,
 #endif
 extern int ata_scsi_queuecmd(struct Scsi_Host *h, struct scsi_cmnd *cmd);
 #if IS_REACHABLE(CONFIG_ATA)
-bool ata_scsi_dma_need_drain(struct request *rq);
+//bool ata_scsi_dma_need_drain(struct request *rq);
 #else
-#define ata_scsi_dma_need_drain NULL
+//#define ata_scsi_dma_need_drain NULL
 #endif
 extern int ata_sas_scsi_ioctl(struct ata_port *ap, struct scsi_device *dev,
 			    unsigned int cmd, void __user *arg);
@@ -1933,8 +1933,8 @@ extern void ata_sff_irq_clear(struct ata_port *ap);
 extern int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
 			    u8 status, int in_wq);
 extern void ata_sff_queue_work(struct work_struct *work);
-extern void ata_sff_queue_delayed_work(struct delayed_work *dwork,
-		unsigned long delay);
+//extern void ata_sff_queue_delayed_work(struct delayed_work *dwork,
+//		unsigned long delay);
 extern void ata_sff_queue_pio_task(struct ata_link *link, unsigned long delay);
 extern unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc);
 extern bool ata_sff_qc_fill_rtf(struct ata_queued_cmd *qc);

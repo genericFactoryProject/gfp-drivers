@@ -7,8 +7,10 @@
 #ifndef __LINUX_INTERCONNECT_H
 #define __LINUX_INTERCONNECT_H
 
-#include <linux/mutex.h>
+//#include <linux/mutex.h>
 #include <linux/types.h>
+#include <linux/errno.h>
+#include <linux/lynix-compat.h>
 
 /* macros for converting to icc units */
 #define Bps_to_icc(x)	((x) / 1000)

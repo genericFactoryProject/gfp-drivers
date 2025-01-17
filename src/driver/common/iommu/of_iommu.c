@@ -8,13 +8,11 @@
 #include <linux/export.h>
 #include <linux/iommu.h>
 #include <linux/limits.h>
-// #include <linux/module.h>
 #include <linux/msi.h>
 #include <linux/of.h>
 #include <linux/of_iommu.h>
 #include <linux/of_pci.h>
 #include <linux/pci.h>
-// #include <linux/slab.h>
 #include <linux/fsl/mc.h>
 
 #define NO_IOMMU	1
@@ -42,11 +40,11 @@ static int of_iommu_xlate(struct device *dev,
 	if (!ops)
 		return driver_deferred_probe_check_state(dev);
 
-	if (!try_module_get(ops->owner))
-		return -ENODEV;
+	//if (!try_module_get(ops->owner))
+	//	return -ENODEV;
 
 	ret = ops->of_xlate(dev, iommu_spec);
-	module_put(ops->owner);
+	//module_put(ops->owner);
 	return ret;
 }
 

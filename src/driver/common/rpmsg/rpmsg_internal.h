@@ -13,7 +13,7 @@
 #define __RPMSG_INTERNAL_H__
 
 #include <linux/rpmsg.h>
-#include <linux/poll.h>
+// #include <linux/poll.h>
 
 #define to_rpmsg_device(d) container_of(d, struct rpmsg_device, dev)
 #define to_rpmsg_driver(d) container_of(d, struct rpmsg_driver, drv)
@@ -73,8 +73,8 @@ struct rpmsg_endpoint_ops {
 	int (*trysendto)(struct rpmsg_endpoint *ept, void *data, int len, u32 dst);
 	int (*trysend_offchannel)(struct rpmsg_endpoint *ept, u32 src, u32 dst,
 			     void *data, int len);
-	__poll_t (*poll)(struct rpmsg_endpoint *ept, struct file *filp,
-			     poll_table *wait);
+	//__poll_t (*poll)(struct rpmsg_endpoint *ept, struct file *filp,
+	//		     poll_table *wait);
 	ssize_t (*get_mtu)(struct rpmsg_endpoint *ept);
 };
 

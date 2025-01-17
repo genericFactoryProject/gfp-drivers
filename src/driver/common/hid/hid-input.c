@@ -13,10 +13,7 @@
  * Vojtech Pavlik, Simunkova 1594, Prague 8, 182 00 Czech Republic
  */
 
-// #include <linux/module.h>
-// #include <linux/slab.h>
-// #include <linux/kernel.h>
-
+#include <linux/bitmap.h>
 #include <linux/hid.h>
 #include <linux/hid-debug.h>
 
@@ -412,7 +409,7 @@ static int hidinput_query_battery_capacity(struct hid_device *dev)
 	u8 *buf;
 	int ret;
 
-	buf = kmalloc(4, GFP_KERNEL);
+	buf = kmalloc(4, 0);
 	if (!buf)
 		return -ENOMEM;
 
@@ -508,11 +505,11 @@ static int hidinput_setup_battery(struct hid_device *dev, unsigned report_type,
 	if (quirks & HID_BATTERY_QUIRK_IGNORE)
 		return 0;
 
-	psy_desc = kzalloc(sizeof(*psy_desc), GFP_KERNEL);
+	psy_desc = kzalloc(sizeof(*psy_desc), 0);
 	if (!psy_desc)
 		return -ENOMEM;
 
-	psy_desc->name = kasprintf(GFP_KERNEL, "hid-%s-battery",
+	psy_desc->name = kasprintf(0, "hid-%s-battery",
 				   strlen(dev->uniq) ?
 					dev->uniq : dev_name(&dev->dev));
 	if (!psy_desc->name) {
@@ -1743,7 +1740,7 @@ static void hidinput_led_worker(struct work_struct *work)
 
 	/* fall back to generic raw-output-report */
 	len = hid_report_len(report);
-	buf = hid_alloc_report_buf(report, GFP_KERNEL);
+	buf = hid_alloc_report_buf(report, 0);
 	if (!buf)
 		return;
 
@@ -1776,7 +1773,7 @@ static int hidinput_input_event(struct input_dev *dev, unsigned int type,
 
 	hid_set_field(field, offset, value);
 
-	schedule_work(&hid->led_work);
+	//schedule_work(&hid->led_work);
 	return 0;
 }
 
@@ -1907,7 +1904,7 @@ static void report_features(struct hid_device *hid)
 static struct hid_input *hidinput_allocate(struct hid_device *hid,
 					   unsigned int application)
 {
-	struct hid_input *hidinput = kzalloc(sizeof(*hidinput), GFP_KERNEL);
+	struct hid_input *hidinput = kzalloc(sizeof(*hidinput), 0);
 	struct input_dev *input_dev = input_allocate_device();
 	const char *suffix = NULL;
 	size_t suffix_len, name_len;
@@ -1968,7 +1965,7 @@ static struct hid_input *hidinput_allocate(struct hid_device *hid,
 		suffix_len = strlen(suffix);
 		if ((name_len < suffix_len) ||
 		    strcmp(hid->name + name_len - suffix_len, suffix)) {
-			hidinput->name = kasprintf(GFP_KERNEL, "%s %s",
+			hidinput->name = kasprintf("%s %s",
 						   hid->name, suffix);
 			if (!hidinput->name)
 				goto fail;
@@ -2182,7 +2179,7 @@ int hidinput_connect(struct hid_device *hid, unsigned int force)
 	int i, k;
 
 	INIT_LIST_HEAD(&hid->inputs);
-	INIT_WORK(&hid->led_work, hidinput_led_worker);
+	//INIT_WORK(&hid->led_work, hidinput_led_worker);
 
 	hid->status &= ~HID_STAT_DUP_DETECTED;
 
@@ -2296,6 +2293,6 @@ void hidinput_disconnect(struct hid_device *hid)
 	 * parent input_dev at all. Once all input devices are removed, we
 	 * know that led_work will never get restarted, so we can cancel it
 	 * synchronously and are safe. */
-	cancel_work_sync(&hid->led_work);
+	//cancel_work_sync(&hid->led_work);
 }
 EXPORT_SYMBOL_GPL(hidinput_disconnect);

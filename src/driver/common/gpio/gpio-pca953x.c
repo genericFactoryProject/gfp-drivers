@@ -8,21 +8,18 @@
  *  Derived from drivers/i2c/chips/pca9539.c
  */
 
-#include <linux/acpi.h>
 #include <linux/bitmap.h>
 #include <linux/gpio/driver.h>
 #include <linux/gpio/consumer.h>
 #include <linux/i2c.h>
 #include <linux/init.h>
 #include <linux/interrupt.h>
-// #include <linux/module.h>
 #include <linux/of_platform.h>
 #include <linux/platform_data/pca953x.h>
 #include <linux/regmap.h>
 #include <linux/regulator/consumer.h>
-// #include <linux/slab.h>
 
-#include <asm/unaligned.h>
+#include <asm-generic/unaligned.h>
 
 #define PCA953X_INPUT		0x00
 #define PCA953X_OUTPUT		0x01
@@ -951,7 +948,7 @@ static int pca953x_probe(struct i2c_client *client,
 	struct regulator *reg;
 	const struct regmap_config *regmap_config;
 
-	chip = devm_kzalloc(&client->dev, sizeof(*chip), GFP_KERNEL);
+	chip = devm_kzalloc(&client->dev, sizeof(*chip), 0);
 	if (chip == NULL)
 		return -ENOMEM;
 
@@ -1044,8 +1041,8 @@ static int pca953x_probe(struct i2c_client *client,
 	 * applied to all other i2c-controlled GPIO expanders (and potentially
 	 * regmap-i2c).
 	 */
-	lockdep_set_subclass(&chip->i2c_lock,
-			     i2c_adapter_depth(client->adapter));
+	//lockdep_set_subclass(&chip->i2c_lock,
+	//		     i2c_adapter_depth(client->adapter));
 
 	/* initialize cached registers from their original values.
 	 * we can't share this chip with another i2c master.

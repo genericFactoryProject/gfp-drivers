@@ -8,7 +8,7 @@
 #define _SWITCHTEC_H
 
 #include <linux/pci.h>
-#include <linux/cdev.h>
+// #include <linux/cdev.h>
 
 #define SWITCHTEC_MRPC_PAYLOAD_SIZE 1024
 #define SWITCHTEC_MAX_PFF_CSR 255
@@ -472,7 +472,7 @@ struct dma_mrpc_output {
 struct switchtec_dev {
 	struct pci_dev *pdev;
 	struct device dev;
-	struct cdev cdev;
+	// struct cdev cdev;
 
 	enum switchtec_gen gen;
 
@@ -499,10 +499,10 @@ struct switchtec_dev {
 	struct list_head mrpc_queue;
 	int mrpc_busy;
 	struct work_struct mrpc_work;
-	struct delayed_work mrpc_timeout;
+	//struct delayed_work mrpc_timeout;
 	bool alive;
 
-	wait_queue_head_t event_wq;
+	//wait_queue_head_t event_wq;
 	atomic_t event_cnt;
 
 	struct work_struct link_event_work;

@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: GPL-2.0
 #include <linux/pci.h>
-// #include <linux/module.h>
-// #include <linux/slab.h>
 #include <linux/ioport.h>
-#include <linux/wait.h>
+#include <linux/lynix-compat.h>
 
 #include "pci.h"
 
@@ -195,6 +193,7 @@ struct pci_ops *pci_bus_set_ops(struct pci_bus *bus, struct pci_ops *ops)
 }
 EXPORT_SYMBOL(pci_bus_set_ops);
 
+#if 0
 /*
  * The following routines are to prevent the user from accessing PCI config
  * space when it's unsafe to do so.  Some devices require this during BIST and
@@ -204,16 +203,19 @@ EXPORT_SYMBOL(pci_bus_set_ops);
  * for callers to sleep on until devices are unblocked.
  */
 static DECLARE_WAIT_QUEUE_HEAD(pci_cfg_wait);
-
+#endif
 static noinline void pci_wait_cfg(struct pci_dev *dev)
 	__must_hold(&pci_lock)
 {
+	#if 0
 	do {
 		raw_spin_unlock_irq(&pci_lock);
 		wait_event(pci_cfg_wait, !dev->block_cfg_access);
 		raw_spin_lock_irq(&pci_lock);
 	} while (dev->block_cfg_access);
+	#endif
 }
+
 
 /* Returns 0 on success, negative values indicate error. */
 #define PCI_USER_READ_CONFIG(size, type)					\
@@ -328,7 +330,7 @@ void pci_cfg_access_unlock(struct pci_dev *dev)
 	dev->block_cfg_access = 0;
 	raw_spin_unlock_irqrestore(&pci_lock, flags);
 
-	wake_up_all(&pci_cfg_wait);
+	//wake_up_all(&pci_cfg_wait);
 }
 EXPORT_SYMBOL_GPL(pci_cfg_access_unlock);
 

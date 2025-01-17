@@ -9,7 +9,8 @@
  */
 
 #include <linux/kref.h>
-#include <linux/mutex.h>
+//#include <linux/mutex.h>
+#include <linux/lynix-compat.h>
 #include <linux/radix-tree.h>
 #include <linux/pinctrl/pinconf.h>
 #include <linux/pinctrl/machine.h>

@@ -6,23 +6,20 @@
  * Author: Georgi Djakov <georgi.djakov@linaro.org>
  */
 
-#include <linux/debugfs.h>
 #include <linux/device.h>
 #include <linux/idr.h>
 #include <linux/init.h>
 #include <linux/interconnect.h>
 #include <linux/interconnect-provider.h>
 #include <linux/list.h>
-// #include <linux/module.h>
-#include <linux/mutex.h>
-// #include <linux/slab.h>
 #include <linux/of.h>
 #include <linux/overflow.h>
+#include <linux/lynix-compat.h>
 
 #include "internal.h"
 
-#define CREATE_TRACE_POINTS
-#include "trace.h"
+//#define CREATE_TRACE_POINTS
+//#include "trace.h"
 
 static DEFINE_IDR(icc_idr);
 static LIST_HEAD(icc_providers);
@@ -30,7 +27,7 @@ static int providers_count;
 static bool synced_state;
 static DEFINE_MUTEX(icc_lock);
 static struct dentry *icc_debugfs_dir;
-
+#if 0
 static void icc_summary_show_one(struct seq_file *s, struct icc_node *n)
 {
 	if (!n)
@@ -142,7 +139,7 @@ static int icc_graph_show(struct seq_file *s, void *data)
 	return 0;
 }
 DEFINE_SHOW_ATTRIBUTE(icc_graph);
-
+#endif
 static struct icc_node *node_find(const int id)
 {
 	return idr_find(&icc_idr, id);
@@ -155,7 +152,7 @@ static struct icc_path *path_init(struct device *dev, struct icc_node *dst,
 	struct icc_path *path;
 	int i;
 
-	path = kzalloc(struct_size(path, reqs, num_nodes), GFP_KERNEL);
+	path = kzalloc(struct_size(path, reqs, num_nodes), 0);
 	if (!path)
 		return ERR_PTR(-ENOMEM);
 
@@ -384,7 +381,7 @@ struct icc_node_data *of_icc_get_from_provider(struct of_phandle_args *spec)
 		return ERR_CAST(node);
 
 	if (!data) {
-		data = kzalloc(sizeof(*data), GFP_KERNEL);
+		data = kzalloc(sizeof(*data), 0);
 		if (!data)
 			return ERR_PTR(-ENOMEM);
 		data->node = node;
@@ -403,7 +400,7 @@ struct icc_path *devm_of_icc_get(struct device *dev, const char *name)
 {
 	struct icc_path **ptr, *path;
 
-	ptr = devres_alloc(devm_icc_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_icc_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -501,7 +498,7 @@ struct icc_path *of_icc_get_by_index(struct device *dev, int idx)
 	if (src_data->tag && src_data->tag == dst_data->tag)
 		icc_set_tag(path, src_data->tag);
 
-	path->name = kasprintf(GFP_KERNEL, "%s-%s",
+	path->name = kasprintf("%s-%s",
 			       src_data->node->name, dst_data->node->name);
 	if (!path->name) {
 		kfree(path);
@@ -647,7 +644,7 @@ int icc_set_bw(struct icc_path *path, u32 avg_bw, u32 peak_bw)
 		/* aggregate requests for this node */
 		aggregate_requests(node);
 
-		trace_icc_set_bw(path, node, i, avg_bw, peak_bw);
+		//trace_icc_set_bw(path, node, i, avg_bw, peak_bw);
 	}
 
 	ret = apply_constraints(path);
@@ -666,7 +663,7 @@ int icc_set_bw(struct icc_path *path, u32 avg_bw, u32 peak_bw)
 
 	mutex_unlock(&icc_lock);
 
-	trace_icc_set_bw_end(path, ret);
+	//trace_icc_set_bw_end(path, ret);
 
 	return ret;
 }
@@ -742,7 +739,7 @@ struct icc_path *icc_get(struct device *dev, const int src_id, const int dst_id)
 		goto out;
 	}
 
-	path->name = kasprintf(GFP_KERNEL, "%s-%s", src->name, dst->name);
+	path->name = kasprintf("%s-%s", src->name, dst->name);
 	if (!path->name) {
 		kfree(path);
 		path = ERR_PTR(-ENOMEM);
@@ -796,11 +793,11 @@ static struct icc_node *icc_node_create_nolock(int id)
 	if (node)
 		return node;
 
-	node = kzalloc(sizeof(*node), GFP_KERNEL);
+	node = kzalloc(sizeof(*node), 0);
 	if (!node)
 		return ERR_PTR(-ENOMEM);
 
-	id = idr_alloc(&icc_idr, node, id, id + 1, GFP_KERNEL);
+	id = idr_alloc(&icc_idr, node, id, id + 1, 0);
 	if (id < 0) {
 		WARN(1, "%s: couldn't get idr\n", __func__);
 		kfree(node);
@@ -888,9 +885,9 @@ int icc_link_create(struct icc_node *node, const int dst_id)
 		}
 	}
 
-	new = krealloc(node->links,
-		       (node->num_links + 1) * sizeof(*node->links),
-		       GFP_KERNEL);
+	new = NULL; //krealloc(node->links,
+		       //(node->num_links + 1) * sizeof(*node->links),
+		       //0);
 	if (!new) {
 		ret = -ENOMEM;
 		goto out;
@@ -938,8 +935,8 @@ int icc_link_destroy(struct icc_node *src, struct icc_node *dst)
 
 	src->links[slot] = src->links[--src->num_links];
 
-	new = krealloc(src->links, src->num_links * sizeof(*src->links),
-		       GFP_KERNEL);
+	new = NULL; //krealloc(src->links, src->num_links * sizeof(*src->links),
+		       //0);
 	if (new)
 		src->links = new;
 	else
@@ -1137,12 +1134,13 @@ static int __init icc_init(void)
 
 	providers_count = of_count_icc_providers(root);
 	of_node_put(root);
-
+#if 0
 	icc_debugfs_dir = debugfs_create_dir("interconnect", NULL);
 	debugfs_create_file("interconnect_summary", 0444,
 			    icc_debugfs_dir, NULL, &icc_summary_fops);
 	debugfs_create_file("interconnect_graph", 0444,
 			    icc_debugfs_dir, NULL, &icc_graph_fops);
+#endif
 	return 0;
 }
 

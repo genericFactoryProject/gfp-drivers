@@ -16,7 +16,9 @@
 #include <linux/linear_range.h>
 #include <linux/notifier.h>
 #include <linux/regulator/consumer.h>
-#include <linux/ww_mutex.h>
+#include <linux/ktime.h>
+
+//#include <linux/ww_mutex.h>
 
 struct gpio_desc;
 struct regmap;
@@ -623,8 +625,8 @@ struct regulator_dev {
 	struct coupling_desc coupling_desc;
 
 	struct blocking_notifier_head notifier;
-	struct ww_mutex mutex; /* consumer lock */
-	struct task_struct *mutex_owner;
+	//struct ww_mutex mutex; /* consumer lock */
+	//struct task_struct *mutex_owner;
 	int ref_cnt;
 	struct module *owner;
 	struct device dev;
@@ -633,7 +635,7 @@ struct regulator_dev {
 	const char *supply_name;
 	struct regmap *regmap;
 
-	struct delayed_work disable_work;
+	//struct delayed_work disable_work;
 
 	void *reg_data;		/* regulator_dev data */
 

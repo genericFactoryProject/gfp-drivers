@@ -4,22 +4,16 @@
  * Author: Marc Zyngier <marc.zyngier@arm.com>
  */
 
-#include <linux/acpi.h>
-#include <linux/acpi_iort.h>
+//#include <linux/acpi_iort.h>
 #include <linux/bitfield.h>
 #include <linux/bitmap.h>
-#include <linux/cpu.h>
-#include <linux/crash_dump.h>
 #include <linux/delay.h>
 #include <linux/dma-iommu.h>
-#include <linux/efi.h>
 #include <linux/interrupt.h>
 #include <linux/iopoll.h>
 #include <linux/irqdomain.h>
 #include <linux/list.h>
 #include <linux/log2.h>
-#include <linux/memblock.h>
-#include <linux/mm.h>
 #include <linux/msi.h>
 #include <linux/of.h>
 #include <linux/of_address.h>
@@ -27,15 +21,17 @@
 #include <linux/of_pci.h>
 #include <linux/of_platform.h>
 #include <linux/percpu.h>
-// #include <linux/slab.h>
 #include <linux/syscore_ops.h>
+#include <linux/idr.h>
+#include <linux/sizes.h>
+#include <linux/lynix-compat.h>
 
 #include <linux/irqchip.h>
 #include <linux/irqchip/arm-gic-v3.h>
 #include <linux/irqchip/arm-gic-v4.h>
 
-#include <asm/cputype.h>
-#include <asm/exception.h>
+//#include <asm/cputype.h>
+//#include <asm/exception.h>
 
 #include "irq-gic-common.h"
 
@@ -598,7 +594,7 @@ static struct its_collection *its_build_mapd_cmd(struct its_node *its,
 	unsigned long itt_addr;
 	u8 size = ilog2(desc->its_mapd_cmd.dev->nr_ites);
 
-	itt_addr = virt_to_phys(desc->its_mapd_cmd.dev->itt);
+	itt_addr = 0;//virt_to_phys(desc->its_mapd_cmd.dev->itt);
 	itt_addr = ALIGN(itt_addr, ITS_ITT_ALIGN);
 
 	its_encode_cmd(cmd, GITS_CMD_MAPD);
@@ -782,7 +778,7 @@ static struct its_vpe *its_build_vmapp_cmd(struct its_node *its,
 		goto out;
 	}
 
-	vpt_addr = virt_to_phys(page_address(desc->its_vmapp_cmd.vpe->vpt_page));
+	vpt_addr = 0;//virt_to_phys(page_address(desc->its_vmapp_cmd.vpe->vpt_page));
 	target = desc->its_vmapp_cmd.col->target_address + its->vlpi_redist_offset;
 
 	its_encode_target(cmd, target);
@@ -792,7 +788,7 @@ static struct its_vpe *its_build_vmapp_cmd(struct its_node *its,
 	if (!is_v4_1(its))
 		goto out;
 
-	vconf_addr = virt_to_phys(page_address(desc->its_vmapp_cmd.vpe->its_vm->vprop_page));
+	vconf_addr = 0;//virt_to_phys(page_address(desc->its_vmapp_cmd.vpe->its_vm->vprop_page));
 
 	alloc = !atomic_fetch_inc(&desc->its_vmapp_cmd.vpe->vmapp_count);
 
@@ -1001,7 +997,7 @@ static struct its_cmd_block *its_allocate_entry(struct its_node *its)
 	while (its_queue_full(its)) {
 		count--;
 		if (!count) {
-			pr_err_ratelimited("ITS queue not draining\n");
+			//pr_err("ITS queue not draining\n");
 			return NULL;
 		}
 		cpu_relax();
@@ -1077,8 +1073,8 @@ static int its_wait_for_range_completion(struct its_node *its,
 
 		count--;
 		if (!count) {
-			pr_err_ratelimited("ITS queue timeout (%llu %llu)\n",
-					   to_idx, linear_idx);
+			//pr_err("ITS queue timeout (%llu %llu)\n",
+			//		   to_idx, linear_idx);
 			return -1;
 		}
 		prev_idx = rd_idx;
@@ -1125,7 +1121,7 @@ post:									\
 	raw_spin_unlock_irqrestore(&its->lock, flags);			\
 									\
 	if (its_wait_for_range_completion(its, rd_idx, next_cmd))	\
-		pr_err_ratelimited("ITS cmd %ps failed\n", builder);	\
+		pr_err("ITS cmd %ps failed\n", builder);	\
 }
 
 static void its_build_sync_cmd(struct its_node *its,
@@ -1399,7 +1395,7 @@ static void lpi_write_config(struct irq_data *d, u8 clr, u8 set)
 	u8 *cfg;
 
 	if (map) {
-		va = page_address(map->vm->vprop_page);
+		va = 0;//page_address(map->vm->vprop_page);
 		hwirq = map->vintid;
 
 		/* Remember the updated property */
@@ -1577,14 +1573,14 @@ static int its_select_cpu(struct irq_data *d,
 	cpumask_var_t tmpmask;
 	int cpu, node;
 
-	if (!alloc_cpumask_var(&tmpmask, GFP_ATOMIC))
+	if (!alloc_cpumask_var(&tmpmask, 0))
 		return -ENOMEM;
 
 	node = its_dev->its->numa_node;
 
 	if (!irqd_affinity_is_managed(d)) {
 		/* First try the NUMA node */
-		if (node != NUMA_NO_NODE) {
+		if (node != 0) {
 			/*
 			 * Try the intersection of the affinity mask and the
 			 * node mask (and the online mask, just to be safe).
@@ -1628,7 +1624,7 @@ static int its_select_cpu(struct irq_data *d,
 
 		/* If we cannot cross sockets, limit the search to that node */
 		if ((its_dev->its->flags & ITS_FLAGS_WORKAROUND_CAVIUM_23144) &&
-		    node != NUMA_NO_NODE)
+		    node != 0)
 			cpumask_and(tmpmask, tmpmask, cpumask_of_node(node));
 
 		cpu = cpumask_pick_least_loaded(d, tmpmask);
@@ -1821,7 +1817,7 @@ static int its_vlpi_map(struct irq_data *d, struct its_cmd_info *info)
 		struct its_vlpi_map *maps;
 
 		maps = kcalloc(its_dev->event_map.nr_lpis, sizeof(*maps),
-			       GFP_ATOMIC);
+			       0);
 		if (!maps) {
 			ret = -ENOMEM;
 			goto out;
@@ -2019,7 +2015,7 @@ static struct lpi_range *mk_lpi_range(u32 base, u32 span)
 {
 	struct lpi_range *range;
 
-	range = kmalloc(sizeof(*range), GFP_KERNEL);
+	range = kmalloc(sizeof(*range), 0);
 	if (range) {
 		range->base_id = base;
 		range->span = span;
@@ -2144,7 +2140,7 @@ static unsigned long *its_lpi_alloc(int nr_irqs, u32 *base, int *nr_ids)
 	if (err)
 		goto out;
 
-	bitmap = bitmap_zalloc(nr_irqs, GFP_ATOMIC);
+	bitmap = bitmap_zalloc(nr_irqs, 0);
 	if (!bitmap)
 		goto out;
 
@@ -2176,19 +2172,19 @@ static struct page *its_allocate_prop_table(gfp_t gfp_flags)
 {
 	struct page *prop_page;
 
-	prop_page = alloc_pages(gfp_flags, get_order(LPI_PROPBASE_SZ));
+	prop_page = 0;//alloc_pages(gfp_flags, get_order(LPI_PROPBASE_SZ));
 	if (!prop_page)
 		return NULL;
 
-	gic_reset_prop_table(page_address(prop_page));
+	//gic_reset_prop_table(page_address(prop_page));
 
 	return prop_page;
 }
 
 static void its_free_prop_table(struct page *prop_page)
 {
-	free_pages((unsigned long)page_address(prop_page),
-		   get_order(LPI_PROPBASE_SZ));
+	//free_pages((unsigned long)page_address(prop_page),
+	//	   get_order(LPI_PROPBASE_SZ));
 }
 
 static bool gic_check_reserved_range(phys_addr_t addr, unsigned long size)
@@ -2201,27 +2197,27 @@ static bool gic_check_reserved_range(phys_addr_t addr, unsigned long size)
 	 * construction, the LPI tables are out of this kernel's
 	 * memory map.
 	 */
-	if (is_kdump_kernel())
-		return true;
+	//if (is_kdump_kernel())
+	//	return true;
 
 	addr_end = addr + size - 1;
-
+#if 0
 	for_each_reserved_mem_range(i, &start, &end) {
 		if (addr >= start && addr_end <= end)
 			return true;
 	}
-
+#endif
 	/* Not found, not a good sign... */
 	pr_warn("GICv3: Expected reserved range [%pa:%pa], not found\n",
 		&addr, &addr_end);
-	add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
+	//add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
 	return false;
 }
 
 static int gic_reserve_range(phys_addr_t addr, unsigned long size)
 {
-	if (efi_enabled(EFI_CONFIG_TABLES))
-		return efi_mem_reserve_persistent(addr, size);
+	//if (efi_enabled(EFI_CONFIG_TABLES))
+	//	return efi_mem_reserve_persistent(addr, size);
 
 	return 0;
 }
@@ -2245,14 +2241,14 @@ static int __init its_setup_lpi_prop_table(void)
 		lpi_id_bits = min_t(u32,
 				    GICD_TYPER_ID_BITS(gic_rdists->gicd_typer),
 				    ITS_MAX_LPI_NRBITS);
-		page = its_allocate_prop_table(GFP_NOWAIT);
+		page = its_allocate_prop_table(0);
 		if (!page) {
 			pr_err("Failed to allocate PROPBASE\n");
 			return -ENOMEM;
 		}
 
-		gic_rdists->prop_table_pa = page_to_phys(page);
-		gic_rdists->prop_table_va = page_address(page);
+		gic_rdists->prop_table_pa = 0;//page_to_phys(page);
+		gic_rdists->prop_table_va = 0;//page_address(page);
 		WARN_ON(gic_reserve_range(gic_rdists->prop_table_pa,
 					  LPI_PROPBASE_SZ));
 	}
@@ -2307,15 +2303,15 @@ static int its_setup_baser(struct its_node *its, struct its_baser *baser,
 			&its->phys_base, its_base_type_string[type],
 			alloc_pages, GITS_BASER_PAGES_MAX);
 		alloc_pages = GITS_BASER_PAGES_MAX;
-		order = get_order(GITS_BASER_PAGES_MAX * psz);
+		order = 0;//get_order(GITS_BASER_PAGES_MAX * psz);
 	}
 
-	page = alloc_pages_node(its->numa_node, GFP_KERNEL | __GFP_ZERO, order);
+	page = 0;//alloc_pages_node(its->numa_node, 0 | 0, order);
 	if (!page)
 		return -ENOMEM;
 
-	base = (void *)page_address(page);
-	baser_phys = virt_to_phys(base);
+	base = (void *)0;//page_address(page);
+	baser_phys = 0;//virt_to_phys(base);
 
 	/* Check if the physical address of the memory is above 48bits */
 	if (IS_ENABLED(CONFIG_ARM64_64K_PAGES) && (baser_phys >> 48)) {
@@ -2437,7 +2433,8 @@ static bool its_parse_indirect_baser(struct its_node *its,
 	 * massive waste of memory if two-level device table
 	 * feature is not supported by hardware.
 	 */
-	new_order = max_t(u32, get_order(esz << ids), new_order);
+	new_order = 0;//max_t(u32, get_order(esz << ids), new_order);
+	#if 0
 	if (new_order >= MAX_ORDER) {
 		new_order = MAX_ORDER - 1;
 		ids = ilog2(PAGE_ORDER_TO_SIZE(new_order) / (int)esz);
@@ -2445,7 +2442,7 @@ static bool its_parse_indirect_baser(struct its_node *its,
 			&its->phys_base, its_base_type_string[type],
 			device_ids(its), ids);
 	}
-
+	#endif
 	*order = new_order;
 
 	return indirect;
@@ -2596,7 +2593,7 @@ static int its_alloc_tables(struct its_node *its)
 			return -ENXIO;
 		}
 
-		order = get_order(baser->psz);
+		order = 0;//get_order(baser->psz);
 
 		switch (type) {
 		case GITS_BASER_TYPE_DEVICE:
@@ -2776,15 +2773,15 @@ static bool allocate_vpe_l2_table(int cpu, u32 id)
 
 	/* Allocate memory for 2nd level table */
 	if (!table[idx]) {
-		page = alloc_pages(GFP_KERNEL | __GFP_ZERO, get_order(psz));
+		page = 0;//alloc_pages(0 | 0, get_order(psz));
 		if (!page)
 			return false;
 
 		/* Flush Lvl2 table to PoC if hw doesn't support coherency */
 		if (!(val & GICR_VPROPBASER_SHAREABILITY_MASK))
-			gic_flush_dcache_to_poc(page_address(page), psz);
+			;//gic_flush_dcache_to_poc(page_address(page), psz);
 
-		table[idx] = cpu_to_le64(page_to_phys(page) | GITS_BASER_VALID);
+		table[idx] = 0;//cpu_to_le64(page_to_phys(page) | GITS_BASER_VALID);
 
 		/* Flush Lvl1 entry to PoC if hw doesn't support coherency */
 		if (!(val & GICR_VPROPBASER_SHAREABILITY_MASK))
@@ -2828,7 +2825,7 @@ static int allocate_vpe_l1_table(void)
 	if (val & GICR_VPROPBASER_4_1_VALID)
 		goto out;
 
-	gic_data_rdist()->vpe_table_mask = kzalloc(sizeof(cpumask_t), GFP_ATOMIC);
+	gic_data_rdist()->vpe_table_mask = kzalloc(sizeof(cpumask_t), 0);
 	if (!gic_data_rdist()->vpe_table_mask)
 		return -ENOMEM;
 
@@ -2895,12 +2892,12 @@ static int allocate_vpe_l1_table(void)
 
 	pr_debug("np = %d, npg = %lld, psz = %d, epp = %d, esz = %d\n",
 		 np, npg, psz, epp, esz);
-	page = alloc_pages(GFP_ATOMIC | __GFP_ZERO, get_order(np * PAGE_SIZE));
+	page = 0;//alloc_pages(0 | 0, get_order(np * PAGE_SIZE));
 	if (!page)
 		return -ENOMEM;
 
-	gic_data_rdist()->vpe_l1_base = page_address(page);
-	pa = virt_to_phys(page_address(page));
+	gic_data_rdist()->vpe_l1_base = 0;//page_address(page);
+	pa = 0;//virt_to_phys(page_address(page));
 	WARN_ON(!IS_ALIGNED(pa, psz));
 
 	val |= FIELD_PREP(GICR_VPROPBASER_4_1_ADDR, pa >> 12);
@@ -2925,7 +2922,7 @@ static int its_alloc_collections(struct its_node *its)
 	int i;
 
 	its->collections = kcalloc(nr_cpu_ids, sizeof(*its->collections),
-				   GFP_KERNEL);
+				   0);
 	if (!its->collections)
 		return -ENOMEM;
 
@@ -2939,8 +2936,8 @@ static struct page *its_allocate_pending_table(gfp_t gfp_flags)
 {
 	struct page *pend_page;
 
-	pend_page = alloc_pages(gfp_flags | __GFP_ZERO,
-				get_order(LPI_PENDBASE_SZ));
+	pend_page = 0;//alloc_pages(gfp_flags | 0,
+				//get_order(LPI_PENDBASE_SZ));
 	if (!pend_page)
 		return NULL;
 
@@ -2952,7 +2949,7 @@ static struct page *its_allocate_pending_table(gfp_t gfp_flags)
 
 static void its_free_pending_table(struct page *pt)
 {
-	free_pages((unsigned long)page_address(pt), get_order(LPI_PENDBASE_SZ));
+	//free_pages((unsigned long)page_address(pt), get_order(LPI_PENDBASE_SZ));
 }
 
 /*
@@ -2999,7 +2996,7 @@ static int __init allocate_lpi_tables(void)
 	for_each_possible_cpu(cpu) {
 		struct page *pend_page;
 
-		pend_page = its_allocate_pending_table(GFP_NOWAIT);
+		pend_page = its_allocate_pending_table(0);
 		if (!pend_page) {
 			pr_err("Failed to allocate PENDBASE for CPU%d\n", cpu);
 			return -ENOMEM;
@@ -3028,7 +3025,7 @@ static u64 read_vpend_dirty_clear(void __iomem *vlpi_base)
 	} while (!clean && count);
 
 	if (unlikely(!clean))
-		pr_err_ratelimited("ITS virtual pending table not cleaning\n");
+		pr_err("ITS virtual pending table not cleaning\n");
 
 	return val;
 }
@@ -3071,7 +3068,7 @@ static void its_cpu_init_lpis(void)
 		paddr = gicr_read_propbaser(rbase + GICR_PROPBASER);
 		paddr &= GENMASK_ULL(51, 12);
 		if (WARN_ON(gic_rdists->prop_table_pa != paddr))
-			add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
+			;//add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
 
 		paddr = gicr_read_pendbaser(rbase + GICR_PENDBASER);
 		paddr &= GENMASK_ULL(51, 16);
@@ -3083,7 +3080,7 @@ static void its_cpu_init_lpis(void)
 	}
 
 	pend_page = gic_data_rdist()->pend_page;
-	paddr = page_to_phys(pend_page);
+	paddr = 0;//page_to_phys(pend_page);
 
 	/* set PROPBASE */
 	val = (gic_rdists->prop_table_pa |
@@ -3111,9 +3108,9 @@ static void its_cpu_init_lpis(void)
 	}
 
 	/* set PENDBASE */
-	val = (page_to_phys(pend_page) |
-	       GICR_PENDBASER_InnerShareable |
-	       GICR_PENDBASER_RaWaWb);
+	val = 0;//(page_to_phys(pend_page) |
+	       //GICR_PENDBASER_InnerShareable |
+	       //GICR_PENDBASER_RaWaWb);
 
 	gicr_write_pendbaser(val, rbase + GICR_PENDBASER);
 	tmp = gicr_read_pendbaser(rbase + GICR_PENDBASER);
@@ -3188,7 +3185,7 @@ static void its_cpu_init_collection(struct its_node *its)
 		struct device_node *cpu_node;
 
 		cpu_node = of_get_cpu_node(cpu, NULL);
-		if (its->numa_node != NUMA_NO_NODE &&
+		if (its->numa_node != 0 &&
 			its->numa_node != of_node_to_nid(cpu_node))
 			return;
 	}
@@ -3281,8 +3278,8 @@ static bool its_alloc_table_entry(struct its_node *its,
 
 	/* Allocate memory for 2nd level table */
 	if (!table[idx]) {
-		page = alloc_pages_node(its->numa_node, GFP_KERNEL | __GFP_ZERO,
-					get_order(baser->psz));
+		page = 0;//alloc_pages_node(its->numa_node, 0 | 0,
+					//get_order(baser->psz));
 		if (!page)
 			return false;
 
@@ -3290,7 +3287,7 @@ static bool its_alloc_table_entry(struct its_node *its,
 		if (!(baser->val & GITS_BASER_SHAREABILITY_MASK))
 			gic_flush_dcache_to_poc(page_address(page), baser->psz);
 
-		table[idx] = cpu_to_le64(page_to_phys(page) | GITS_BASER_VALID);
+		table[idx] = 0;//cpu_to_le64(page_to_phys(page) | GITS_BASER_VALID);
 
 		/* Flush Lvl1 entry to PoC if hw doesn't support coherency */
 		if (!(baser->val & GITS_BASER_SHAREABILITY_MASK))
@@ -3377,7 +3374,7 @@ static struct its_device *its_create_device(struct its_node *its, u32 dev_id,
 	if (WARN_ON(!is_power_of_2(nvecs)))
 		nvecs = roundup_pow_of_two(nvecs);
 
-	dev = kzalloc(sizeof(*dev), GFP_KERNEL);
+	dev = kzalloc(sizeof(*dev), 0);
 	/*
 	 * Even if the device wants a single LPI, the ITT must be
 	 * sized as a power of two (and you need at least one bit...).
@@ -3385,14 +3382,14 @@ static struct its_device *its_create_device(struct its_node *its, u32 dev_id,
 	nr_ites = max(2, nvecs);
 	sz = nr_ites * (FIELD_GET(GITS_TYPER_ITT_ENTRY_SIZE, its->typer) + 1);
 	sz = max(sz, ITS_ITT_ALIGN) + ITS_ITT_ALIGN - 1;
-	itt = kzalloc_node(sz, GFP_KERNEL, its->numa_node);
+	itt = 0;//kzalloc_node(sz, 0, its->numa_node);
 	if (alloc_lpis) {
 		lpi_map = its_lpi_alloc(nvecs, &lpi_base, &nr_lpis);
 		if (lpi_map)
 			col_map = kcalloc(nr_lpis, sizeof(*col_map),
-					  GFP_KERNEL);
+					  0);
 	} else {
-		col_map = kcalloc(nr_ites, sizeof(*col_map), GFP_KERNEL);
+		col_map = kcalloc(nr_ites, sizeof(*col_map), 0);
 		nr_lpis = 0;
 		lpi_base = 0;
 	}
@@ -3838,15 +3835,15 @@ static void its_vpe_schedule(struct its_vpe *vpe)
 	u64 val;
 
 	/* Schedule the VPE */
-	val  = virt_to_phys(page_address(vpe->its_vm->vprop_page)) &
-		GENMASK_ULL(51, 12);
+	val  = 0;//virt_to_phys(page_address(vpe->its_vm->vprop_page)) &
+		//GENMASK_ULL(51, 12);
 	val |= (LPI_NRBITS - 1) & GICR_VPROPBASER_IDBITS_MASK;
 	val |= GICR_VPROPBASER_RaWb;
 	val |= GICR_VPROPBASER_InnerShareable;
 	gicr_write_vpropbaser(val, vlpi_base + GICR_VPROPBASER);
 
-	val  = virt_to_phys(page_address(vpe->vpt_page)) &
-		GENMASK_ULL(51, 16);
+	val  = 0;//virt_to_phys(page_address(vpe->vpt_page)) &
+		//GENMASK_ULL(51, 16);
 	val |= GICR_VPENDBASER_RaWaWb;
 	val |= GICR_VPENDBASER_InnerShareable;
 	/*
@@ -4275,7 +4272,7 @@ static int its_sgi_get_irqchip_state(struct irq_data *d,
 
 		count--;
 		if (!count) {
-			pr_err_ratelimited("Unable to get SGI status\n");
+			pr_err("Unable to get SGI status\n");
 			goto out;
 		}
 		cpu_relax();
@@ -4388,7 +4385,7 @@ static const struct irq_domain_ops its_sgi_domain_ops = {
 
 static int its_vpe_id_alloc(void)
 {
-	return ida_simple_get(&its_vpeid_ida, 0, ITS_MAX_VPEID, GFP_KERNEL);
+	return ida_simple_get(&its_vpeid_ida, 0, ITS_MAX_VPEID, 0);
 }
 
 static void its_vpe_id_free(u16 id)
@@ -4407,7 +4404,7 @@ static int its_vpe_init(struct its_vpe *vpe)
 		return vpe_id;
 
 	/* Allocate VPT */
-	vpt_page = its_allocate_pending_table(GFP_KERNEL);
+	vpt_page = its_allocate_pending_table(0);
 	if (!vpt_page) {
 		its_vpe_id_free(vpe_id);
 		return -ENOMEM;
@@ -4484,7 +4481,7 @@ static int its_vpe_irq_domain_alloc(struct irq_domain *domain, unsigned int virq
 		return -ENOMEM;
 	}
 
-	vprop_page = its_allocate_prop_table(GFP_KERNEL);
+	vprop_page = its_allocate_prop_table(0);
 	if (!vprop_page) {
 		its_lpi_free(bitmap, base, nr_ids);
 		return -ENOMEM;
@@ -4903,7 +4900,7 @@ static int its_init_domain(struct fwnode_handle *handle, struct its_node *its)
 	struct irq_domain *inner_domain;
 	struct msi_domain_info *info;
 
-	info = kzalloc(sizeof(*info), GFP_KERNEL);
+	info = kzalloc(sizeof(*info), 0);
 	if (!info)
 		return -ENOMEM;
 
@@ -4939,7 +4936,7 @@ static int its_init_vpe_domain(void)
 
 	entries = roundup_pow_of_two(nr_cpu_ids);
 	vpe_proxy.vpes = kcalloc(entries, sizeof(*vpe_proxy.vpes),
-				 GFP_KERNEL);
+				 0);
 	if (!vpe_proxy.vpes)
 		return -ENOMEM;
 
@@ -5016,7 +5013,7 @@ static int __init its_probe_one(struct resource *res,
 
 	pr_info("ITS %pR\n", res);
 
-	its = kzalloc(sizeof(*its), GFP_KERNEL);
+	its = kzalloc(sizeof(*its), 0);
 	if (!its) {
 		err = -ENOMEM;
 		goto out_unmap;
@@ -5062,13 +5059,13 @@ static int __init its_probe_one(struct resource *res,
 
 	its->numa_node = numa_node;
 
-	page = alloc_pages_node(its->numa_node, GFP_KERNEL | __GFP_ZERO,
-				get_order(ITS_CMD_QUEUE_SZ));
+	page = 0;//alloc_pages_node(its->numa_node, 0 | 0,
+				//get_order(ITS_CMD_QUEUE_SZ));
 	if (!page) {
 		err = -ENOMEM;
 		goto out_unmap_sgir;
 	}
-	its->cmd_base = (void *)page_address(page);
+	its->cmd_base = 0;//(void *)page_address(page);
 	its->cmd_write = its->cmd_base;
 	its->fwnode_handle = handle;
 	its->get_msi_base = its_irq_get_msi_base;
@@ -5084,11 +5081,11 @@ static int __init its_probe_one(struct resource *res,
 	if (err)
 		goto out_free_tables;
 
-	baser = (virt_to_phys(its->cmd_base)	|
+	baser = //(virt_to_phys(its->cmd_base)	|
 		 GITS_CBASER_RaWaWb		|
 		 GITS_CBASER_InnerShareable	|
 		 (ITS_CMD_QUEUE_SZ / SZ_4K - 1)	|
-		 GITS_CBASER_VALID);
+		 GITS_CBASER_VALID; //);
 
 	gits_write_cbaser(baser, its->base + GITS_CBASER);
 	tmp = gits_read_cbaser(its->base + GITS_CBASER);
@@ -5129,7 +5126,7 @@ static int __init its_probe_one(struct resource *res,
 out_free_tables:
 	its_free_tables(its);
 out_free_cmd:
-	free_pages((unsigned long)its->cmd_base, get_order(ITS_CMD_QUEUE_SZ));
+	//free_pages((unsigned long)its->cmd_base, get_order(ITS_CMD_QUEUE_SZ));
 out_unmap_sgir:
 	if (its->sgir_base)
 		iounmap(its->sgir_base);
@@ -5177,7 +5174,7 @@ static int redist_disable_lpis(void)
 	 */
 	pr_warn("GICv3: CPU%d: Booted with LPIs enabled, memory probably corrupted\n",
 		smp_processor_id());
-	add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
+	//add_taint(TAINT_CRAP, LOCKDEP_STILL_OK);
 
 	/* Disable LPIs */
 	val &= ~GICR_CTLR_ENABLE_LPIS;
@@ -5232,12 +5229,12 @@ int its_cpu_init(void)
 
 static void rdist_memreserve_cpuhp_cleanup_workfn(struct work_struct *work)
 {
-	cpuhp_remove_state_nocalls(gic_rdists->cpuhp_memreserve_state);
-	gic_rdists->cpuhp_memreserve_state = CPUHP_INVALID;
+	//cpuhp_remove_state_nocalls(gic_rdists->cpuhp_memreserve_state);
+	//gic_rdists->cpuhp_memreserve_state = CPUHP_INVALID;
 }
 
-static DECLARE_WORK(rdist_memreserve_cpuhp_cleanup_work,
-		    rdist_memreserve_cpuhp_cleanup_workfn);
+//static DECLARE_WORK(rdist_memreserve_cpuhp_cleanup_work,
+//		    rdist_memreserve_cpuhp_cleanup_workfn);
 
 static int its_cpu_memreserve_lpi(unsigned int cpu)
 {
@@ -5262,7 +5259,7 @@ static int its_cpu_memreserve_lpi(unsigned int cpu)
 		its_free_pending_table(pend_page);
 		gic_data_rdist()->pend_page = NULL;
 	} else {
-		phys_addr_t paddr = page_to_phys(pend_page);
+		phys_addr_t paddr = 0;//page_to_phys(pend_page);
 		WARN_ON(gic_reserve_range(paddr, LPI_PENDBASE_SZ));
 	}
 
@@ -5270,7 +5267,7 @@ out:
 	/* Last CPU being brought up gets to issue the cleanup */
 	if (!IS_ENABLED(CONFIG_SMP) ||
 	    cpumask_equal(&cpus_booted_once_mask, cpu_possible_mask))
-		schedule_work(&rdist_memreserve_cpuhp_cleanup_work);
+		;//schedule_work(&rdist_memreserve_cpuhp_cleanup_work);
 
 	gic_data_rdist()->flags |= RD_LOCAL_MEMRESERVE_DONE;
 	return ret;
@@ -5366,7 +5363,7 @@ static int __init acpi_get_its_numa_node(u32 its_id)
 		if (its_id == its_srat_maps[i].its_id)
 			return its_srat_maps[i].numa_node;
 	}
-	return NUMA_NO_NODE;
+	return 0;
 }
 
 static int __init gic_acpi_match_srat_its(union acpi_subtable_headers *header,
@@ -5398,7 +5395,7 @@ static int __init gic_acpi_parse_srat_its(union acpi_subtable_headers *header,
 	 */
 	node = pxm_to_node(its_affinity->proximity_domain);
 
-	if (node == NUMA_NO_NODE || node >= MAX_NUMNODES) {
+	if (node == 0 || node >= MAX_NUMNODES) {
 		pr_err("SRAT: Invalid NUMA node %d in ITS affinity\n", node);
 		return 0;
 	}
@@ -5424,7 +5421,7 @@ static void __init acpi_table_parse_srat_its(void)
 		return;
 
 	its_srat_maps = kmalloc_array(count, sizeof(struct its_srat_map),
-				      GFP_KERNEL);
+				      0);
 	if (!its_srat_maps)
 		return;
 
@@ -5441,7 +5438,7 @@ static void __init acpi_its_srat_maps_free(void)
 }
 #else
 static void __init acpi_table_parse_srat_its(void)	{ }
-static int __init acpi_get_its_numa_node(u32 its_id) { return NUMA_NO_NODE; }
+static int __init acpi_get_its_numa_node(u32 its_id) { return 0; }
 static void __init acpi_its_srat_maps_free(void) { }
 #endif
 
@@ -5524,21 +5521,21 @@ int __init its_lpi_memreserve_init(void)
 {
 	int state;
 
-	if (!efi_enabled(EFI_CONFIG_TABLES))
-		return 0;
+	//if (!efi_enabled(EFI_CONFIG_TABLES))
+	//	return 0;
 
 	if (list_empty(&its_nodes))
 		return 0;
 
-	gic_rdists->cpuhp_memreserve_state = CPUHP_INVALID;
-	state = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN,
-				  "irqchip/arm/gicv3/memreserve:online",
-				  its_cpu_memreserve_lpi,
-				  NULL);
-	if (state < 0)
-		return state;
+	//gic_rdists->cpuhp_memreserve_state = CPUHP_INVALID;
+	//state = cpuhp_setup_state(CPUHP_AP_ONLINE_DYN,
+	//			  "irqchip/arm/gicv3/memreserve:online",
+	//			  its_cpu_memreserve_lpi,
+	//			  NULL);
+	//if (state < 0)
+	//	return state;
 
-	gic_rdists->cpuhp_memreserve_state = state;
+	//gic_rdists->cpuhp_memreserve_state = state;
 
 	return 0;
 }

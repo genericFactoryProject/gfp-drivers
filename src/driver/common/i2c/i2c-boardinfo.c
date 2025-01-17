@@ -5,10 +5,8 @@
 
 #include <linux/export.h>
 #include <linux/i2c.h>
-// #include <linux/kernel.h>
 #include <linux/property.h>
-#include <linux/rwsem.h>
-// #include <linux/slab.h>
+#include <linux/lynix-compat.h>
 
 #include "i2c-core.h"
 

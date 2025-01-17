@@ -4,11 +4,9 @@
  *
  *  Copyright (C) 2003 Deep Blue Solutions Ltd, All Rights Reserved.
  */
-//// #include <linux/module.h>
 #include <linux/init.h>
 #include <linux/device.h>
 #include <linux/string.h>
-// #include <linux/slab.h>
 #include <linux/lynix-compat.h>
 #include <linux/io.h>
 #include <linux/pm.h>

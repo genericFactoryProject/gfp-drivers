@@ -13,13 +13,8 @@
  */
 
 #include <linux/lynix-compat.h>
-// #include <linux/kernel.h>
-// #include <linux/gfp.h>
 #include <linux/pci.h>
-// #include <linux/module.h>
 #include <linux/libata.h>
-// #include <linux/highmem.h>
-// #include <trace/events/libata.h>
 #include "libata.h"
 
 static struct workqueue_struct *ata_sff_wq;
@@ -509,9 +504,9 @@ static inline void ata_tf_to_host(struct ata_port *ap,
 				  const struct ata_taskfile *tf,
 				  unsigned int tag)
 {
-	trace_ata_tf_load(ap, tf);
+	// trace_ata_tf_load(ap, tf);
 	ap->ops->sff_tf_load(ap, tf);
-	trace_ata_exec_command(ap, tf, tag);
+	// trace_ata_exec_command(ap, tf, tag);
 	ap->ops->sff_exec_command(ap, tf);
 }
 
@@ -632,6 +627,7 @@ unsigned int ata_sff_data_xfer32(struct ata_queued_cmd *qc, unsigned char *buf,
 }
 EXPORT_SYMBOL_GPL(ata_sff_data_xfer32);
 
+#if 0
 static void ata_pio_xfer(struct ata_queued_cmd *qc, struct page *page,
 		unsigned int offset, size_t xfer_size)
 {
@@ -730,7 +726,7 @@ static void ata_pio_sectors(struct ata_queued_cmd *qc)
 
 	ata_sff_sync(qc->ap); /* flush */
 }
-
+#endif
 /**
  *	atapi_send_cdb - Write CDB bytes to hardware
  *	@ap: Port to which ATAPI device is attached.
@@ -745,7 +741,7 @@ static void ata_pio_sectors(struct ata_queued_cmd *qc)
 static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
 {
 	/* send SCSI cdb */
-	trace_atapi_send_cdb(qc, 0, qc->dev->cdb_len);
+	// trace_atapi_send_cdb(qc, 0, qc->dev->cdb_len);
 	WARN_ON_ONCE(qc->dev->cdb_len < 12);
 
 	ap->ops->sff_data_xfer(qc, qc->cdb, qc->dev->cdb_len, 1);
@@ -771,7 +767,7 @@ static void atapi_send_cdb(struct ata_port *ap, struct ata_queued_cmd *qc)
 		BUG();
 	}
 }
-
+#if 0
 /**
  *	__atapi_pio_bytes - Transfer data from/to the ATAPI device.
  *	@qc: Command on going
@@ -897,7 +893,7 @@ static void atapi_pio_bytes(struct ata_queued_cmd *qc)
 	qc->err_mask |= AC_ERR_HSM;
 	ap->hsm_task_state = HSM_ST_ERR;
 }
-
+#endif
 /**
  *	ata_hsm_ok_in_wq - Check if the qc can be handled in the workqueue.
  *	@ap: the target ata_port
@@ -996,7 +992,7 @@ int ata_sff_hsm_move(struct ata_port *ap, struct ata_queued_cmd *qc,
 	WARN_ON_ONCE(in_wq != ata_hsm_ok_in_wq(ap, qc));
 
 fsm_start:
-	trace_ata_sff_hsm_state(qc, status);
+	// trace_ata_sff_hsm_state(qc, status);
 
 	switch (ap->hsm_task_state) {
 	case HSM_ST_FIRST:
@@ -1057,7 +1053,7 @@ fsm_start:
 			 * before ata_pio_sectors().
 			 */
 			ap->hsm_task_state = HSM_ST;
-			ata_pio_sectors(qc);
+			// ata_pio_sectors(qc);
 		} else
 			/* send CDB */
 			atapi_send_cdb(ap, qc);
@@ -1094,7 +1090,7 @@ fsm_start:
 				goto fsm_start;
 			}
 
-			atapi_pio_bytes(qc);
+			// atapi_pio_bytes(qc);
 
 			if (unlikely(ap->hsm_task_state == HSM_ST_ERR))
 				/* bad ireason reported by device */
@@ -1147,7 +1143,7 @@ fsm_start:
 				qc->err_mask |= AC_ERR_DEV;
 
 				if (!(qc->tf.flags & ATA_TFLAG_WRITE)) {
-					ata_pio_sectors(qc);
+					// ata_pio_sectors(qc);
 					status = ata_wait_idle(ap);
 				}
 
@@ -1176,7 +1172,7 @@ fsm_start:
 				goto fsm_start;
 			}
 
-			ata_pio_sectors(qc);
+			// ata_pio_sectors(qc);
 
 			if (ap->hsm_task_state == HSM_ST_LAST &&
 			    (!(qc->tf.flags & ATA_TFLAG_WRITE))) {
@@ -1197,7 +1193,7 @@ fsm_start:
 		}
 
 		/* no more data to transfer */
-		trace_ata_sff_hsm_command_complete(qc, status);
+		// trace_ata_sff_hsm_command_complete(qc, status);
 
 		WARN_ON_ONCE(qc->err_mask & (AC_ERR_DEV | AC_ERR_HSM));
 
@@ -1226,7 +1222,7 @@ fsm_start:
 	return poll_next;
 }
 EXPORT_SYMBOL_GPL(ata_sff_hsm_move);
-
+#if 0
 void ata_sff_queue_work(struct work_struct *work)
 {
 	queue_work(ata_sff_wq, work);
@@ -1424,7 +1420,7 @@ unsigned int ata_sff_qc_issue(struct ata_queued_cmd *qc)
 	return 0;
 }
 EXPORT_SYMBOL_GPL(ata_sff_qc_issue);
-
+#endif
 /**
  *	ata_sff_qc_fill_rtf - fill result TF using ->sff_tf_read
  *	@qc: qc to fill result TF for
@@ -1467,7 +1463,7 @@ static unsigned int __ata_sff_port_intr(struct ata_port *ap,
 {
 	u8 status;
 
-	trace_ata_sff_port_intr(qc, hsmv_on_idle);
+	// trace_ata_sff_port_intr(qc, hsmv_on_idle);
 
 	/* Check whether we are expecting interrupt in this state */
 	switch (ap->hsm_task_state) {
@@ -2300,7 +2296,7 @@ int ata_pci_sff_prepare_host(struct pci_dev *pdev,
 	struct ata_host *host;
 	int rc;
 
-	if (!devres_open_group(&pdev->dev, NULL, GFP_KERNEL))
+	if (!devres_open_group(&pdev->dev, NULL, 0))
 		return -ENOMEM;
 
 	host = ata_host_alloc_pinfo(&pdev->dev, ppi, 2);
@@ -2373,7 +2369,7 @@ int ata_pci_sff_activate_host(struct ata_host *host,
 			legacy_mode = 1;
 	}
 
-	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+	if (!devres_open_group(dev, NULL, 0))
 		return -ENOMEM;
 
 	if (!legacy_mode && pdev->irq) {
@@ -2453,7 +2449,7 @@ static int ata_pci_init_one(struct pci_dev *pdev,
 		return -EINVAL;
 	}
 
-	if (!devres_open_group(dev, NULL, GFP_KERNEL))
+	if (!devres_open_group(dev, NULL, 0))
 		return -ENOMEM;
 
 	rc = pcim_enable_device(pdev);
@@ -3060,7 +3056,7 @@ int ata_bmdma_port_start(struct ata_port *ap)
 	if (ap->mwdma_mask || ap->udma_mask) {
 		ap->bmdma_prd =
 			dmam_alloc_coherent(ap->host->dev, ATA_PRD_TBL_SZ,
-					    &ap->bmdma_prd_dma, GFP_KERNEL);
+					    &ap->bmdma_prd_dma, 0);
 		if (!ap->bmdma_prd)
 			return -ENOMEM;
 	}
@@ -3258,21 +3254,21 @@ EXPORT_SYMBOL_GPL(ata_pci_bmdma_init_one);
  */
 void ata_sff_port_init(struct ata_port *ap)
 {
-	INIT_DELAYED_WORK(&ap->sff_pio_task, ata_sff_pio_task);
+	// INIT_DELAYED_WORK(&ap->sff_pio_task, ata_sff_pio_task);
 	ap->ctl = ATA_DEVCTL_OBS;
 	ap->last_ctl = 0xFF;
 }
 
 int __init ata_sff_init(void)
 {
-	ata_sff_wq = alloc_workqueue("ata_sff", WQ_MEM_RECLAIM, WQ_MAX_ACTIVE);
-	if (!ata_sff_wq)
-		return -ENOMEM;
+	//ata_sff_wq = alloc_workqueue("ata_sff", WQ_MEM_RECLAIM, WQ_MAX_ACTIVE);
+	//if (!ata_sff_wq)
+	//	return -ENOMEM;
 
 	return 0;
 }
 
 void ata_sff_exit(void)
 {
-	destroy_workqueue(ata_sff_wq);
+	//destroy_workqueue(ata_sff_wq);
 }

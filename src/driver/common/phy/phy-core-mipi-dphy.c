@@ -6,11 +6,11 @@
 
 #include <linux/errno.h>
 #include <linux/export.h>
-// #include <linux/kernel.h>
 #include <linux/time64.h>
-
+#include <linux/lynix-compat.h>
 #include <linux/phy/phy.h>
 #include <linux/phy/phy-mipi-dphy.h>
+#include <linux/align.h>
 
 /*
  * Minimum D-PHY timings based on MIPI D-PHY specification. Derived

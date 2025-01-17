@@ -8,7 +8,6 @@
 #include <linux/irq.h>
 #include <linux/irqdomain.h>
 #include <linux/msi.h>
-#include <linux/sched.h>
 
 #include <linux/irqchip/arm-gic-v4.h>
 
@@ -140,7 +139,7 @@ static int its_alloc_vcpu_sgis(struct its_vpe *vpe, int idx)
 		goto err;
 
 	sgi_base = __irq_domain_alloc_irqs(vpe->sgi_domain, -1, 16,
-					       NUMA_NO_NODE, vpe,
+					       0, vpe,
 					       false, NULL);
 	if (sgi_base <= 0)
 		goto err;
@@ -161,7 +160,7 @@ int its_alloc_vcpu_irqs(struct its_vm *vm)
 	int vpe_base_irq, i;
 
 	vm->fwnode = irq_domain_alloc_named_id_fwnode("GICv4-vpe",
-						      task_pid_nr(current));
+						      0);
 	if (!vm->fwnode)
 		goto err;
 
@@ -177,7 +176,7 @@ int its_alloc_vcpu_irqs(struct its_vm *vm)
 	}
 
 	vpe_base_irq = __irq_domain_alloc_irqs(vm->domain, -1, vm->nr_vpes,
-					       NUMA_NO_NODE, vm,
+					       0, vm,
 					       false, NULL);
 	if (vpe_base_irq <= 0)
 		goto err;
@@ -239,7 +238,7 @@ int its_make_vpe_non_resident(struct its_vpe *vpe, bool db)
 	struct its_cmd_info info = { };
 	int ret;
 
-	WARN_ON(preemptible());
+	//WARN_ON(preemptible());
 
 	info.cmd_type = DESCHEDULE_VPE;
 	if (has_v4_1()) {
@@ -265,7 +264,7 @@ int its_make_vpe_resident(struct its_vpe *vpe, bool g0en, bool g1en)
 	struct its_cmd_info info = { };
 	int ret;
 
-	WARN_ON(preemptible());
+	//WARN_ON(preemptible());
 
 	info.cmd_type = SCHEDULE_VPE;
 	if (has_v4_1()) {
@@ -290,7 +289,7 @@ int its_commit_vpe(struct its_vpe *vpe)
 	};
 	int ret;
 
-	WARN_ON(preemptible());
+	//WARN_ON(preemptible());
 
 	ret = its_send_vpe_cmd(vpe, &info);
 	if (!ret)

@@ -34,24 +34,15 @@
 #include <linux/platform_device.h>
 #include <linux/dma-mapping.h>
 #include <linux/init.h>
-// #include <linux/module.h>
-#include <linux/mm.h>
 #include <linux/device.h>
 #include <linux/dmaengine.h>
-#include <linux/hardirq.h>
-// #include <linux/spinlock.h>
 #include <linux/percpu.h>
-#include <linux/rcupdate.h>
-#include <linux/mutex.h>
 #include <linux/jiffies.h>
-#include <linux/rculist.h>
 #include <linux/idr.h>
-// #include <linux/slab.h>
-#include <linux/acpi.h>
-#include <linux/acpi_dma.h>
+// //#include <linux/acpi.h>
 #include <linux/of_dma.h>
-#include <linux/mempool.h>
-#include <linux/numa.h>
+#include <linux/rculist.h>
+#include <linux/lynix-compat.h>
 
 #include "dmaengine.h"
 
@@ -158,7 +149,7 @@ static struct dma_chan *dev_to_dma_chan(struct device *dev)
 	chan_dev = container_of(dev, typeof(*chan_dev), device);
 	return chan_dev->chan;
 }
-
+#if 0
 static ssize_t memcpy_count_show(struct device *dev,
 				 struct device_attribute *attr, char *buf)
 {
@@ -228,7 +219,7 @@ static struct attribute *dma_dev_attrs[] = {
 	NULL,
 };
 ATTRIBUTE_GROUPS(dma_dev);
-
+#endif
 static void chan_dev_release(struct device *dev)
 {
 	struct dma_chan_dev *chan_dev;
@@ -239,7 +230,7 @@ static void chan_dev_release(struct device *dev)
 
 static struct class dma_devclass = {
 	.name		= "dma",
-	.dev_groups	= dma_dev_groups,
+	// .dev_groups	= dma_dev_groups,
 	.dev_release	= chan_dev_release,
 };
 
@@ -302,8 +293,8 @@ arch_initcall(dma_channel_table_init);
 static bool dma_chan_is_local(struct dma_chan *chan, int cpu)
 {
 	int node = dev_to_node(chan->device->dev);
-	return node == NUMA_NO_NODE ||
-		cpumask_test_cpu(cpu, cpumask_of_node(node));
+	return true;// node == NUMA_NO_NODE ||
+		// cpumask_test_cpu(cpu, cpumask_of_node(node));
 }
 
 /**
@@ -412,10 +403,10 @@ static struct module *dma_chan_to_owner(struct dma_chan *chan)
  */
 static void balance_ref_count(struct dma_chan *chan)
 {
-	struct module *owner = dma_chan_to_owner(chan);
+	// struct module *owner = dma_chan_to_owner(chan);
 
 	while (chan->client_count < dmaengine_ref_count) {
-		__module_get(owner);
+		// __module_get(owner);
 		chan->client_count++;
 	}
 }
@@ -450,12 +441,12 @@ static int dma_chan_get(struct dma_chan *chan)
 
 	/* The channel is already in use, update client count */
 	if (chan->client_count) {
-		__module_get(owner);
+		//__module_get(owner);
 		goto out;
 	}
 
-	if (!try_module_get(owner))
-		return -ENODEV;
+	//if (!try_module_get(owner))
+	//	return -ENODEV;
 
 	ret = kref_get_unless_zero(&chan->device->ref);
 	if (!ret) {
@@ -480,7 +471,7 @@ out:
 err_out:
 	dma_device_put(chan->device);
 module_put_out:
-	module_put(owner);
+	//module_put(owner);
 	return ret;
 }
 
@@ -513,7 +504,7 @@ static void dma_chan_put(struct dma_chan *chan)
 	}
 
 	dma_device_put(chan->device);
-	module_put(dma_chan_to_owner(chan));
+	//module_put(dma_chan_to_owner(chan));
 }
 
 enum dma_status dma_sync_wait(struct dma_chan *chan, dma_cookie_t cookie)
@@ -819,8 +810,8 @@ struct dma_chan *dma_request_chan(struct device *dev, const char *name)
 		chan = of_dma_request_slave_channel(dev->of_node, name);
 
 	/* If device was enumerated by ACPI get slave info from here */
-	if (has_acpi_companion(dev) && !chan)
-		chan = acpi_dma_request_slave_chan_by_name(dev, name);
+	//if (has_acpi_companion(dev) && !chan)
+	//	chan = acpi_dma_request_slave_chan_by_name(dev, name);
 
 	if (PTR_ERR(chan) == -EPROBE_DEFER)
 		return chan;
@@ -853,21 +844,21 @@ struct dma_chan *dma_request_chan(struct device *dev, const char *name)
 
 found:
 #ifdef CONFIG_DEBUG_FS
-	chan->dbg_client_name = kasprintf(GFP_KERNEL, "%s:%s", dev_name(dev),
+	chan->dbg_client_name = kasprintf(0, "%s:%s", dev_name(dev),
 					  name);
 #endif
 
-	chan->name = kasprintf(GFP_KERNEL, "dma:%s", name);
+	chan->name = kasprintf(0, "dma:%s", name);
 	if (!chan->name)
 		return chan;
 	chan->slave = dev;
-
+#if 0
 	if (sysfs_create_link(&chan->dev->device.kobj, &dev->kobj,
 			      DMA_SLAVE_NAME))
 		dev_warn(dev, "Cannot create DMA %s symlink\n", DMA_SLAVE_NAME);
 	if (sysfs_create_link(&dev->kobj, &chan->dev->device.kobj, chan->name))
 		dev_warn(dev, "Cannot create DMA %s symlink\n", chan->name);
-
+#endif
 	return chan;
 }
 EXPORT_SYMBOL_GPL(dma_request_chan);
@@ -910,8 +901,8 @@ void dma_release_channel(struct dma_chan *chan)
 		dma_cap_clear(DMA_PRIVATE, chan->device->cap_mask);
 
 	if (chan->slave) {
-		sysfs_remove_link(&chan->dev->device.kobj, DMA_SLAVE_NAME);
-		sysfs_remove_link(&chan->slave->kobj, chan->name);
+		//sysfs_remove_link(&chan->dev->device.kobj, DMA_SLAVE_NAME);
+		//sysfs_remove_link(&chan->slave->kobj, chan->name);
 		kfree(chan->name);
 		chan->name = NULL;
 		chan->slave = NULL;
@@ -1027,7 +1018,7 @@ static bool device_has_all_tx_types(struct dma_device *device)
 
 static int get_dma_id(struct dma_device *device)
 {
-	int rc = ida_alloc(&dma_ida, GFP_KERNEL);
+	int rc = ida_alloc(&dma_ida, 0);
 
 	if (rc < 0)
 		return rc;
@@ -1043,7 +1034,7 @@ static int __dma_async_device_channel_register(struct dma_device *device,
 	chan->local = alloc_percpu(typeof(*chan->local));
 	if (!chan->local)
 		return -ENOMEM;
-	chan->dev = kzalloc(sizeof(*chan->dev), GFP_KERNEL);
+	chan->dev = kzalloc(sizeof(*chan->dev), 0);
 	if (!chan->dev) {
 		rc = -ENOMEM;
 		goto err_free_local;
@@ -1054,7 +1045,7 @@ static int __dma_async_device_channel_register(struct dma_device *device,
 	 * the channel. Otherwise we are static enumerating.
 	 */
 	mutex_lock(&device->chan_mutex);
-	chan->chan_id = ida_alloc(&device->chan_ida, GFP_KERNEL);
+	chan->chan_id = ida_alloc(&device->chan_ida, 0);
 	mutex_unlock(&device->chan_mutex);
 	if (chan->chan_id < 0) {
 		pr_err("%s: unable to alloc ida for chan: %d\n",
@@ -1150,7 +1141,7 @@ int dma_async_device_register(struct dma_device *device)
 		return -EIO;
 	}
 
-	device->owner = device->dev->driver->owner;
+	//device->owner = device->dev->driver->owner;
 
 	if (dma_has_cap(DMA_MEMCPY, device->cap_mask) && !device->device_prep_dma_memcpy) {
 		dev_err(device->dev,
@@ -1355,7 +1346,7 @@ int dmaenginem_async_device_register(struct dma_device *device)
 	void *p;
 	int ret;
 
-	p = devres_alloc(dmam_device_release, sizeof(void *), GFP_KERNEL);
+	p = devres_alloc(dmam_device_release, sizeof(void *), 0);
 	if (!p)
 		return -ENOMEM;
 
@@ -1370,7 +1361,7 @@ int dmaenginem_async_device_register(struct dma_device *device)
 	return ret;
 }
 EXPORT_SYMBOL(dmaenginem_async_device_register);
-
+#if 0
 struct dmaengine_unmap_pool {
 	struct kmem_cache *cache;
 	const char *name;
@@ -1499,7 +1490,7 @@ dmaengine_get_unmap_data(struct device *dev, int nr, gfp_t flags)
 	return unmap;
 }
 EXPORT_SYMBOL(dmaengine_get_unmap_data);
-
+#endif
 void dma_async_tx_descriptor_init(struct dma_async_tx_descriptor *tx,
 	struct dma_chan *chan)
 {
@@ -1651,14 +1642,14 @@ EXPORT_SYMBOL_GPL(dma_run_dependencies);
 
 static int __init dma_bus_init(void)
 {
-	int err = dmaengine_init_unmap_pool();
+	int err ; //= dmaengine_init_unmap_pool();
 
-	if (err)
-		return err;
+	//if (err)
+	//	return err;
 
 	err = class_register(&dma_devclass);
-	if (!err)
-		dmaengine_debugfs_init();
+	//if (!err)
+	//	dmaengine_debugfs_init();
 
 	return err;
 }

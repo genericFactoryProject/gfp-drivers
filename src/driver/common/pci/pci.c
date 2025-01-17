@@ -8,8 +8,6 @@
  * Copyright 1997 -- 2000 Martin Mares <mj@ucw.cz>
  */
 
-#include <linux/acpi.h>
-// #include <linux/kernel.h>
 #include <linux/delay.h>
 #include <linux/dmi.h>
 #include <linux/init.h>
@@ -17,9 +15,6 @@
 #include <linux/of.h>
 #include <linux/pci.h>
 #include <linux/pm.h>
-// #include <linux/slab.h>
-// #include <linux/module.h>
-// #include <linux/spinlock.h>
 #include <linux/string.h>
 #include <linux/log2.h>
 #include <linux/logic_pio.h>
@@ -28,8 +23,8 @@
 #include <linux/device.h>
 #include <linux/pm_runtime.h>
 #include <linux/pci_hotplug.h>
-#include <linux/vmalloc.h>
-#include <asm/dma.h>
+//#include <asm/dma.h>
+#include <linux/kstrtox.h>
 #include <linux/aer.h>
 #include <linux/bitfield.h>
 #include "pci.h"
@@ -53,7 +48,7 @@ static void pci_pme_list_scan(struct work_struct *work);
 
 static LIST_HEAD(pci_pme_list);
 static DEFINE_MUTEX(pci_pme_list_mutex);
-static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
+//static DECLARE_DELAYED_WORK(pci_pme_work, pci_pme_list_scan);
 
 struct pci_pme_device {
 	struct list_head list;
@@ -275,7 +270,7 @@ static int pci_dev_str_match_path(struct pci_dev *dev, const char *path,
 
 	*endptr = strchrnul(path, ';');
 
-	wpath = kmemdup_nul(path, *endptr - path, GFP_ATOMIC);
+	wpath = kmemdup_nul(path, *endptr - path, 0);
 	if (!wpath)
 		return -ENOMEM;
 
@@ -1776,7 +1771,7 @@ struct pci_saved_state *pci_store_saved_state(struct pci_dev *dev)
 	hlist_for_each_entry(tmp, &dev->saved_cap_space, next)
 		size += sizeof(struct pci_cap_saved_data) + tmp->cap.size;
 
-	state = kzalloc(size, GFP_KERNEL);
+	state = kzalloc(size, 0);
 	if (!state)
 		return NULL;
 
@@ -2046,7 +2041,7 @@ static struct pci_devres *get_pci_dr(struct pci_dev *pdev)
 	if (dr)
 		return dr;
 
-	new_dr = devres_alloc(pcim_release, sizeof(*new_dr), GFP_KERNEL);
+	new_dr = devres_alloc(pcim_release, sizeof(*new_dr), 0);
 	if (!new_dr)
 		return NULL;
 	return devres_get(&pdev->dev, new_dr, NULL, NULL);
@@ -2362,8 +2357,8 @@ static void pci_pme_list_scan(struct work_struct *work)
 		}
 	}
 	if (!list_empty(&pci_pme_list))
-		queue_delayed_work(system_freezable_wq, &pci_pme_work,
-				   msecs_to_jiffies(PME_TIMEOUT));
+		//queue_delayed_work(system_freezable_wq, &pci_pme_work,
+		//		   msecs_to_jiffies(PME_TIMEOUT));
 	mutex_unlock(&pci_pme_list_mutex);
 }
 
@@ -2441,7 +2436,7 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
 		struct pci_pme_device *pme_dev;
 		if (enable) {
 			pme_dev = kmalloc(sizeof(struct pci_pme_device),
-					  GFP_KERNEL);
+					  0);
 			if (!pme_dev) {
 				pci_warn(dev, "can't enable PME#\n");
 				return;
@@ -2450,9 +2445,9 @@ void pci_pme_active(struct pci_dev *dev, bool enable)
 			mutex_lock(&pci_pme_list_mutex);
 			list_add(&pme_dev->list, &pci_pme_list);
 			if (list_is_singular(&pci_pme_list))
-				queue_delayed_work(system_freezable_wq,
-						   &pci_pme_work,
-						   msecs_to_jiffies(PME_TIMEOUT));
+				//queue_delayed_work(system_freezable_wq,
+				//		   &pci_pme_work,
+				//		   msecs_to_jiffies(PME_TIMEOUT));
 			mutex_unlock(&pci_pme_list_mutex);
 		} else {
 			mutex_lock(&pci_pme_list_mutex);
@@ -3396,7 +3391,7 @@ static int _pci_add_cap_save_buffer(struct pci_dev *dev, u16 cap,
 	if (!pos)
 		return 0;
 
-	save_state = kzalloc(sizeof(*save_state) + size, GFP_KERNEL);
+	save_state = kzalloc(sizeof(*save_state) + size, 0);
 	if (!save_state)
 		return -ENOMEM;
 
@@ -4115,7 +4110,7 @@ int pci_register_io_range(struct fwnode_handle *fwnode, phys_addr_t addr,
 	if (!size || addr + size < addr)
 		return -EINVAL;
 
-	range = kzalloc(sizeof(*range), GFP_ATOMIC);
+	range = kzalloc(sizeof(*range), 0);
 	if (!range)
 		return -ENOMEM;
 
@@ -4185,8 +4180,8 @@ int pci_remap_iospace(const struct resource *res, phys_addr_t phys_addr)
 	if (res->end > IO_SPACE_LIMIT)
 		return -EINVAL;
 
-	return ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
-				  pgprot_device(PAGE_KERNEL));
+	return 0; //ioremap_page_range(vaddr, vaddr + resource_size(res), phys_addr,
+				//  pgprot_device(PAGE_KERNEL));
 #else
 	/*
 	 * This architecture does not have memory mapped I/O space,
@@ -4212,7 +4207,7 @@ void pci_unmap_iospace(struct resource *res)
 #if defined(PCI_IOBASE) && defined(CONFIG_MMU)
 	unsigned long vaddr = (unsigned long)PCI_IOBASE + res->start;
 
-	vunmap_range(vaddr, vaddr + resource_size(res));
+	//vunmap_range(vaddr, vaddr + resource_size(res));
 #endif
 }
 EXPORT_SYMBOL(pci_unmap_iospace);
@@ -4239,7 +4234,7 @@ int devm_pci_remap_iospace(struct device *dev, const struct resource *res,
 	const struct resource **ptr;
 	int error;
 
-	ptr = devres_alloc(devm_pci_unmap_iospace, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_pci_unmap_iospace, sizeof(*ptr), 0);
 	if (!ptr)
 		return -ENOMEM;
 
@@ -4270,7 +4265,7 @@ void __iomem *devm_pci_remap_cfgspace(struct device *dev,
 {
 	void __iomem **ptr, *addr;
 
-	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_ioremap_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return NULL;
 
@@ -4321,10 +4316,10 @@ void __iomem *devm_pci_remap_cfg_resource(struct device *dev,
 	size = resource_size(res);
 
 	if (res->name)
-		name = devm_kasprintf(dev, GFP_KERNEL, "%s %s", dev_name(dev),
+		name = devm_kasprintf(dev, 0, "%s %s", dev_name(dev),
 				      res->name);
 	else
-		name = devm_kstrdup(dev, dev_name(dev), GFP_KERNEL);
+		name = devm_kstrdup(dev, dev_name(dev), 0);
 	if (!name)
 		return IOMEM_ERR_PTR(-ENOMEM);
 
@@ -5081,13 +5076,13 @@ static int pci_reset_hotplug_slot(struct hotplug_slot *hotplug, bool probe)
 {
 	int rc = -ENOTTY;
 
-	if (!hotplug || !try_module_get(hotplug->owner))
-		return rc;
+	//if (!hotplug || !try_module_get(hotplug->owner))
+	//	return rc;
 
 	if (hotplug->ops->reset_slot)
 		rc = hotplug->ops->reset_slot(hotplug, probe);
 
-	module_put(hotplug->owner);
+	//module_put(hotplug->owner);
 
 	return rc;
 }
@@ -5196,7 +5191,7 @@ static const struct pci_reset_fn_method pci_reset_fn_methods[] = {
 	{ pci_pm_reset, .name = "pm" },
 	{ pci_reset_bus_function, .name = "bus" },
 };
-
+#if 0
 static ssize_t reset_method_show(struct device *dev,
 				 struct device_attribute *attr, char *buf)
 {
@@ -5251,7 +5246,7 @@ static ssize_t reset_method_store(struct device *dev,
 		return count;
 	}
 
-	options = kstrndup(buf, count, GFP_KERNEL);
+	options = kstrndup(buf, count, 0);
 	if (!options)
 		return -ENOMEM;
 
@@ -5318,7 +5313,7 @@ const struct attribute_group pci_dev_reset_method_attr_group = {
 	.attrs = pci_dev_reset_method_attrs,
 	.is_visible = pci_dev_reset_method_attr_is_visible,
 };
-
+#endif
 /**
  * __pci_reset_function_locked - reset a PCI device function while holding
  * the @dev mutex lock.
@@ -6386,7 +6381,7 @@ void pci_add_dma_alias(struct pci_dev *dev, u8 devfn_from,
 	devfn_to = devfn_from + nr_devfns - 1;
 
 	if (!dev->dma_alias_mask)
-		dev->dma_alias_mask = bitmap_zalloc(MAX_NR_DEVFNS, GFP_KERNEL);
+		dev->dma_alias_mask = bitmap_zalloc(MAX_NR_DEVFNS, 0);
 	if (!dev->dma_alias_mask) {
 		pci_warn(dev, "Unable to allocate DMA alias mask\n");
 		return;
@@ -6673,7 +6668,7 @@ static ssize_t resource_alignment_store(struct bus_type *bus,
 	if (count >= (PAGE_SIZE - 1))
 		return -EINVAL;
 
-	param = kstrndup(buf, count, GFP_KERNEL);
+	param = kstrndup(buf, count, 0);
 	if (!param)
 		return -ENOMEM;
 
@@ -6873,8 +6868,8 @@ early_param("pci", pci_setup);
 static int __init pci_realloc_setup_params(void)
 {
 	resource_alignment_param = kstrdup(resource_alignment_param,
-					   GFP_KERNEL);
-	disable_acs_redir_param = kstrdup(disable_acs_redir_param, GFP_KERNEL);
+					   0);
+	disable_acs_redir_param = kstrdup(disable_acs_redir_param, 0);
 
 	return 0;
 }

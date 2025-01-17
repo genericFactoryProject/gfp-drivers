@@ -53,7 +53,7 @@ struct regulator {
 	unsigned int deferred_disables;
 	struct regulator_voltage voltage[REGULATOR_STATES_NUM];
 	const char *supply_name;
-	struct device_attribute dev_attr;
+	//struct device_attribute dev_attr;
 	struct regulator_dev *rdev;
 	struct dentry *debugfs;
 };

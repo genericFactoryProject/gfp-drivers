@@ -3,8 +3,8 @@
 #define __SPI_DW_H__
 
 #include <linux/bits.h>
-#include <linux/completion.h>
-#include <linux/debugfs.h>
+//#include <linux/completion.h>
+//#include <linux/debugfs.h>
 #include <linux/irqreturn.h>
 #include <linux/io.h>
 #include <linux/scatterlist.h>
@@ -200,7 +200,7 @@ struct dw_spi {
 	unsigned long		dma_chan_busy;
 	dma_addr_t		dma_addr; /* phy address of the Data register */
 	const struct dw_spi_dma_ops *dma_ops;
-	struct completion	dma_completion;
+	//struct completion	dma_completion;
 
 #ifdef CONFIG_DEBUG_FS
 	struct dentry *debugfs;

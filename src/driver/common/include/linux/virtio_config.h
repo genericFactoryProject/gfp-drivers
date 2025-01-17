@@ -8,6 +8,7 @@
 #include <linux/virtio_byteorder.h>
 #include <linux/compiler_types.h>
 #include <uapi/linux/virtio_config.h>
+#include <linux/cpumask.h>
 
 struct irq_affinity;
 

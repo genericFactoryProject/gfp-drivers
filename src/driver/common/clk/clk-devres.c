@@ -2,7 +2,6 @@
 #include <linux/clk.h>
 #include <linux/device.h>
 #include <linux/export.h>
-// #include <linux/gfp.h>
 
 static void devm_clk_release(struct device *dev, void *res)
 {
@@ -13,7 +12,7 @@ struct clk *devm_clk_get(struct device *dev, const char *id)
 {
 	struct clk **ptr, *clk;
 
-	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
@@ -59,7 +58,7 @@ static int __devm_clk_bulk_get(struct device *dev, int num_clks,
 	int ret;
 
 	devres = devres_alloc(devm_clk_bulk_release,
-			      sizeof(*devres), GFP_KERNEL);
+			      sizeof(*devres), 0);
 	if (!devres)
 		return -ENOMEM;
 
@@ -106,7 +105,7 @@ int __must_check devm_clk_bulk_get_all(struct device *dev,
 	int ret;
 
 	devres = devres_alloc(devm_clk_bulk_release_all,
-			      sizeof(*devres), GFP_KERNEL);
+			      sizeof(*devres), 0);
 	if (!devres)
 		return -ENOMEM;
 
@@ -148,7 +147,7 @@ struct clk *devm_get_clk_from_child(struct device *dev,
 {
 	struct clk **ptr, *clk;
 
-	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), GFP_KERNEL);
+	ptr = devres_alloc(devm_clk_release, sizeof(*ptr), 0);
 	if (!ptr)
 		return ERR_PTR(-ENOMEM);
 
