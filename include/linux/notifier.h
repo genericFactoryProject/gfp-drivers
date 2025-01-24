@@ -47,6 +47,10 @@ struct notifier_block {
 	int priority;
 };
 
+struct sm_notifier_head {
+
+};
+
 struct atomic_notifier_head {
 	spinlock_t lock;
 	struct notifier_block __rcu *head;

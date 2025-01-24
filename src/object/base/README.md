@@ -1,0 +1,8 @@
+xarray可以作为针对单个ID，fix range的分配器。例如，对于叶子value可以存储一个bitmap指针，那么分配的ID可以是xa_index*MAX_BITMAP_LENGTH+bit；如果每一个value节点都是存储一个bitmap指针，那么分配的ID可以是xa_index_prevlvl**MAX_BITMAP_LENGTH+bit_currlvl。
+如果假设MAX_BITMAP_LENGTH为1024，且每一个bit表示一个Page(4096)，那么每一个叶子ID的范围是0~1024*4096。
+在叶子节点的上一层，可以直接选择一个index，size作为1024*4096。所以需要对xarray改造：从指定的level下分配ID
+
+类似IDA，在value放置bitmap，可以在value放置block，block的order可以是9或是11，然后对于block可以使用buddy。
+
+maple可以作为ID，unfix range的分配器。类似vma的分配方式。
+
