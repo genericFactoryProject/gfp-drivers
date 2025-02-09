@@ -3,7 +3,7 @@
 ## 概述
 
 Lynix内核基于结构分层概念来管理真实设备，静态内核对象以及运行时对象。如下图所示：
-![](doc/lynix-framework.png)
+![](kernel/doc/lynix-framework.png)
 
 该内核目标是在用户态/特权态/安全态可以运行，并管理硬件和抽象资源。
 
